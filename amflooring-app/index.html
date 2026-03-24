@@ -10,11 +10,10 @@
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
-      --red:#b91c1c;--red-dark:#7f1d1d;--red-light:#ef4444;--red-faint:#fef2f2;
-      --black:#0f0f0f;--charcoal:#1c1c1c;
-      --g900:#111827;--g800:#1f2937;--g700:#374151;--g600:#4b5563;
-      --g500:#6b7280;--g400:#9ca3af;--g300:#d1d5db;--g200:#e5e7eb;
-      --g100:#f3f4f6;--g50:#f9fafb;--white:#fff;--gold:#c9a84c;
+      --red:#b91c1c;--red-dark:#7f1d1d;--red-faint:#fef2f2;
+      --charcoal:#1c1c1c;
+      --g900:#111827;--g700:#374151;--g600:#4b5563;--g500:#6b7280;
+      --g400:#9ca3af;--g300:#d1d5db;--g200:#e5e7eb;--g100:#f3f4f6;--g50:#f9fafb;
       --green:#16a34a;--gfaint:#f0fdf4;
       --blue:#2563eb;--bfaint:#eff6ff;
       --amber:#d97706;--afaint:#fffbeb;
@@ -58,7 +57,7 @@
     .user-name{font-size:.875rem;color:rgba(255,255,255,.7);display:none}
     @media(min-width:480px){.user-name{display:block}}
     .app-body{flex:1;display:flex;overflow:hidden}
-    .sidebar{width:220px;background:#fff;border-right:1px solid var(--g200);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+    .sidebar{width:220px;background:#fff;border-right:1px solid var(--g200);flex-shrink:0;overflow-y:auto}
     .sidebar-nav{padding:1rem .75rem;display:flex;flex-direction:column;gap:2px}
     .sidebar-section{font-size:.7rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.1em;padding:.75rem .75rem .35rem}
     .sidebar-link{display:flex;align-items:center;gap:.6rem;padding:.6rem .75rem;border-radius:6px;font-size:.875rem;font-weight:500;color:var(--g600);cursor:pointer;transition:all .15s;border:none;background:none;width:100%;text-align:left}
@@ -78,13 +77,19 @@
     .page-title{font-size:1.4rem;font-weight:700}
     .page-subtitle{font-size:.875rem;color:var(--g500);margin-top:2px}
     .card{background:#fff;border:1px solid var(--g200);border-radius:10px;overflow:hidden}
-    .card-header{padding:1rem 1.25rem;border-bottom:1px solid var(--g100);display:flex;align-items:center;justify-content:space-between}
-    .card-title{font-size:.95rem;font-weight:600}
+    .card-header{padding:1rem 1.25rem;border-bottom:1px solid var(--g100);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
     .card-body{padding:1.25rem}
-    /* CAL TABS */
-    .cal-tabs{display:flex;gap:4px;margin-bottom:1rem;background:var(--g100);padding:4px;border-radius:8px;width:fit-content;flex-wrap:wrap}
-    .cal-tab{padding:.45rem 1rem;border-radius:6px;font-size:.825rem;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--g600);font-family:'Inter',sans-serif;transition:all .15s}
-    .cal-tab.active{background:#fff;color:var(--g900);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+    /* TABS */
+    .cal-tabs{display:flex;gap:4px;background:var(--g100);padding:4px;border-radius:8px;width:fit-content;flex-wrap:wrap}
+    .cal-tab{padding:.45rem 1rem;border-radius:6px;font-size:.825rem;font-weight:400;cursor:pointer;border:none;background:transparent;color:var(--g500);font-family:'Inter',sans-serif;transition:all .15s}
+    .cal-tab.active{background:#fff;color:var(--g900);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+    /* VIEW TOGGLE */
+    .view-toggle{display:flex;gap:4px;background:var(--g100);padding:4px;border-radius:8px}
+    .view-btn{padding:.4rem .9rem;border-radius:6px;font-size:.8rem;font-weight:400;cursor:pointer;border:none;background:transparent;color:var(--g500);font-family:'Inter',sans-serif;transition:all .15s}
+    .view-btn.active{background:#fff;color:var(--g900);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+    /* WHO FILTER */
+    .who-filter{padding:.45rem .9rem;border:1.5px solid var(--g300);border-radius:8px;font-family:'Inter',sans-serif;font-size:.825rem;color:var(--g700);background:#fff;outline:none;cursor:pointer;min-width:140px}
+    .who-filter:focus{border-color:var(--red)}
     /* DATE FILTER */
     .date-filter-bar{display:flex;align-items:center;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap}
     .date-filter-bar label{font-size:.8rem;font-weight:600;color:var(--g600);text-transform:uppercase;letter-spacing:.05em}
@@ -101,8 +106,8 @@
     .stat-card-label{font-size:.75rem;font-weight:500;color:var(--g500);margin-bottom:.4rem}
     .stat-card-value{font-size:1.8rem;font-weight:700;line-height:1}
     .stat-card-sub{font-size:.75rem;color:var(--g400);margin-top:.25rem}
-    /* WEEK CAL */
-    .calendar-nav{display:flex;align-items:center;gap:1rem;margin-bottom:1rem}
+    /* WEEK CALENDAR */
+    .calendar-nav{display:flex;align-items:center;gap:.75rem}
     .calendar-nav h3{font-size:1.1rem;font-weight:600;flex:1;text-align:center}
     .week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
     .week-day-header{text-align:center;font-size:.7rem;font-weight:700;color:var(--g400);text-transform:uppercase;padding:.5rem 0}
@@ -110,13 +115,25 @@
     .week-day-cell.today{border-color:var(--red);background:var(--red-faint)}
     .day-num{font-size:.75rem;font-weight:600;color:var(--g400);margin-bottom:4px}
     .week-day-cell.today .day-num{color:var(--red)}
-    .cal-event{background:var(--bfaint);border-left:3px solid var(--blue);border-radius:3px;padding:2px 4px;font-size:.68rem;font-weight:500;color:var(--blue);margin-bottom:2px;cursor:pointer;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;transition:opacity .15s}
+    .cal-event{background:var(--bfaint);border-left:3px solid var(--blue);border-radius:3px;padding:2px 4px;font-size:.68rem;font-weight:500;color:var(--blue);margin-bottom:2px;cursor:pointer;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
     .cal-event:hover{opacity:.75}
     .cal-event.cal-sales{background:#fdf4ff;border-color:#a855f7;color:#7e22ce}
     .cal-event.cal-warehouse{background:var(--afaint);border-color:var(--amber);color:#92400e}
     .cal-event.status-complete{opacity:.5}
     .cal-event.time-off{background:#fef9c3;border-color:#ca8a04;color:#713f12}
+    .more-pill{font-size:.65rem;font-weight:600;color:var(--g500);background:var(--g100);border-radius:3px;padding:1px 5px;cursor:pointer;display:inline-block;margin-top:1px}
+    .more-pill:hover{background:var(--g200)}
     @media(max-width:600px){.week-day-cell{min-height:70px;padding:3px}.cal-event{font-size:.6rem}.week-day-header{font-size:.6rem}}
+    /* MONTH CALENDAR */
+    .month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+    .month-day-header{text-align:center;font-size:.7rem;font-weight:700;color:var(--g400);text-transform:uppercase;padding:.4rem 0}
+    .month-day-cell{background:#fff;border:1px solid var(--g200);border-radius:6px;min-height:90px;padding:.4rem;cursor:default}
+    .month-day-cell.today{border-color:var(--red)}
+    .month-day-cell.other-month{background:var(--g50);opacity:.6}
+    .month-day-num{font-size:.75rem;font-weight:600;color:var(--g400);margin-bottom:3px;display:flex;align-items:center;justify-content:space-between}
+    .month-day-cell.today .month-day-num span{background:var(--red);color:#fff;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;font-size:.7rem}
+    @media(max-width:600px){.month-day-cell{min-height:60px;padding:3px}.month-day-num{font-size:.65rem}}
+    /* LEGEND */
     .cal-legend{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:.75rem}
     .legend-item{display:flex;align-items:center;gap:4px;font-size:.75rem;color:var(--g600)}
     .legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
@@ -137,7 +154,7 @@
     .installer-job-card{background:#fff;border:1.5px solid var(--g200);border-radius:12px;padding:1.1rem 1.25rem;margin-bottom:.75rem;border-left:5px solid var(--blue)}
     .installer-job-customer{font-size:1.1rem;font-weight:700;margin-bottom:.3rem}
     .installer-job-address{font-size:.9rem;color:var(--g600);margin-bottom:.75rem}
-    .installer-job-details{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.75rem}
+    .installer-job-details{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.5rem}
     .installer-detail-pill{background:var(--g100);padding:.3rem .7rem;border-radius:20px;font-size:.8rem;font-weight:500;color:var(--g700)}
     .installer-job-notes{font-size:.85rem;color:var(--g500);font-style:italic;padding-top:.5rem;border-top:1px solid var(--g100)}
     .map-btn{display:inline-flex;align-items:center;gap:5px;background:var(--bfaint);color:var(--blue);border:1px solid #bfdbfe;padding:.45rem .9rem;border-radius:6px;font-size:.8rem;font-weight:600;text-decoration:none;margin-top:.5rem}
@@ -156,10 +173,21 @@
     .modal-close{background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--g400);padding:.2rem;line-height:1}
     .modal-body{padding:1.5rem}
     .modal-footer{padding:1rem 1.5rem;border-top:1px solid var(--g200);display:flex;gap:.75rem;justify-content:flex-end}
+    /* TIME SLIDER */
+    .time-slider-group{margin-bottom:1.2rem}
+    .time-slider-group label{display:block;font-size:.8rem;font-weight:600;color:var(--g700);margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.05em}
+    .time-slider-row{display:flex;align-items:center;gap:1rem}
+    .time-display{font-size:1rem;font-weight:600;color:var(--g900);min-width:56px;text-align:center;background:var(--g100);padding:.35rem .75rem;border-radius:6px}
+    .time-slider-row input[type=range]{flex:1;accent-color:var(--red);cursor:pointer}
+    /* QUICK ADD PERSON */
+    .quick-add-person{margin-top:.75rem;border:1.5px dashed var(--g300);border-radius:8px;padding:1rem;background:var(--g50)}
+    .quick-add-person h4{font-size:.8rem;font-weight:600;color:var(--g600);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem}
+    .quick-add-person .form-group{margin-bottom:.75rem}
+    .quick-add-person .form-group:last-of-type{margin-bottom:0}
     /* CREW */
     .crew-list{display:flex;flex-direction:column;gap:.5rem}
     .crew-item{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;background:#fff;border:1px solid var(--g200);border-radius:8px;transition:opacity .2s}
-    .crew-item.inactive{opacity:.45}
+    .crew-item.inactive{opacity:.4}
     .crew-item-left{display:flex;align-items:center;gap:.75rem}
     .crew-avatar{width:36px;height:36px;background:var(--red-faint);color:var(--red);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.875rem;flex-shrink:0}
     .crew-avatar.staff-av{background:var(--pfaint);color:var(--purple)}
@@ -176,16 +204,26 @@
     .timeoff-item{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;background:#fff;border:1px solid var(--g200);border-radius:8px;margin-bottom:.5rem}
     .timeoff-name{font-weight:500;font-size:.9rem}
     .timeoff-dates{font-size:.8rem;color:var(--g500);margin-top:2px}
+    /* PTO */
+    .pto-row{display:flex;align-items:flex-start;justify-content:space-between;padding:.75rem 1rem;background:#fff;border:1px solid var(--g200);border-radius:8px;margin-bottom:.5rem}
+    .pto-name{font-weight:500}
+    .pto-days{font-size:.9rem;color:var(--g600);white-space:nowrap;margin-left:1rem}
+    .pto-days strong{color:var(--g900);font-weight:700}
     /* DETAIL */
     .detail-section{margin-bottom:1.5rem}
     .detail-section-title{font-size:.75rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.75rem}
     .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
     .detail-item label{font-size:.75rem;color:var(--g500);display:block;margin-bottom:2px}
     .detail-item span{font-size:.95rem;font-weight:500}
+    /* DAY DETAIL MODAL */
+    .day-detail-event{padding:.6rem .75rem;border-radius:6px;margin-bottom:.4rem;cursor:pointer;border-left:3px solid var(--blue);background:var(--bfaint);font-size:.875rem;font-weight:500;color:var(--blue)}
+    .day-detail-event.cal-sales{border-color:#a855f7;background:#fdf4ff;color:#7e22ce}
+    .day-detail-event.cal-warehouse{border-color:var(--amber);background:var(--afaint);color:#92400e}
+    .day-detail-event.time-off{border-color:#ca8a04;background:#fef9c3;color:#713f12}
+    .day-detail-event:hover{opacity:.8}
     /* MISC */
     .spinner{display:inline-block;width:20px;height:20px;border:2px solid var(--g200);border-top-color:var(--red);border-radius:50%;animation:spin .7s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
-    .loading-screen{display:flex;align-items:center;justify-content:center;min-height:200px;color:var(--g400);flex-direction:column;gap:.75rem}
     .empty-state{text-align:center;padding:3rem 1rem;color:var(--g400)}
     .empty-state .empty-icon{font-size:2.5rem;margin-bottom:.75rem}
     .section-divider{font-size:.75rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.1em;margin:1.25rem 0 .5rem;padding-bottom:.35rem;border-bottom:1px solid var(--g200)}
@@ -225,36 +263,49 @@
       <button class="btn btn-ghost btn-sm" onclick="handleLogout()" style="color:rgba(255,255,255,.6)">Sign out</button>
     </div>
   </nav>
+
   <div class="app-body">
     <aside class="sidebar" id="sidebar">
       <nav class="sidebar-nav">
-        <div class="sidebar-section">Calendars</div>
-        <button class="sidebar-link active" id="sb-calendar" onclick="showPage('calendar')"><span class="icon">📅</span>Schedule</button>
+        <div class="sidebar-section">Schedule</div>
+        <button class="sidebar-link active" id="sb-calendar" onclick="showPage('calendar')"><span class="icon">📅</span>Calendar</button>
         <button class="sidebar-link" id="sb-projects" onclick="showPage('projects')"><span class="icon">📋</span>All Projects</button>
         <div class="sidebar-section">Manage</div>
         <button class="sidebar-link" id="sb-timeoff" onclick="showPage('timeoff')"><span class="icon">🏖</span>Time Off</button>
         <button class="sidebar-link" id="sb-crew" onclick="showPage('crew')"><span class="icon">👷</span>Crew & Users</button>
       </nav>
     </aside>
+
     <main class="content" id="content">
 
-      <!-- CALENDAR -->
+      <!-- CALENDAR PAGE -->
       <div class="page active" id="page-calendar">
         <div class="page-header">
           <div><div class="page-title">Schedule</div><div class="page-subtitle" id="cal-subtitle"></div></div>
           <button class="btn btn-primary" id="btn-new-project" onclick="openNewProject()">+ New Project</button>
         </div>
+        <!-- Stats -->
         <div class="stats-grid">
-          <div class="stat-card"><div class="stat-card-label">This Week</div><div class="stat-card-value" id="stat-week">–</div><div class="stat-card-sub">projects</div></div>
+          <div class="stat-card"><div class="stat-card-label" id="stat-week-label">This Week</div><div class="stat-card-value" id="stat-week">–</div><div class="stat-card-sub" id="stat-week-sub">projects</div></div>
           <div class="stat-card"><div class="stat-card-label">In Progress</div><div class="stat-card-value" id="stat-inprog">–</div><div class="stat-card-sub">active now</div></div>
           <div class="stat-card"><div class="stat-card-label">Scheduled</div><div class="stat-card-value" id="stat-sched">–</div><div class="stat-card-sub">upcoming</div></div>
           <div class="stat-card"><div class="stat-card-label">This Month</div><div class="stat-card-value" id="stat-done">–</div><div class="stat-card-sub">complete</div></div>
         </div>
-        <div class="cal-tabs" id="cal-tabs">
-          <button class="cal-tab active" onclick="setCalTab('all',this)">All</button>
-          <button class="cal-tab" onclick="setCalTab('install',this)">Installs</button>
-          <button class="cal-tab" onclick="setCalTab('sales',this)">Sales</button>
-          <button class="cal-tab" onclick="setCalTab('warehouse',this)">Warehouse</button>
+        <!-- Controls row -->
+        <div style="display:flex;gap:.75rem;align-items:center;margin-bottom:.75rem;flex-wrap:wrap">
+          <div class="cal-tabs" id="cal-tabs">
+            <button class="cal-tab active" onclick="setCalTab('all',this)">All</button>
+            <button class="cal-tab" onclick="setCalTab('install',this)">Installs</button>
+            <button class="cal-tab" onclick="setCalTab('sales',this)">Sales</button>
+            <button class="cal-tab" onclick="setCalTab('warehouse',this)">Warehouse</button>
+          </div>
+          <select class="who-filter" id="who-filter" onchange="renderCal()">
+            <option value="all">👥 All People</option>
+          </select>
+          <div class="view-toggle">
+            <button class="view-btn active" id="vbtn-week" onclick="setView('week',this)">Week</button>
+            <button class="view-btn" id="vbtn-month" onclick="setView('month',this)">Month</button>
+          </div>
         </div>
         <div class="cal-legend">
           <span class="legend-item"><span class="legend-dot" style="background:var(--blue)"></span>Installs</span>
@@ -264,24 +315,26 @@
         </div>
         <div class="card">
           <div class="card-header">
-            <div class="calendar-nav" style="width:100%;margin-bottom:0">
-              <button class="btn btn-secondary btn-sm" onclick="changeWeek(-1)">‹</button>
-              <h3 id="cal-week-label"></h3>
-              <button class="btn btn-secondary btn-sm" onclick="changeWeek(1)">›</button>
+            <div class="calendar-nav" style="width:100%">
+              <button class="btn btn-secondary btn-sm" onclick="navBack()">‹</button>
+              <h3 id="cal-nav-label"></h3>
+              <button class="btn btn-secondary btn-sm" onclick="navForward()">›</button>
               <button class="btn btn-ghost btn-sm" onclick="goToday()">Today</button>
             </div>
           </div>
-          <div class="card-body" style="padding:.75rem"><div class="week-grid" id="week-grid"></div></div>
+          <div class="card-body" style="padding:.75rem">
+            <div id="cal-container"></div>
+          </div>
         </div>
       </div>
 
-      <!-- PROJECTS -->
+      <!-- ALL PROJECTS PAGE -->
       <div class="page" id="page-projects">
         <div class="page-header">
           <div><div class="page-title">All Projects</div><div class="page-subtitle" id="projects-count"></div></div>
           <button class="btn btn-primary" onclick="openNewProject()">+ New Project</button>
         </div>
-        <div class="cal-tabs" id="proj-cal-tabs">
+        <div class="cal-tabs" id="proj-cal-tabs" style="margin-bottom:1rem">
           <button class="cal-tab active" onclick="setProjectCalTab('all',this)">All</button>
           <button class="cal-tab" onclick="setProjectCalTab('install',this)">Installs</button>
           <button class="cal-tab" onclick="setProjectCalTab('sales',this)">Sales</button>
@@ -291,7 +344,8 @@
           <label>From</label><input type="date" id="filter-from" onchange="renderProjectsList()"/>
           <label>To</label><input type="date" id="filter-to" onchange="renderProjectsList()"/>
           <div class="quick-range-btns">
-            <button class="qr-btn active" onclick="setQuickRange('90d',this)">90 days</button>
+            <button class="qr-btn active" onclick="setQuickRange('30d',this)">30 days</button>
+            <button class="qr-btn" onclick="setQuickRange('90d',this)">90 days</button>
             <button class="qr-btn" onclick="setQuickRange('ytd',this)">This year</button>
             <button class="qr-btn" onclick="setQuickRange('2025',this)">2025</button>
             <button class="qr-btn" onclick="setQuickRange('2024',this)">2024</button>
@@ -310,16 +364,26 @@
         <div id="projects-list"></div>
       </div>
 
-      <!-- TIME OFF -->
+      <!-- TIME OFF PAGE -->
       <div class="page" id="page-timeoff">
         <div class="page-header">
-          <div><div class="page-title">Time Off</div><div class="page-subtitle">Track crew availability</div></div>
+          <div><div class="page-title">Time Off</div><div class="page-subtitle">Shown on each person's calendar</div></div>
           <button class="btn btn-primary" onclick="openTimeOffModal()">+ Add Time Off</button>
         </div>
-        <div id="timeoff-list"><div class="loading-screen"><div class="spinner"></div></div></div>
+        <div id="timeoff-list"></div>
+        <div id="pto-report-section" class="hidden">
+          <div class="section-divider" style="margin-top:2rem">PTO Report</div>
+          <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;flex-wrap:wrap">
+            <label style="font-size:.8rem;font-weight:600;color:var(--g600);text-transform:uppercase;letter-spacing:.05em">Year</label>
+            <select id="pto-year" onchange="renderPTOReport()" style="padding:.4rem .75rem;border:1.5px solid var(--g300);border-radius:6px;font-family:'Inter',sans-serif;font-size:.875rem;background:#fff;outline:none">
+              <option value="2026">2026</option><option value="2025">2025</option><option value="2024">2024</option>
+            </select>
+          </div>
+          <div id="pto-report"></div>
+        </div>
       </div>
 
-      <!-- CREW -->
+      <!-- CREW PAGE -->
       <div class="page" id="page-crew">
         <div class="page-header">
           <div><div class="page-title">Crew & Users</div><div class="page-subtitle">Toggle active/inactive with the switch</div></div>
@@ -352,7 +416,7 @@
       <input type="hidden" id="project-id"/>
       <div class="form-row">
         <div class="form-group"><label>Calendar *</label>
-          <select id="f-calendar">
+          <select id="f-calendar" onchange="toggleInstallFields()">
             <option value="install">Install</option>
             <option value="sales">Sales</option>
             <option value="warehouse">Warehouse</option>
@@ -369,27 +433,64 @@
       </div>
       <div class="form-group"><label>Customer / Job Name *</label><input type="text" id="f-customer" placeholder="John Smith"/></div>
       <div class="form-group"><label>Address</label><input type="text" id="f-address" placeholder="123 Main St, Olathe, KS"/></div>
-      <div class="form-row">
-        <div class="form-group"><label>Flooring Type</label>
-          <select id="f-flooring" onchange="updateUnit()">
-            <option value="">Select...</option>
-            <option value="Carpet">Carpet</option><option value="Pad">Pad</option>
-            <option value="Hardwood">Hardwood</option><option value="LVP">LVP</option>
-            <option value="LVT">LVT</option><option value="Tile">Tile</option>
-            <option value="Stone">Stone</option><option value="Laminate">Laminate</option>
-            <option value="VCT">VCT</option><option value="Exercise Mat">Exercise Mat</option>
-            <option value="Other">Other</option>
-          </select>
+      <div id="install-only-fields">
+        <div class="form-row">
+          <div class="form-group"><label>Flooring Type</label>
+            <select id="f-flooring" onchange="updateUnit()">
+              <option value="">Select...</option>
+              <option>Carpet</option><option>Pad</option><option>Hardwood</option>
+              <option>LVP</option><option>LVT</option><option>Tile</option>
+              <option>Stone</option><option>Laminate</option><option>VCT</option>
+              <option>Exercise Mat</option><option>Other</option>
+            </select>
+          </div>
+          <div class="form-group"><label id="measure-label">Measurement (SF)</label><input type="number" id="f-measurement" placeholder="0" min="0" step="0.01"/></div>
         </div>
-        <div class="form-group"><label id="measure-label">Measurement (SF)</label><input type="number" id="f-measurement" placeholder="0" min="0" step="0.01"/></div>
+        <div class="form-group"><label>Materials</label><input type="text" id="f-materials" placeholder="e.g. Shaw #4421"/></div>
       </div>
       <div class="form-row">
         <div class="form-group"><label>Start Date *</label><input type="date" id="f-start-date"/></div>
         <div class="form-group"><label>End Date</label><input type="date" id="f-end-date"/></div>
       </div>
-      <div class="form-group"><label>Assign Crew</label><div id="crew-checkboxes" style="display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.25rem"></div></div>
+      <div class="form-row">
+        <div class="time-slider-group">
+          <label>Start Time</label>
+          <div class="time-slider-row">
+            <input type="range" id="f-start-time" min="0" max="95" step="1" value="32" oninput="updateTimeDisplay('fstart')"/>
+            <span class="time-display" id="fstart-display">8:00 AM</span>
+          </div>
+        </div>
+        <div class="time-slider-group">
+          <label>End Time</label>
+          <div class="time-slider-row">
+            <input type="range" id="f-end-time" min="0" max="95" step="1" value="68" oninput="updateTimeDisplay('fend')"/>
+            <span class="time-display" id="fend-display">5:00 PM</span>
+          </div>
+        </div>
+      </div>
+      <!-- CREW ASSIGNMENT WITH QUICK ADD -->
+      <div class="form-group">
+        <label>Assign Crew</label>
+        <div id="crew-checkboxes" style="display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.25rem"></div>
+        <button type="button" class="btn btn-ghost btn-sm" style="margin-top:.5rem;color:var(--blue);padding-left:0" onclick="toggleQuickAdd()">
+          <span id="quick-add-icon">＋</span> Add new person
+        </button>
+        <div id="quick-add-form" class="quick-add-person hidden">
+          <h4>Quick Add Person</h4>
+          <div class="form-group"><label>Full Name *</label><input type="text" id="qa-name" placeholder="Mike Johnson"/></div>
+          <div class="form-row">
+            <div class="form-group"><label>Role *</label>
+              <select id="qa-role"><option value="installer">Installer / Sub</option><option value="staff">Staff</option></select>
+            </div>
+            <div class="form-group"><label>Default Calendar</label>
+              <select id="qa-calendar"><option value="install">Installs</option><option value="sales">Sales</option><option value="warehouse">Warehouse</option></select>
+            </div>
+          </div>
+          <div class="form-group"><label>Email (optional)</label><input type="email" id="qa-email" placeholder="mike@example.com"/></div>
+          <button type="button" class="btn btn-primary btn-sm" onclick="quickAddPerson()">Create & Assign</button>
+        </div>
+      </div>
       <div class="form-group"><label>Notes</label><textarea id="f-notes" placeholder="Room details, instructions, access info..."></textarea></div>
-      <div class="form-group"><label>Materials</label><input type="text" id="f-materials" placeholder="e.g. Shaw #4421, ordered 6/1"/></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-danger btn-sm" id="btn-delete" onclick="deleteProject()" style="display:none;margin-right:auto">Delete</button>
@@ -408,16 +509,45 @@
   </div>
 </div>
 
+<!-- DAY DETAIL MODAL -->
+<div class="modal-overlay" id="day-modal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header"><div class="modal-title" id="day-modal-title"></div><button class="modal-close" onclick="closeModal('day-modal')">×</button></div>
+    <div class="modal-body" id="day-modal-body"></div>
+  </div>
+</div>
+
 <!-- TIME OFF MODAL -->
 <div class="modal-overlay" id="timeoff-modal">
-  <div class="modal" style="max-width:440px">
+  <div class="modal" style="max-width:480px">
     <div class="modal-header"><div class="modal-title" id="to-modal-title">Add Time Off</div><button class="modal-close" onclick="closeModal('timeoff-modal')">×</button></div>
     <div class="modal-body">
       <input type="hidden" id="to-id"/>
-      <div class="form-group"><label>Person *</label><select id="to-person"></select></div>
+      <div class="form-group"><label>Person *</label><select id="to-person" onchange="autoSetCalendar()"></select></div>
+      <div class="form-group">
+        <label>Calendar</label>
+        <select id="to-calendar"><option value="install">Installs</option><option value="sales">Sales</option><option value="warehouse">Warehouse</option></select>
+        <div style="font-size:.75rem;color:var(--g400);margin-top:.3rem">Auto-set based on person. Change if needed.</div>
+      </div>
       <div class="form-row">
         <div class="form-group"><label>Start *</label><input type="date" id="to-start"/></div>
         <div class="form-group"><label>End *</label><input type="date" id="to-end"/></div>
+      </div>
+      <div class="form-row">
+        <div class="time-slider-group">
+          <label>Start Time</label>
+          <div class="time-slider-row">
+            <input type="range" id="to-start-time" min="0" max="95" step="1" value="32" oninput="updateTimeDisplay('tostart')"/>
+            <span class="time-display" id="tostart-display">8:00 AM</span>
+          </div>
+        </div>
+        <div class="time-slider-group">
+          <label>End Time</label>
+          <div class="time-slider-row">
+            <input type="range" id="to-end-time" min="0" max="95" step="1" value="68" oninput="updateTimeDisplay('toend')"/>
+            <span class="time-display" id="toend-display">5:00 PM</span>
+          </div>
+        </div>
       </div>
       <div class="form-group"><label>Note</label><input type="text" id="to-note" placeholder="Vacation, sick, personal..."/></div>
     </div>
@@ -440,6 +570,9 @@
       <div class="form-group"><label>Role *</label>
         <select id="new-role"><option value="installer">Installer / Sub</option><option value="staff">Staff</option></select>
       </div>
+      <div class="form-group"><label>Default Calendar (for time off)</label>
+        <select id="new-calendar"><option value="install">Installs</option><option value="sales">Sales</option><option value="warehouse">Warehouse</option></select>
+      </div>
       <div class="form-group"><label>Temporary Password *</label><input type="text" id="new-password" placeholder="They can change this later"/></div>
     </div>
     <div class="modal-footer">
@@ -455,13 +588,25 @@
 const SURL='https://gijtwufwkrhyfrdzsvkv.supabase.co';
 const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdpanR3dWZ3a3JoeWZyZHpzdmt2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTk0MDMsImV4cCI6MjA4OTg5NTQwM30.tPt-oLIDg5UdkIJO3Tbuz-jqBUHgIl8fxyDhSultPpY';
 const sb=supabase.createClient(SURL,SKEY);
+const OWNER_EMAIL='cutcojohngilmore@gmail.com';
 
-let me=null,myProfile=null;
+let me=null,myProfile=null,isOwner=false;
 let projects=[],profiles=[],timeoffs=[];
-let weekStart=weekOf(new Date());
-let calTab='all',projCalTab='all',statusFilter='all';
+let weekStart=weekOf(new Date()),currentMonth=new Date();
+let calView='week',calTab='all',whoFilter='all';
+let projCalTab='all',statusFilter='all';
 
-// ─── AUTH ───────────────────────────────────────────────────────────────────
+// ── TIME SLIDER ──────────────────────────────────────────────────────────────
+function s2t(v){const m=v*15,h=Math.floor(m/60),min=m%60,ap=h<12?'AM':'PM',h12=h===0?12:h>12?h-12:h;return`${h12}:${min.toString().padStart(2,'0')} ${ap}`}
+function s2str(v){const m=v*15,h=Math.floor(m/60),min=m%60;return`${h.toString().padStart(2,'0')}:${min.toString().padStart(2,'0')}`}
+function str2s(t){if(!t)return 32;const [h,m]=(t||'08:00').split(':').map(Number);return Math.round((h*60+m)/15)}
+function updateTimeDisplay(prefix){
+  const map={fstart:['f-start-time','fstart-display'],fend:['f-end-time','fend-display'],tostart:['to-start-time','tostart-display'],toend:['to-end-time','toend-display']};
+  const [sid,did]=map[prefix]||[];if(!sid)return;
+  document.getElementById(did).textContent=s2t(parseInt(document.getElementById(sid).value));
+}
+
+// ── AUTH ─────────────────────────────────────────────────────────────────────
 async function handleLogin(){
   const email=document.getElementById('login-email').value.trim();
   const pw=document.getElementById('login-password').value;
@@ -473,24 +618,21 @@ async function handleLogin(){
   if(error){showErr(err,'Invalid email or password.');btn.innerHTML='Sign In';btn.disabled=false;return}
   await boot(data.user);
 }
-async function handleLogout(){
-  await sb.auth.signOut();me=null;myProfile=null;
-  document.getElementById('app').style.display='none';
-  document.getElementById('login-screen').style.display='flex';
-}
+async function handleLogout(){await sb.auth.signOut();me=null;myProfile=null;document.getElementById('app').style.display='none';document.getElementById('login-screen').style.display='flex'}
 function showErr(el,msg){el.textContent=msg;el.classList.remove('hidden')}
 document.getElementById('login-password').addEventListener('keydown',e=>{if(e.key==='Enter')handleLogin()});
 
-// ─── BOOT ───────────────────────────────────────────────────────────────────
+// ── BOOT ─────────────────────────────────────────────────────────────────────
 async function boot(user){
   me=user;
   const {data:p}=await sb.from('profiles').select('*').eq('id',user.id).single();
-  myProfile=p;
-  if(!p){showToast('Profile not found. Contact admin.','error');await sb.auth.signOut();return}
+  myProfile=p;isOwner=(user.email===OWNER_EMAIL);
+  if(!p){showToast('Profile not found.','error');await sb.auth.signOut();return}
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').style.display='flex';
   document.getElementById('nav-user-name').textContent=p.full_name;
   document.getElementById('nav-role-badge').textContent=p.role;
+  if(isOwner)document.getElementById('pto-report-section').classList.remove('hidden');
   initDateFilters();
   buildNav(p.role);
   await loadAll();
@@ -501,7 +643,7 @@ function buildNav(role){
   if(role==='installer'){
     document.getElementById('sidebar').style.display='none';
     document.getElementById('btn-new-project').style.display='none';
-    mn.innerHTML=`<button class="mobile-nav-btn active" onclick="showPage('installer')"><span class="nav-icon">📅</span>My Jobs</button>`;
+    mn.innerHTML=`<button class="mobile-nav-btn active" id="mnb-installer" onclick="showPage('installer')"><span class="nav-icon">📅</span>My Jobs</button>`;
     showPage('installer');
   } else {
     mn.innerHTML=`
@@ -513,33 +655,35 @@ function buildNav(role){
   }
 }
 
-// ─── DATA ───────────────────────────────────────────────────────────────────
+// ── DATA ─────────────────────────────────────────────────────────────────────
 async function loadAll(){await Promise.all([fetchProjects(),fetchProfiles(),fetchTimeOff()]);renderActive()}
 
 async function fetchProjects(){
   const from=document.getElementById('filter-from')?.value||defaultFrom();
   const to=document.getElementById('filter-to')?.value||'2099-12-31';
-  let q=sb.from('projects').select('*,project_installers(installer_id,profiles(full_name))').order('start_date');
+  let q=sb.from('projects').select('*,project_installers(installer_id,profiles(full_name))').order('start_date',{ascending:false});
   if(myProfile?.role==='installer'){
     const {data:mine}=await sb.from('project_installers').select('project_id').eq('installer_id',me.id);
-    if(mine?.length)q=q.in('id',mine.map(a=>a.project_id));
-    else{projects=[];return}
+    if(mine?.length)q=q.in('id',mine.map(a=>a.project_id));else{projects=[];return}
   } else {
     q=q.gte('start_date',from).lte('start_date',to);
   }
   const {data}=await q;projects=data||[];
 }
+async function fetchProfiles(){const {data}=await sb.from('profiles').select('*').order('full_name');profiles=data||[];buildWhoFilter()}
+async function fetchTimeOff(){const {data}=await sb.from('time_off').select('*,profiles(full_name,default_calendar)').order('start_date');timeoffs=data||[]}
 
-async function fetchProfiles(){const {data}=await sb.from('profiles').select('*').order('full_name');profiles=data||[]}
-async function fetchTimeOff(){const {data}=await sb.from('time_off').select('*,profiles(full_name)').order('start_date');timeoffs=data||[]}
+function defaultFrom(){const d=new Date();d.setDate(d.getDate()-30);return d.toISOString().split('T')[0]}
+function initDateFilters(){document.getElementById('filter-from').value=defaultFrom();document.getElementById('filter-to').value='2099-12-31'}
 
-function defaultFrom(){const d=new Date();d.setDate(d.getDate()-90);return d.toISOString().split('T')[0]}
-function initDateFilters(){
-  document.getElementById('filter-from').value=defaultFrom();
-  document.getElementById('filter-to').value='2099-12-31';
+function buildWhoFilter(){
+  const sel=document.getElementById('who-filter');
+  const cur=sel.value;
+  const active=profiles.filter(p=>p.is_active!==false);
+  sel.innerHTML=`<option value="all">👥 All People</option>`+active.map(p=>`<option value="${p.id}" ${p.id===cur?'selected':''}>${p.full_name.split(' ')[0]}</option>`).join('');
 }
 
-// ─── NAVIGATION ─────────────────────────────────────────────────────────────
+// ── NAV ───────────────────────────────────────────────────────────────────────
 function showPage(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.sidebar-link').forEach(l=>l.classList.remove('active'));
@@ -549,68 +693,166 @@ function showPage(name){
   document.getElementById('mnb-'+name)?.classList.add('active');
   render(name);
 }
-function renderActive(){
-  const p=document.querySelector('.page.active');
-  if(p)render(p.id.replace('page-',''));
-}
+function renderActive(){const p=document.querySelector('.page.active');if(p)render(p.id.replace('page-',''))}
 function render(name){
   if(name==='calendar')renderCal();
   else if(name==='projects')renderProjectsList();
-  else if(name==='timeoff')renderTimeOff();
+  else if(name==='timeoff'){renderTimeOff();if(isOwner)renderPTOReport()}
   else if(name==='crew')renderCrew();
   else if(name==='installer')renderInstaller();
 }
 
-// ─── CALENDAR ───────────────────────────────────────────────────────────────
+// ── CALENDAR ──────────────────────────────────────────────────────────────────
 function weekOf(d){const c=new Date(d);const day=c.getDay();c.setDate(c.getDate()-day+(day===0?-6:1));c.setHours(0,0,0,0);return c}
-function changeWeek(n){weekStart=new Date(weekStart);weekStart.setDate(weekStart.getDate()+n*7);renderCal()}
-function goToday(){weekStart=weekOf(new Date());renderCal()}
+function setView(v,b){calView=v;document.querySelectorAll('.view-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderCal()}
 function setCalTab(v,b){calTab=v;document.querySelectorAll('#cal-tabs .cal-tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderCal()}
+function navBack(){if(calView==='week'){weekStart=new Date(weekStart);weekStart.setDate(weekStart.getDate()-7)}else{currentMonth=new Date(currentMonth.getFullYear(),currentMonth.getMonth()-1,1)}renderCal()}
+function navForward(){if(calView==='week'){weekStart=new Date(weekStart);weekStart.setDate(weekStart.getDate()+7)}else{currentMonth=new Date(currentMonth.getFullYear(),currentMonth.getMonth()+1,1)}renderCal()}
+function goToday(){weekStart=weekOf(new Date());currentMonth=new Date();renderCal()}
+
+function filterProjectsForCal(all){
+  let f=all;
+  if(calTab!=='all')f=f.filter(p=>p.calendar_type===calTab);
+  if(whoFilter!=='all'){
+    // filter by who — check project_installers or assigned_to name
+    f=f.filter(p=>{
+      const ids=p.project_installers?.map(pi=>pi.installer_id)||[];
+      return ids.includes(whoFilter)||p.assigned_to===whoFilter;
+    });
+  }
+  return f;
+}
+
+function filterTimeOffForCal(all){
+  let f=all;
+  if(calTab!=='all')f=f.filter(t=>(t.calendar_type||'install')===calTab);
+  if(whoFilter!=='all')f=f.filter(t=>t.profile_id===whoFilter);
+  return f;
+}
 
 function renderCal(){
+  whoFilter=document.getElementById('who-filter').value;
+  const filteredP=filterProjectsForCal(projects);
+  const filteredT=filterTimeOffForCal(timeoffs);
+  updateStats(filteredP);
+  calView==='week'?renderWeek(filteredP,filteredT):renderMonth(filteredP,filteredT);
+}
+
+function updateStats(fp){
+  const today=new Date();today.setHours(0,0,0,0);
+  let ws,we;
+  if(calView==='week'){
+    ws=weekStart.toISOString().split('T')[0];
+    const we2=new Date(weekStart);we2.setDate(we2.getDate()+6);we=we2.toISOString().split('T')[0];
+  } else {
+    ws=new Date(currentMonth.getFullYear(),currentMonth.getMonth(),1).toISOString().split('T')[0];
+    we=new Date(currentMonth.getFullYear(),currentMonth.getMonth()+1,0).toISOString().split('T')[0];
+  }
+  const now=new Date();
+  const ms=new Date(now.getFullYear(),now.getMonth(),1).toISOString().split('T')[0];
+  const me2=new Date(now.getFullYear(),now.getMonth()+1,0).toISOString().split('T')[0];
+  const label=calView==='week'?'This Week':'This Month';
+  document.getElementById('stat-week-label').textContent=label;
+  document.getElementById('stat-week').textContent=fp.filter(p=>p.start_date>=ws&&p.start_date<=we).length;
+  document.getElementById('stat-week-sub').textContent=whoFilter==='all'?'projects':`${(profiles.find(x=>x.id===whoFilter)?.full_name||'').split(' ')[0]}'s projects`;
+  document.getElementById('stat-inprog').textContent=fp.filter(p=>p.status==='in_progress').length;
+  document.getElementById('stat-sched').textContent=fp.filter(p=>p.status==='scheduled').length;
+  document.getElementById('stat-done').textContent=fp.filter(p=>p.status==='complete'&&p.start_date>=ms&&p.start_date<=me2).length;
+  // Nav label
+  if(calView==='week'){
+    const we3=new Date(weekStart);we3.setDate(we3.getDate()+6);
+    const fmt=d=>d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    document.getElementById('cal-nav-label').textContent=`${fmt(weekStart)} – ${fmt(we3)}`;
+    document.getElementById('cal-subtitle').textContent=weekStart.toLocaleDateString('en-US',{month:'long',year:'numeric'});
+  } else {
+    document.getElementById('cal-nav-label').textContent=currentMonth.toLocaleDateString('en-US',{month:'long',year:'numeric'});
+    document.getElementById('cal-subtitle').textContent=currentMonth.getFullYear();
+  }
+}
+
+function eventClasses(p){return`cal-event cal-${p.calendar_type}${p.status==='complete'?' status-complete':''}`}
+
+function renderWeek(fp,ft){
   const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
   const today=new Date();today.setHours(0,0,0,0);
-  const we=new Date(weekStart);we.setDate(we.getDate()+6);
-  const fmt=d=>d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
-  document.getElementById('cal-week-label').textContent=`${fmt(weekStart)} – ${fmt(we)}`;
-  document.getElementById('cal-subtitle').textContent=weekStart.toLocaleDateString('en-US',{month:'long',year:'numeric'});
-  const ws=weekStart.toISOString().split('T')[0],we2=we.toISOString().split('T')[0];
-  const now=new Date(),ms=new Date(now.getFullYear(),now.getMonth(),1).toISOString().split('T')[0],me2=new Date(now.getFullYear(),now.getMonth()+1,0).toISOString().split('T')[0];
-  document.getElementById('stat-week').textContent=projects.filter(p=>p.start_date>=ws&&p.start_date<=we2).length;
-  document.getElementById('stat-inprog').textContent=projects.filter(p=>p.status==='in_progress').length;
-  document.getElementById('stat-sched').textContent=projects.filter(p=>p.status==='scheduled').length;
-  document.getElementById('stat-done').textContent=projects.filter(p=>p.status==='complete'&&p.start_date>=ms&&p.start_date<=me2).length;
-  const grid=document.getElementById('week-grid');
-  grid.innerHTML=days.map(d=>`<div class="week-day-header">${d}</div>`).join('');
+  let html=days.map(d=>`<div class="week-day-header">${d}</div>`).join('');
   for(let i=0;i<7;i++){
     const cd=new Date(weekStart);cd.setDate(cd.getDate()+i);
     const isToday=cd.getTime()===today.getTime();
     const ds=cd.toISOString().split('T')[0];
-    let dp=projects.filter(p=>{const s=p.start_date,e=p.end_date||s;return ds>=s&&ds<=e});
-    if(calTab!=='all')dp=dp.filter(p=>p.calendar_type===calTab);
-    const dto=timeoffs.filter(t=>ds>=t.start_date&&ds<=t.end_date);
-    const evts=dp.map(p=>`<div class="cal-event cal-${p.calendar_type} ${p.status==='complete'?'status-complete':''}" onclick="openDetail('${p.id}')" title="${p.customer_name}">${p.customer_name}</div>`).join('');
-    const toEvts=dto.map(t=>`<div class="cal-event time-off">🏖 ${(t.profiles?.full_name||'').split(' ')[0]}</div>`).join('');
-    grid.innerHTML+=`<div class="week-day-cell ${isToday?'today':''}"><div class="day-num">${cd.getDate()}</div>${evts}${toEvts}</div>`;
+    const dp=fp.filter(p=>{const s=p.start_date,e=p.end_date||s;return ds>=s&&ds<=e});
+    const dto=ft.filter(t=>ds>=t.start_date&&ds<=t.end_date);
+    const allItems=[...dp.map(p=>({type:'project',p})),...dto.map(t=>({type:'to',t}))];
+    const MAX=3;const shown=allItems.slice(0,MAX);const extra=allItems.length-MAX;
+    const evts=shown.map(item=>{
+      if(item.type==='project'){const p=item.p;return`<div class="${eventClasses(p)}" onclick="openDetail('${p.id}')" title="${p.customer_name}${p.address?' · '+p.address.split(',')[0]:''}">${p.customer_name}</div>`}
+      const t=item.t;return`<div class="cal-event time-off">🏖 ${(t.profiles?.full_name||'').split(' ')[0]}</div>`;
+    }).join('');
+    const morePill=extra>0?`<div class="more-pill" onclick="openDayModal('${ds}')">+${extra} more</div>`:'';
+    html+=`<div class="week-day-cell ${isToday?'today':''}"><div class="day-num">${cd.getDate()}</div>${evts}${morePill}</div>`;
   }
+  document.getElementById('cal-container').innerHTML=`<div class="week-grid">${html}</div>`;
 }
 
-// ─── PROJECTS LIST ───────────────────────────────────────────────────────────
+function renderMonth(fp,ft){
+  const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const today=new Date();today.setHours(0,0,0,0);
+  const year=currentMonth.getFullYear(),month=currentMonth.getMonth();
+  const firstDay=new Date(year,month,1);
+  const lastDay=new Date(year,month+1,0);
+  // First Monday on/before firstDay
+  let start=new Date(firstDay);
+  const fd=start.getDay();start.setDate(start.getDate()-((fd===0?7:fd)-1));
+  let html=days.map(d=>`<div class="month-day-header">${d}</div>`).join('');
+  const cur=new Date(start);
+  while(cur<=lastDay||cur.getDay()!==1){
+    const ds=cur.toISOString().split('T')[0];
+    const isToday=cur.getTime()===today.getTime();
+    const otherMonth=cur.getMonth()!==month;
+    const dp=fp.filter(p=>{const s=p.start_date,e=p.end_date||s;return ds>=s&&ds<=e});
+    const dto=ft.filter(t=>ds>=t.start_date&&ds<=t.end_date);
+    const allItems=[...dp.map(p=>({type:'project',p})),...dto.map(t=>({type:'to',t}))];
+    const MAX=3;const shown=allItems.slice(0,MAX);const extra=allItems.length-MAX;
+    const numHtml=isToday?`<span>${cur.getDate()}</span>`:`${cur.getDate()}`;
+    const evts=shown.map(item=>{
+      if(item.type==='project'){const p=item.p;return`<div class="${eventClasses(p)}" onclick="openDetail('${p.id}')" style="font-size:.62rem;padding:1px 3px;margin-bottom:1px">${p.customer_name}</div>`}
+      const t=item.t;return`<div class="cal-event time-off" style="font-size:.62rem;padding:1px 3px;margin-bottom:1px">🏖 ${(t.profiles?.full_name||'').split(' ')[0]}</div>`;
+    }).join('');
+    const morePill=extra>0?`<div class="more-pill" onclick="openDayModal('${ds}')">+${extra} more</div>`:'';
+    html+=`<div class="month-day-cell ${isToday?'today':''} ${otherMonth?'other-month':''}"><div class="month-day-num"><span>${numHtml}</span></div>${evts}${morePill}</div>`;
+    cur.setDate(cur.getDate()+1);
+    if(cur>lastDay&&cur.getDay()===1)break;
+  }
+  document.getElementById('cal-container').innerHTML=`<div class="month-grid">${html}</div>`;
+}
+
+function openDayModal(ds){
+  const d=new Date(ds+'T00:00:00');
+  document.getElementById('day-modal-title').textContent=d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  const fp=filterProjectsForCal(projects).filter(p=>{const s=p.start_date,e=p.end_date||s;return ds>=s&&ds<=e});
+  const ft=filterTimeOffForCal(timeoffs).filter(t=>ds>=t.start_date&&ds<=t.end_date);
+  let html='';
+  fp.forEach(p=>{html+=`<div class="day-detail-event cal-${p.calendar_type}" onclick="closeModal('day-modal');openDetail('${p.id}')">${p.customer_name}${p.address?`<div style="font-size:.75rem;margin-top:2px;opacity:.7">📍 ${p.address}</div>`:''}</div>`});
+  ft.forEach(t=>{html+=`<div class="day-detail-event time-off">🏖 ${t.profiles?.full_name||''} - Time Off${t.note?' ('+t.note+')':''}</div>`});
+  if(!html)html=`<div style="color:var(--g400);font-size:.875rem">No events this day.</div>`;
+  document.getElementById('day-modal-body').innerHTML=html;
+  openModal('day-modal');
+}
+
+// ── PROJECTS LIST ─────────────────────────────────────────────────────────────
 function setProjectCalTab(v,b){projCalTab=v;document.querySelectorAll('#proj-cal-tabs .cal-tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderProjectsList()}
 function filterProjects(v,b){statusFilter=v;document.querySelectorAll('.filter-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderProjectsList()}
-
 function setQuickRange(r,b){
   document.querySelectorAll('.qr-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');
   const n=new Date();let from,to;
-  if(r==='90d'){const d=new Date();d.setDate(d.getDate()-90);from=d.toISOString().split('T')[0];to='2099-12-31'}
+  if(r==='30d'){const d=new Date();d.setDate(d.getDate()-30);from=d.toISOString().split('T')[0];to='2099-12-31'}
+  else if(r==='90d'){const d=new Date();d.setDate(d.getDate()-90);from=d.toISOString().split('T')[0];to='2099-12-31'}
   else if(r==='ytd'){from=`${n.getFullYear()}-01-01`;to='2099-12-31'}
   else if(r==='all'){from='2000-01-01';to='2099-12-31'}
   else{from=`${r}-01-01`;to=`${r}-12-31`}
-  document.getElementById('filter-from').value=from;
-  document.getElementById('filter-to').value=to;
+  document.getElementById('filter-from').value=from;document.getElementById('filter-to').value=to;
   fetchProjects().then(renderProjectsList);
 }
-
 async function renderProjectsList(){
   await fetchProjects();
   let f=projects;
@@ -623,13 +865,14 @@ async function renderProjectsList(){
   c.innerHTML=f.map(p=>{
     const crew=p.project_installers?.map(pi=>pi.profiles?.full_name).filter(Boolean).join(', ')||p.assigned_to||'';
     const m=p.measurement_value?`${p.measurement_value} ${p.measurement_unit}`:'';
+    const timeStr=p.start_time?` · ${fmtTime(p.start_time)}`:'';
     return `<div class="project-card cal-${p.calendar_type}" onclick="openDetail('${p.id}')">
       <div class="project-card-top">
         <div><div class="project-customer">${p.customer_name}</div>${p.address?`<div class="project-address">📍 ${p.address}</div>`:''}</div>
         <span class="badge badge-${p.status}">${slbl(p.status)}</span>
       </div>
       <div class="project-meta">
-        <span class="project-meta-item">🗓 ${fdr(p.start_date,p.end_date)}</span>
+        <span class="project-meta-item">🗓 ${fdr(p.start_date,p.end_date)}${timeStr}</span>
         <span class="project-meta-item">${calMap[p.calendar_type]||''}</span>
         ${p.flooring_type?`<span class="project-meta-item">🪵 ${p.flooring_type}</span>`:''}
         ${m?`<span class="project-meta-item">📐 ${m}</span>`:''}
@@ -639,25 +882,27 @@ async function renderProjectsList(){
   }).join('');
 }
 
-// ─── INSTALLER ───────────────────────────────────────────────────────────────
+// ── INSTALLER ─────────────────────────────────────────────────────────────────
 function renderInstaller(){
   document.getElementById('installer-subtitle').textContent=`Welcome, ${myProfile?.full_name?.split(' ')[0]||''}`;
   const c=document.getElementById('installer-schedule');
   if(!projects.length){c.innerHTML=`<div class="empty-state"><div class="empty-icon">✅</div><p>No projects assigned yet.</p></div>`;return}
   const today=new Date();today.setHours(0,0,0,0);
-  const grp={};projects.forEach(p=>{if(!grp[p.start_date])grp[p.start_date]=[];grp[p.start_date].push(p)});
+  const sorted=[...projects].sort((a,b)=>a.start_date.localeCompare(b.start_date));
+  const grp={};sorted.forEach(p=>{if(!grp[p.start_date])grp[p.start_date]=[];grp[p.start_date].push(p)});
   c.innerHTML=Object.keys(grp).sort().map(ds=>{
-    const d=new Date(ds+'T00:00:00');
-    const diff=Math.round((d-today)/86400000);
+    const d=new Date(ds+'T00:00:00');const diff=Math.round((d-today)/86400000);
     let lbl=d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
     if(diff===0)lbl='Today — '+lbl;else if(diff===1)lbl='Tomorrow — '+lbl;
     const jobs=grp[ds].map(p=>{
       const m=p.measurement_value?`${p.measurement_value} ${p.measurement_unit}`:'';
       const murl=`https://maps.google.com/?q=${encodeURIComponent(p.address||'')}`;
+      const timeStr=p.start_time?`${fmtTime(p.start_time)}${p.end_time?' – '+fmtTime(p.end_time):''}`:null;
       return `<div class="installer-job-card">
         <div class="installer-job-customer">${p.customer_name}</div>
         ${p.address?`<div class="installer-job-address">📍 ${p.address}</div>`:''}
         <div class="installer-job-details">
+          ${timeStr?`<span class="installer-detail-pill">🕐 ${timeStr}</span>`:''}
           ${p.flooring_type?`<span class="installer-detail-pill">🪵 ${p.flooring_type}</span>`:''}
           ${m?`<span class="installer-detail-pill">📐 ${m}</span>`:''}
           ${p.end_date&&p.end_date!==ds?`<span class="installer-detail-pill">📅 Through ${fd(p.end_date)}</span>`:''}
@@ -670,182 +915,206 @@ function renderInstaller(){
   }).join('');
 }
 
-// ─── TIME OFF ────────────────────────────────────────────────────────────────
+// ── TIME OFF ──────────────────────────────────────────────────────────────────
 function renderTimeOff(){
   const c=document.getElementById('timeoff-list');
   if(!timeoffs.length){c.innerHTML=`<div class="empty-state"><div class="empty-icon">🏖</div><p>No time off scheduled.</p></div>`;return}
   const today=new Date().toISOString().split('T')[0];
-  const up=timeoffs.filter(t=>t.end_date>=today);
-  const past=timeoffs.filter(t=>t.end_date<today);
+  const up=timeoffs.filter(t=>t.end_date>=today),past=timeoffs.filter(t=>t.end_date<today);
   let html='';
   if(up.length){html+=`<div class="section-divider">Upcoming & Current</div>`;html+=up.map(toRow).join('')}
   if(past.length){html+=`<div class="section-divider" style="margin-top:1.5rem">Past</div>`;html+=past.map(toRow).join('')}
   c.innerHTML=html;
 }
 function toRow(t){
+  const cal={install:'Installs',sales:'Sales',warehouse:'Warehouse'}[t.calendar_type||'install']||'';
+  const st=t.start_time?fmtTime(t.start_time):'',et=t.end_time?fmtTime(t.end_time):'';
+  const tr=st?` · ${st}${et?' – '+et:''}`:'' ;
   return `<div class="timeoff-item">
-    <div><div class="timeoff-name">${t.profiles?.full_name||'Unknown'}</div>
-    <div class="timeoff-dates">${fd(t.start_date)} – ${fd(t.end_date)}${t.note?` · ${t.note}`:''}</div></div>
+    <div><div class="timeoff-name">${t.profiles?.full_name||'Unknown'} <span style="font-size:.75rem;color:var(--g400)">${cal}</span></div>
+    <div class="timeoff-dates">${fd(t.start_date)} – ${fd(t.end_date)}${tr}${t.note?' · '+t.note:''}</div></div>
     <button class="btn btn-ghost btn-sm" onclick="editTimeOff('${t.id}')">Edit</button>
   </div>`;
 }
+function renderPTOReport(){
+  const year=document.getElementById('pto-year').value;
+  const yf=`${year}-01-01`,yt=`${year}-12-31`;
+  const entries=timeoffs.filter(t=>t.start_date>=yf&&t.start_date<=yt);
+  const byP={};entries.forEach(t=>{const n=t.profiles?.full_name||t.profile_id;if(!byP[n])byP[n]=[];byP[n].push(t)});
+  const c=document.getElementById('pto-report');
+  if(!Object.keys(byP).length){c.innerHTML=`<div style="color:var(--g400);font-size:.875rem;padding:.5rem 0">No time off recorded for ${year}.</div>`;return}
+  c.innerHTML=Object.entries(byP).sort().map(([name,entries])=>{
+    let days=0;entries.forEach(t=>{const s=new Date(t.start_date+'T00:00:00'),e=new Date(t.end_date+'T00:00:00');days+=Math.round((e-s)/86400000)+1});
+    const details=entries.map(t=>`<div style="font-size:.75rem;color:var(--g500);margin-top:2px">${fd(t.start_date)}${t.end_date!==t.start_date?' – '+fd(t.end_date):''}${t.note?' · '+t.note:''}</div>`).join('');
+    return `<div class="pto-row"><div><div class="pto-name">${name}</div>${details}</div><div class="pto-days"><strong>${days}</strong> day${days!==1?'s':''}</div></div>`;
+  }).join('');
+}
 function openTimeOffModal(){
-  document.getElementById('to-id').value='';
-  document.getElementById('to-modal-title').textContent='Add Time Off';
-  document.getElementById('to-start').value='';document.getElementById('to-end').value='';document.getElementById('to-note').value='';
+  document.getElementById('to-id').value='';document.getElementById('to-modal-title').textContent='Add Time Off';
+  ['to-start','to-end','to-note'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('to-del-btn').style.display='none';
+  document.getElementById('to-start-time').value=32;document.getElementById('to-end-time').value=68;
+  updateTimeDisplay('tostart');updateTimeDisplay('toend');
   fillToPeople(null);openModal('timeoff-modal');
 }
 function editTimeOff(id){
   const t=timeoffs.find(x=>x.id===id);if(!t)return;
-  document.getElementById('to-id').value=id;
-  document.getElementById('to-modal-title').textContent='Edit Time Off';
+  document.getElementById('to-id').value=id;document.getElementById('to-modal-title').textContent='Edit Time Off';
   document.getElementById('to-start').value=t.start_date;document.getElementById('to-end').value=t.end_date;document.getElementById('to-note').value=t.note||'';
-  document.getElementById('to-del-btn').style.display='inline-flex';
-  fillToPeople(t.profile_id);openModal('timeoff-modal');
+  document.getElementById('to-del-btn').style.display='inline-flex';document.getElementById('to-calendar').value=t.calendar_type||'install';
+  document.getElementById('to-start-time').value=str2s(t.start_time);document.getElementById('to-end-time').value=str2s(t.end_time);
+  updateTimeDisplay('tostart');updateTimeDisplay('toend');fillToPeople(t.profile_id);openModal('timeoff-modal');
 }
 function fillToPeople(sel){
-  document.getElementById('to-person').innerHTML=profiles.map(p=>`<option value="${p.id}" ${p.id===sel?'selected':''}>${p.full_name}</option>`).join('');
+  document.getElementById('to-person').innerHTML=profiles.filter(p=>p.is_active!==false).map(p=>`<option value="${p.id}" ${p.id===sel?'selected':''}>${p.full_name}</option>`).join('');
+  if(!sel)autoSetCalendar();
+}
+function autoSetCalendar(){
+  const pid=document.getElementById('to-person').value;
+  const p=profiles.find(x=>x.id===pid);if(!p)return;
+  const cal=p.default_calendar||(p.role==='staff'?'sales':'install');
+  document.getElementById('to-calendar').value=cal==='all'?'install':cal;
 }
 async function saveTimeOff(){
   const id=document.getElementById('to-id').value;
-  const payload={profile_id:document.getElementById('to-person').value,start_date:document.getElementById('to-start').value,end_date:document.getElementById('to-end').value,note:document.getElementById('to-note').value||null,created_by:me.id};
-  if(!payload.profile_id||!payload.start_date||!payload.end_date){showToast('Fill in all fields.','error');return}
-  if(id)await sb.from('time_off').update(payload).eq('id',id);
-  else await sb.from('time_off').insert(payload);
-  closeModal('timeoff-modal');showToast('Saved!','success');
-  await fetchTimeOff();renderTimeOff();
+  const payload={profile_id:document.getElementById('to-person').value,start_date:document.getElementById('to-start').value,end_date:document.getElementById('to-end').value,note:document.getElementById('to-note').value||null,calendar_type:document.getElementById('to-calendar').value,start_time:s2str(parseInt(document.getElementById('to-start-time').value)),end_time:s2str(parseInt(document.getElementById('to-end-time').value)),created_by:me.id};
+  if(!payload.profile_id||!payload.start_date||!payload.end_date){showToast('Fill in all required fields.','error');return}
+  if(id)await sb.from('time_off').update(payload).eq('id',id);else await sb.from('time_off').insert(payload);
+  closeModal('timeoff-modal');showToast('Saved!','success');await fetchTimeOff();renderTimeOff();if(isOwner)renderPTOReport();
 }
 async function deleteTimeOff(){
-  const id=document.getElementById('to-id').value;if(!id)return;
-  if(!confirm('Delete this time off?'))return;
-  await sb.from('time_off').delete().eq('id',id);
-  closeModal('timeoff-modal');showToast('Deleted.','');
-  await fetchTimeOff();renderTimeOff();
+  const id=document.getElementById('to-id').value;if(!id||!confirm('Delete?'))return;
+  await sb.from('time_off').delete().eq('id',id);closeModal('timeoff-modal');showToast('Deleted.','');await fetchTimeOff();renderTimeOff();
 }
 
-// ─── CREW ────────────────────────────────────────────────────────────────────
+// ── CREW ──────────────────────────────────────────────────────────────────────
 function renderCrew(){
-  const staff=profiles.filter(p=>p.role==='staff');
-  const inst=profiles.filter(p=>p.role==='installer');
-  const mkList=(arr,isStaff)=>arr.length?`<div class="crew-list">${arr.map(p=>crewRow(p,isStaff)).join('')}</div>`:`<div style="color:var(--g400);font-size:.875rem;padding:.5rem 0">None yet.</div>`;
-  document.getElementById('staff-list').innerHTML=mkList(staff,true);
-  document.getElementById('installer-list').innerHTML=mkList(inst,false);
+  const staff=profiles.filter(p=>p.role==='staff'),inst=profiles.filter(p=>p.role==='installer');
+  const mk=(arr,isS)=>arr.length?`<div class="crew-list">${arr.map(p=>crewRow(p,isS)).join('')}</div>`:`<div style="color:var(--g400);font-size:.875rem;padding:.5rem 0">None yet.</div>`;
+  document.getElementById('staff-list').innerHTML=mk(staff,true);
+  document.getElementById('installer-list').innerHTML=mk(inst,false);
 }
 function crewRow(p,isStaff){
   const active=p.is_active!==false;
+  const calLabel={install:'Installs',sales:'Sales',warehouse:'Warehouse',all:'All'}[p.default_calendar||'install']||'';
   return `<div class="crew-item ${active?'':'inactive'}">
     <div class="crew-item-left">
       <div class="crew-avatar ${isStaff?'staff-av':''}">${p.full_name.charAt(0).toUpperCase()}</div>
-      <div><div class="crew-name">${p.full_name}</div><div class="crew-role">${isStaff?'Staff':'Installer / Sub'}${active?'':' · Inactive'}</div></div>
+      <div><div class="crew-name">${p.full_name}</div><div class="crew-role">${isStaff?'Staff':'Installer / Sub'} · ${calLabel}${active?'':' · Inactive'}</div></div>
     </div>
-    <label class="toggle" title="${active?'Mark inactive':'Mark active'}">
-      <input type="checkbox" ${active?'checked':''} onchange="toggleActive('${p.id}',this.checked)"/>
-      <span class="toggle-track"></span><span class="toggle-thumb"></span>
-    </label>
+    <label class="toggle"><input type="checkbox" ${active?'checked':''} onchange="toggleActive('${p.id}',this.checked)"/><span class="toggle-track"></span><span class="toggle-thumb"></span></label>
   </div>`;
 }
-async function toggleActive(id,val){
-  await sb.from('profiles').update({is_active:val}).eq('id',id);
-  await fetchProfiles();renderCrew();showToast(val?'Marked active':'Marked inactive','');
-}
-function openAddUserModal(){
-  document.getElementById('new-name').value='';document.getElementById('new-email').value='';
-  document.getElementById('new-password').value='';document.getElementById('new-role').value='installer';
-  openModal('add-user-modal');
-}
+async function toggleActive(id,val){await sb.from('profiles').update({is_active:val}).eq('id',id);await fetchProfiles();renderCrew();showToast(val?'Marked active':'Marked inactive','')}
+function openAddUserModal(){['new-name','new-email','new-password'].forEach(id=>document.getElementById(id).value='');document.getElementById('new-role').value='installer';document.getElementById('new-calendar').value='install';openModal('add-user-modal')}
 async function createUser(){
-  const name=document.getElementById('new-name').value.trim();
-  const email=document.getElementById('new-email').value.trim();
-  const role=document.getElementById('new-role').value;
-  const pw=document.getElementById('new-password').value;
+  const name=document.getElementById('new-name').value.trim(),email=document.getElementById('new-email').value.trim(),role=document.getElementById('new-role').value,pw=document.getElementById('new-password').value,default_calendar=document.getElementById('new-calendar').value;
   if(!name||!email||!pw){showToast('Fill in all fields.','error');return}
   const {data,error}=await sb.auth.signUp({email,password:pw});
   if(error){showToast('Error: '+error.message,'error');return}
-  await sb.from('profiles').insert({id:data.user.id,full_name:name,role,is_active:true});
-  closeModal('add-user-modal');showToast(`Account created for ${name}!`,'success');
-  await fetchProfiles();renderCrew();
+  await sb.from('profiles').insert({id:data.user.id,full_name:name,role,is_active:true,default_calendar});
+  closeModal('add-user-modal');showToast(`Account created for ${name}!`,'success');await fetchProfiles();renderCrew();
 }
 
-// ─── PROJECT FORM ────────────────────────────────────────────────────────────
+// ── QUICK ADD PERSON ──────────────────────────────────────────────────────────
+function toggleQuickAdd(){
+  const f=document.getElementById('quick-add-form');
+  const icon=document.getElementById('quick-add-icon');
+  const showing=!f.classList.contains('hidden');
+  f.classList.toggle('hidden',showing);
+  icon.textContent=showing?'＋':'×';
+}
+async function quickAddPerson(){
+  const name=document.getElementById('qa-name').value.trim();
+  const role=document.getElementById('qa-role').value;
+  const default_calendar=document.getElementById('qa-calendar').value;
+  const email=document.getElementById('qa-email').value.trim();
+  if(!name){showToast('Name is required.','error');return}
+  let uid=null;
+  if(email){
+    // Create auth user with temp password
+    const tempPw='Temp'+Math.random().toString(36).slice(2,8)+'!';
+    const {data,error}=await sb.auth.signUp({email,password:tempPw});
+    if(error){showToast('Error creating account: '+error.message,'error');return}
+    uid=data.user.id;
+  } else {
+    // Create profile-only (no login) — use a random UUID
+    uid=crypto.randomUUID();
+  }
+  await sb.from('profiles').insert({id:uid,full_name:name,role,is_active:true,default_calendar});
+  await fetchProfiles();
+  buildCrewCb(getCheckedCrew());
+  // Auto-check the new person
+  const newCheckbox=document.querySelector(`#crew-checkboxes input[value="${uid}"]`);
+  if(newCheckbox)newCheckbox.checked=true;
+  showToast(`${name} added and assigned!`,'success');
+  toggleQuickAdd();
+  document.getElementById('qa-name').value='';document.getElementById('qa-email').value='';
+}
+function getCheckedCrew(){return Array.from(document.querySelectorAll('#crew-checkboxes input:checked')).map(i=>i.value)}
+
+// ── PROJECT FORM ──────────────────────────────────────────────────────────────
+function toggleInstallFields(){const cal=document.getElementById('f-calendar').value;document.getElementById('install-only-fields').style.display=cal==='install'?'block':'none'}
 function openNewProject(){
   document.getElementById('modal-title').textContent='New Project';
   ['project-id','f-customer','f-address','f-measurement','f-notes','f-materials'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('f-flooring').value='';document.getElementById('f-status').value='scheduled';
-  document.getElementById('f-calendar').value='install';
-  document.getElementById('f-start-date').value=new Date().toISOString().split('T')[0];
-  document.getElementById('f-end-date').value='';
+  document.getElementById('f-flooring').value='';document.getElementById('f-status').value='scheduled';document.getElementById('f-calendar').value='install';
+  document.getElementById('f-start-date').value=new Date().toISOString().split('T')[0];document.getElementById('f-end-date').value='';
+  document.getElementById('f-start-time').value=32;document.getElementById('f-end-time').value=68;
+  updateTimeDisplay('fstart');updateTimeDisplay('fend');
   document.getElementById('btn-delete').style.display='none';
-  updateUnit();buildCrewCb([]);openModal('project-modal');
+  document.getElementById('quick-add-form').classList.add('hidden');document.getElementById('quick-add-icon').textContent='＋';
+  toggleInstallFields();updateUnit();buildCrewCb([]);openModal('project-modal');
 }
 function openEditProject(p){
   document.getElementById('modal-title').textContent='Edit Project';
   document.getElementById('project-id').value=p.id;
-  document.getElementById('f-customer').value=p.customer_name||'';
-  document.getElementById('f-address').value=p.address||'';
-  document.getElementById('f-flooring').value=p.flooring_type||'';
-  document.getElementById('f-measurement').value=p.measurement_value||'';
-  document.getElementById('f-start-date').value=p.start_date||'';
-  document.getElementById('f-end-date').value=p.end_date||'';
-  document.getElementById('f-notes').value=p.notes||'';
-  document.getElementById('f-materials').value=p.materials||'';
-  document.getElementById('f-status').value=p.status||'scheduled';
-  document.getElementById('f-calendar').value=p.calendar_type||'install';
+  document.getElementById('f-customer').value=p.customer_name||'';document.getElementById('f-address').value=p.address||'';
+  document.getElementById('f-flooring').value=p.flooring_type||'';document.getElementById('f-measurement').value=p.measurement_value||'';
+  document.getElementById('f-start-date').value=p.start_date||'';document.getElementById('f-end-date').value=p.end_date||'';
+  document.getElementById('f-notes').value=p.notes||'';document.getElementById('f-materials').value=p.materials||'';
+  document.getElementById('f-status').value=p.status||'scheduled';document.getElementById('f-calendar').value=p.calendar_type||'install';
+  document.getElementById('f-start-time').value=str2s(p.start_time);document.getElementById('f-end-time').value=str2s(p.end_time);
+  updateTimeDisplay('fstart');updateTimeDisplay('fend');
   document.getElementById('btn-delete').style.display='inline-flex';
-  updateUnit();buildCrewCb(p.project_installers?.map(pi=>pi.installer_id)||[]);
-  openModal('project-modal');
+  document.getElementById('quick-add-form').classList.add('hidden');document.getElementById('quick-add-icon').textContent='＋';
+  toggleInstallFields();updateUnit();buildCrewCb(p.project_installers?.map(pi=>pi.installer_id)||[]);openModal('project-modal');
 }
 function buildCrewCb(sel){
-  const active=profiles.filter(p=>p.role==='installer'&&p.is_active!==false);
+  const active=profiles.filter(p=>p.is_active!==false);
   const c=document.getElementById('crew-checkboxes');
   c.innerHTML=active.length?active.map(p=>`
     <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--g100);padding:5px 10px;border-radius:20px;font-size:.825rem;font-weight:500">
       <input type="checkbox" value="${p.id}" ${sel.includes(p.id)?'checked':''} style="accent-color:var(--red)"/>
       ${p.full_name.split(' ')[0]}
     </label>`).join(''):
-    `<span style="font-size:.8rem;color:var(--g400)">No active installers yet.</span>`;
+    `<span style="font-size:.8rem;color:var(--g400)">No active people yet.</span>`;
 }
-function updateUnit(){
-  const t=document.getElementById('f-flooring').value;
-  document.getElementById('measure-label').textContent=`Measurement (${t==='Carpet'||t==='Pad'?'SY':'SF'})`;
-}
+function updateUnit(){const t=document.getElementById('f-flooring').value;document.getElementById('measure-label').textContent=`Measurement (${t==='Carpet'||t==='Pad'?'SY':'SF'})`}
 async function saveProject(){
   const id=document.getElementById('project-id').value;
   const customer=document.getElementById('f-customer').value.trim();
   const start=document.getElementById('f-start-date').value;
   if(!customer||!start){showToast('Customer name and start date are required.','error');return}
-  const ft=document.getElementById('f-flooring').value;
-  const payload={
-    customer_name:customer,address:document.getElementById('f-address').value.trim()||null,
-    flooring_type:ft||null,measurement_value:parseFloat(document.getElementById('f-measurement').value)||null,
-    measurement_unit:(ft==='Carpet'||ft==='Pad'?'SY':'SF'),
-    start_date:start,end_date:document.getElementById('f-end-date').value||null,
-    status:document.getElementById('f-status').value,
-    notes:document.getElementById('f-notes').value.trim()||null,
-    materials:document.getElementById('f-materials').value.trim()||null,
-    calendar_type:document.getElementById('f-calendar').value,created_by:me.id,
-  };
+  const ft=document.getElementById('f-flooring').value,ct=document.getElementById('f-calendar').value;
+  const payload={customer_name:customer,address:document.getElementById('f-address').value.trim()||null,flooring_type:ct==='install'?(ft||null):null,measurement_value:ct==='install'?(parseFloat(document.getElementById('f-measurement').value)||null):null,measurement_unit:(ft==='Carpet'||ft==='Pad'?'SY':'SF'),materials:ct==='install'?(document.getElementById('f-materials').value.trim()||null):null,start_date:start,end_date:document.getElementById('f-end-date').value||null,start_time:s2str(parseInt(document.getElementById('f-start-time').value)),end_time:s2str(parseInt(document.getElementById('f-end-time').value)),status:document.getElementById('f-status').value,notes:document.getElementById('f-notes').value.trim()||null,calendar_type:ct,created_by:me.id};
   let pid=id;
-  if(id){await sb.from('projects').update(payload).eq('id',id)}
+  if(id)await sb.from('projects').update(payload).eq('id',id);
   else{const {data}=await sb.from('projects').insert(payload).select().single();pid=data?.id}
   if(pid){
     await sb.from('project_installers').delete().eq('project_id',pid);
     const checked=Array.from(document.querySelectorAll('#crew-checkboxes input:checked')).map(i=>({project_id:pid,installer_id:i.value}));
     if(checked.length)await sb.from('project_installers').insert(checked);
   }
-  closeModal('project-modal');showToast(id?'Updated!':'Created!','success');
-  await fetchProjects();renderActive();
+  closeModal('project-modal');showToast(id?'Updated!':'Created!','success');await fetchProjects();renderActive();
 }
 async function deleteProject(){
-  const id=document.getElementById('project-id').value;if(!id)return;
-  if(!confirm('Delete this project?'))return;
-  await sb.from('project_installers').delete().eq('project_id',id);
-  await sb.from('projects').delete().eq('id',id);
-  closeModal('project-modal');showToast('Deleted.','');
-  await fetchProjects();renderActive();
+  const id=document.getElementById('project-id').value;if(!id||!confirm('Delete this project?'))return;
+  await sb.from('project_installers').delete().eq('project_id',id);await sb.from('projects').delete().eq('id',id);
+  closeModal('project-modal');showToast('Deleted.','');await fetchProjects();renderActive();
 }
 
-// ─── DETAIL ──────────────────────────────────────────────────────────────────
+// ── DETAIL ────────────────────────────────────────────────────────────────────
 function openDetail(id){
   const p=projects.find(x=>x.id===id);if(!p)return;
   document.getElementById('detail-customer').textContent=p.customer_name;
@@ -853,6 +1122,8 @@ function openDetail(id){
   const m=p.measurement_value?`${p.measurement_value} ${p.measurement_unit}`:'—';
   const calMap={install:'Install',sales:'Sales',warehouse:'Warehouse'};
   const murl=`https://maps.google.com/?q=${encodeURIComponent(p.address||'')}`;
+  const timeStr=p.start_time?`${fmtTime(p.start_time)}${p.end_time?' – '+fmtTime(p.end_time):''}`:null;
+  const isInstall=p.calendar_type==='install';
   document.getElementById('detail-body').innerHTML=`
     <div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap">
       <span class="badge badge-${p.status}">${slbl(p.status)}</span>
@@ -863,41 +1134,35 @@ function openDetail(id){
       <div class="detail-grid">
         <div class="detail-item" style="grid-column:span 2"><label>Customer</label><span>${p.customer_name}</span></div>
         ${p.address?`<div class="detail-item" style="grid-column:span 2"><label>Address</label><span>${p.address}</span></div>`:''}
-        ${p.flooring_type?`<div class="detail-item"><label>Flooring</label><span>${p.flooring_type}</span></div>`:''}
-        <div class="detail-item"><label>Measurement</label><span>${m}</span></div>
-        <div class="detail-item"><label>Start</label><span>${fd(p.start_date)}</span></div>
-        <div class="detail-item"><label>End</label><span>${p.end_date?fd(p.end_date):'—'}</span></div>
+        <div class="detail-item"><label>Date</label><span>${fdr(p.start_date,p.end_date)}</span></div>
+        ${timeStr?`<div class="detail-item"><label>Time</label><span>${timeStr}</span></div>`:'<div></div>'}
+        ${isInstall&&p.flooring_type?`<div class="detail-item"><label>Flooring</label><span>${p.flooring_type}</span></div>`:''}
+        ${isInstall&&p.measurement_value?`<div class="detail-item"><label>Measurement</label><span>${m}</span></div>`:''}
         <div class="detail-item" style="grid-column:span 2"><label>Crew</label><span>${crew}</span></div>
         ${p.notes?`<div class="detail-item" style="grid-column:span 2"><label>Notes</label><span>${p.notes}</span></div>`:''}
-        ${p.materials?`<div class="detail-item" style="grid-column:span 2"><label>Materials</label><span>${p.materials}</span></div>`:''}
+        ${isInstall&&p.materials?`<div class="detail-item" style="grid-column:span 2"><label>Materials</label><span>${p.materials}</span></div>`:''}
       </div>
     </div>
     ${p.address?`<a href="${murl}" target="_blank" class="map-btn">🗺 Open in Maps</a>`:''}`;
   const ft=document.getElementById('detail-footer');
-  if(myProfile?.role==='staff'){
-    ft.innerHTML=`<button class="btn btn-secondary" onclick="closeModal('detail-modal')">Close</button>
-      <button class="btn btn-primary" onclick="closeModal('detail-modal');openEditProject(${JSON.stringify(p).replace(/"/g,'&quot;')})">Edit</button>`;
-  } else {
-    ft.innerHTML=`<button class="btn btn-secondary btn-full" onclick="closeModal('detail-modal')">Close</button>`;
-  }
+  if(myProfile?.role==='staff')ft.innerHTML=`<button class="btn btn-secondary" onclick="closeModal('detail-modal')">Close</button><button class="btn btn-primary" onclick="closeModal('detail-modal');openEditProject(${JSON.stringify(p).replace(/"/g,'&quot;')})">Edit</button>`;
+  else ft.innerHTML=`<button class="btn btn-secondary btn-full" onclick="closeModal('detail-modal')">Close</button>`;
   openModal('detail-modal');
 }
 
-// ─── MODAL HELPERS ────────────────────────────────────────────────────────────
+// ── MODAL HELPERS ─────────────────────────────────────────────────────────────
 function openModal(id){document.getElementById(id).classList.add('open')}
 function closeModal(id){document.getElementById(id).classList.remove('open')}
 document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open')}));
 
-// ─── UTILS ────────────────────────────────────────────────────────────────────
+// ── UTILS ─────────────────────────────────────────────────────────────────────
 function slbl(s){return{scheduled:'Scheduled',in_progress:'In Progress',complete:'Complete',invoiced:'Invoiced'}[s]||s}
 function fd(s){if(!s)return'—';const d=new Date(s+'T00:00:00');return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}
 function fdr(s,e){if(!s)return'—';if(!e||e===s)return fd(s);return`${fd(s)} – ${fd(e)}`}
-function showToast(msg,type=''){
-  const t=document.getElementById('toast');t.textContent=msg;t.className=`show ${type}`;
-  setTimeout(()=>t.className='',3000);
-}
+function fmtTime(t){if(!t)return'';const [h,m]=t.split(':').map(Number);const ap=h<12?'AM':'PM';const h12=h===0?12:h>12?h-12:h;return`${h12}:${m.toString().padStart(2,'0')} ${ap}`}
+function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className=`show ${type}`;setTimeout(()=>t.className='',3000)}
 
-// ─── AUTO-LOGIN ────────────────────────────────────────────────────────────────
+// ── AUTO-LOGIN ────────────────────────────────────────────────────────────────
 sb.auth.getSession().then(({data:{session}})=>{if(session)boot(session.user)});
 </script>
 </body>
