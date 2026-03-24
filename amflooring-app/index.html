@@ -18,6 +18,10 @@
       --blue:#2563eb;--bfaint:#eff6ff;
       --amber:#d97706;--afaint:#fffbeb;
       --purple:#7c3aed;--pfaint:#f5f3ff;
+      --sales-bg:#dcfce7;--sales-border:#16a34a;--sales-text:#14532d;
+      --install-bg:#dbeafe;--install-border:#2563eb;--install-text:#1e3a8a;
+      --warehouse-bg:#fef3c7;--warehouse-border:#d97706;--warehouse-text:#78350f;
+      --timeoff-bg:#fef9c3;--timeoff-border:#ca8a04;--timeoff-text:#713f12;
     }
     html,body{height:100%;font-family:'Inter',sans-serif;background:var(--g50);color:var(--g900)}
     .hidden{display:none!important}
@@ -66,6 +70,7 @@
     .sidebar-link .icon{font-size:1rem;width:20px;text-align:center}
     .content{flex:1;overflow-y:auto;padding:1.5rem}
     @media(max-width:768px){.sidebar{display:none}.content{padding:1rem}}
+    /* MOBILE NAV */
     .mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--g200);padding:.5rem 0 calc(.5rem + env(safe-area-inset-bottom));z-index:50}
     .mobile-nav-inner{display:flex;justify-content:space-around}
     .mobile-nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:.4rem .75rem;border:none;background:none;cursor:pointer;color:var(--g500);font-size:.7rem;font-weight:500;font-family:'Inter',sans-serif;transition:color .15s}
@@ -94,7 +99,6 @@
     .date-filter-bar{display:flex;align-items:center;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap}
     .date-filter-bar label{font-size:.8rem;font-weight:600;color:var(--g600);text-transform:uppercase;letter-spacing:.05em}
     .date-filter-bar input[type=date]{padding:.4rem .75rem;border:1.5px solid var(--g300);border-radius:6px;font-family:'Inter',sans-serif;font-size:.85rem;outline:none;background:#fff}
-    .date-filter-bar input[type=date]:focus{border-color:var(--red)}
     .quick-range-btns{display:flex;gap:4px;flex-wrap:wrap}
     .qr-btn{padding:.35rem .75rem;border-radius:20px;border:1.5px solid var(--g300);background:#fff;font-size:.75rem;font-weight:500;color:var(--g600);cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s}
     .qr-btn:hover{border-color:var(--red);color:var(--red)}
@@ -106,33 +110,44 @@
     .stat-card-label{font-size:.75rem;font-weight:500;color:var(--g500);margin-bottom:.4rem}
     .stat-card-value{font-size:1.8rem;font-weight:700;line-height:1}
     .stat-card-sub{font-size:.75rem;color:var(--g400);margin-top:.25rem}
-    /* WEEK CALENDAR */
-    .calendar-nav{display:flex;align-items:center;gap:.75rem}
-    .calendar-nav h3{font-size:1.1rem;font-weight:600;flex:1;text-align:center}
+    /* CALENDAR EVENTS — bold, no fade */
+    .cal-event{border-left:3px solid;border-radius:4px;padding:3px 5px;font-size:.72rem;font-weight:600;margin-bottom:2px;cursor:pointer;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;line-height:1.3}
+    .cal-event:hover{filter:brightness(.92)}
+    .cal-event.cal-sales{background:var(--sales-bg);border-color:var(--sales-border);color:var(--sales-text)}
+    .cal-event.cal-install{background:var(--install-bg);border-color:var(--install-border);color:var(--install-text)}
+    .cal-event.cal-warehouse{background:var(--warehouse-bg);border-color:var(--warehouse-border);color:var(--warehouse-text)}
+    .cal-event.time-off{background:var(--timeoff-bg);border-color:var(--timeoff-border);color:var(--timeoff-text)}
+    .more-pill{font-size:.68rem;font-weight:700;color:var(--g600);background:var(--g200);border-radius:4px;padding:2px 6px;cursor:pointer;display:inline-block;margin-top:2px}
+    .more-pill:hover{background:var(--g300)}
+    /* WEEK GRID */
     .week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
     .week-day-header{text-align:center;font-size:.7rem;font-weight:700;color:var(--g400);text-transform:uppercase;padding:.5rem 0}
     .week-day-cell{background:#fff;border:1px solid var(--g200);border-radius:8px;min-height:100px;padding:.5rem}
     .week-day-cell.today{border-color:var(--red);background:var(--red-faint)}
+    .week-day-cell.weekend{background:#fafaf9}
     .day-num{font-size:.75rem;font-weight:600;color:var(--g400);margin-bottom:4px}
     .week-day-cell.today .day-num{color:var(--red)}
-    .cal-event{background:var(--bfaint);border-left:3px solid var(--blue);border-radius:3px;padding:2px 4px;font-size:.68rem;font-weight:500;color:var(--blue);margin-bottom:2px;cursor:pointer;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-    .cal-event:hover{opacity:.75}
-    .cal-event.cal-sales{background:#fdf4ff;border-color:#a855f7;color:#7e22ce}
-    .cal-event.cal-warehouse{background:var(--afaint);border-color:var(--amber);color:#92400e}
-    .cal-event.status-complete{opacity:.5}
-    .cal-event.time-off{background:#fef9c3;border-color:#ca8a04;color:#713f12}
-    .more-pill{font-size:.65rem;font-weight:600;color:var(--g500);background:var(--g100);border-radius:3px;padding:1px 5px;cursor:pointer;display:inline-block;margin-top:1px}
-    .more-pill:hover{background:var(--g200)}
-    @media(max-width:600px){.week-day-cell{min-height:70px;padding:3px}.cal-event{font-size:.6rem}.week-day-header{font-size:.6rem}}
-    /* MONTH CALENDAR */
+    /* MONTH GRID */
     .month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
     .month-day-header{text-align:center;font-size:.7rem;font-weight:700;color:var(--g400);text-transform:uppercase;padding:.4rem 0}
-    .month-day-cell{background:#fff;border:1px solid var(--g200);border-radius:6px;min-height:90px;padding:.4rem;cursor:default}
+    .month-day-cell{background:#fff;border:1px solid var(--g200);border-radius:6px;min-height:90px;padding:.4rem}
     .month-day-cell.today{border-color:var(--red)}
-    .month-day-cell.other-month{background:var(--g50);opacity:.6}
-    .month-day-num{font-size:.75rem;font-weight:600;color:var(--g400);margin-bottom:3px;display:flex;align-items:center;justify-content:space-between}
-    .month-day-cell.today .month-day-num span{background:var(--red);color:#fff;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;font-size:.7rem}
-    @media(max-width:600px){.month-day-cell{min-height:60px;padding:3px}.month-day-num{font-size:.65rem}}
+    .month-day-cell.other-month{background:var(--g50);opacity:.65}
+    .month-day-cell.weekend{background:#fafaf9}
+    .month-day-num{font-size:.75rem;font-weight:600;color:var(--g400);margin-bottom:3px}
+    .month-day-cell.today .month-day-num .dn{background:var(--red);color:#fff;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;font-size:.7rem}
+    /* MOBILE CALENDAR — vertical day list */
+    .mobile-day-block{margin-bottom:1rem}
+    .mobile-day-label{font-size:.75rem;font-weight:700;color:var(--g500);text-transform:uppercase;letter-spacing:.1em;padding:.4rem .75rem;background:var(--g100);border-radius:6px;margin-bottom:.4rem;display:flex;justify-content:space-between;align-items:center}
+    .mobile-day-label.today-label{background:var(--red-faint);color:var(--red)}
+    .mobile-day-events{padding:0 .25rem}
+    .mobile-cal-event{display:flex;align-items:flex-start;gap:.5rem;padding:.5rem .75rem;border-radius:8px;margin-bottom:.4rem;cursor:pointer;border-left:4px solid}
+    .mobile-cal-event.cal-sales{background:var(--sales-bg);border-color:var(--sales-border)}
+    .mobile-cal-event.cal-install{background:var(--install-bg);border-color:var(--install-border)}
+    .mobile-cal-event.cal-warehouse{background:var(--warehouse-bg);border-color:var(--warehouse-border)}
+    .mobile-cal-event.time-off{background:var(--timeoff-bg);border-color:var(--timeoff-border)}
+    .mobile-event-name{font-size:.875rem;font-weight:600;color:var(--g900)}
+    .mobile-event-sub{font-size:.75rem;color:var(--g600);margin-top:1px}
     /* LEGEND */
     .cal-legend{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:.75rem}
     .legend-item{display:flex;align-items:center;gap:4px;font-size:.75rem;color:var(--g600)}
@@ -140,9 +155,9 @@
     /* PROJECT CARDS */
     .project-card{background:#fff;border:1px solid var(--g200);border-radius:10px;padding:1rem 1.25rem;margin-bottom:.75rem;border-left:4px solid var(--g300);cursor:pointer;transition:all .15s}
     .project-card:hover{box-shadow:0 4px 12px rgba(0,0,0,.08)}
-    .project-card.cal-install{border-left-color:var(--blue)}
-    .project-card.cal-sales{border-left-color:#a855f7}
-    .project-card.cal-warehouse{border-left-color:var(--amber)}
+    .project-card.cal-install{border-left-color:var(--install-border)}
+    .project-card.cal-sales{border-left-color:var(--sales-border)}
+    .project-card.cal-warehouse{border-left-color:var(--warehouse-border)}
     .project-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem;margin-bottom:.5rem}
     .project-customer{font-size:1rem;font-weight:600}
     .project-address{font-size:.8rem;color:var(--g500);margin-top:2px}
@@ -151,7 +166,7 @@
     /* INSTALLER VIEW */
     .installer-day{margin-bottom:1.5rem}
     .installer-day-label{font-size:.75rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.12em;margin-bottom:.6rem;padding-bottom:.4rem;border-bottom:1px solid var(--g200)}
-    .installer-job-card{background:#fff;border:1.5px solid var(--g200);border-radius:12px;padding:1.1rem 1.25rem;margin-bottom:.75rem;border-left:5px solid var(--blue)}
+    .installer-job-card{background:#fff;border:1.5px solid var(--g200);border-radius:12px;padding:1.1rem 1.25rem;margin-bottom:.75rem;border-left:5px solid var(--install-border)}
     .installer-job-customer{font-size:1.1rem;font-weight:700;margin-bottom:.3rem}
     .installer-job-address{font-size:.9rem;color:var(--g600);margin-bottom:.75rem}
     .installer-job-details{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.5rem}
@@ -167,23 +182,24 @@
     /* MODAL */
     .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:1rem}
     .modal-overlay.open{display:flex}
-    .modal{background:#fff;border-radius:12px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 25px 60px rgba(0,0,0,.3)}
+    .modal{background:#fff;border-radius:12px;width:100%;max-width:580px;max-height:90vh;overflow-y:auto;box-shadow:0 25px 60px rgba(0,0,0,.3)}
     .modal-header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--g200);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1}
     .modal-title{font-size:1.1rem;font-weight:700}
     .modal-close{background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--g400);padding:.2rem;line-height:1}
     .modal-body{padding:1.5rem}
     .modal-footer{padding:1rem 1.5rem;border-top:1px solid var(--g200);display:flex;gap:.75rem;justify-content:flex-end}
-    /* TIME INPUT */
-    .time-hint{font-size:.75rem;color:var(--g400);margin-top:.25rem}
-    /* QUICK ADD PERSON */
+    /* QUICK ADD */
     .quick-add-person{margin-top:.75rem;border:1.5px dashed var(--g300);border-radius:8px;padding:1rem;background:var(--g50)}
     .quick-add-person h4{font-size:.8rem;font-weight:600;color:var(--g600);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem}
-    .quick-add-person .form-group{margin-bottom:.75rem}
-    .quick-add-person .form-group:last-of-type{margin-bottom:0}
     /* CREW */
+    .crew-section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem}
+    .crew-toggle{display:flex;gap:3px;background:var(--g100);padding:3px;border-radius:6px}
+    .crew-toggle-btn{padding:.3rem .7rem;border-radius:4px;font-size:.75rem;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--g500);font-family:'Inter',sans-serif;transition:all .15s}
+    .crew-toggle-btn.active{background:#fff;color:var(--g900);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.1)}
     .crew-list{display:flex;flex-direction:column;gap:.5rem}
-    .crew-item{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;background:#fff;border:1px solid var(--g200);border-radius:8px;transition:opacity .2s}
-    .crew-item.inactive{opacity:.4}
+    .crew-item{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;background:#fff;border:1px solid var(--g200);border-radius:8px;cursor:pointer;transition:all .15s}
+    .crew-item:hover{border-color:var(--g300);box-shadow:0 2px 8px rgba(0,0,0,.06)}
+    .crew-item.inactive{opacity:.45}
     .crew-item-left{display:flex;align-items:center;gap:.75rem}
     .crew-avatar{width:36px;height:36px;background:var(--red-faint);color:var(--red);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.875rem;flex-shrink:0}
     .crew-avatar.staff-av{background:var(--pfaint);color:var(--purple)}
@@ -196,6 +212,17 @@
     .toggle input:checked~.toggle-track{background:var(--green)}
     .toggle-thumb{position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
     .toggle input:checked~.toggle-thumb{transform:translateX(16px)}
+    /* INSTALLER PROFILE MODAL */
+    .doc-list{display:flex;flex-direction:column;gap:.5rem;margin-top:.5rem}
+    .doc-item{display:flex;align-items:center;justify-content:space-between;padding:.6rem .9rem;background:var(--g50);border:1px solid var(--g200);border-radius:6px;font-size:.875rem}
+    .doc-item-left{display:flex;align-items:center;gap:.5rem}
+    .doc-badge{font-size:.7rem;font-weight:700;padding:2px 7px;border-radius:20px;text-transform:uppercase}
+    .doc-badge.coi{background:#dbeafe;color:#1e40af}
+    .doc-badge.w9{background:#dcfce7;color:#14532d}
+    .doc-badge.contract{background:#fef3c7;color:#78350f}
+    .doc-badge.other{background:var(--g100);color:var(--g600)}
+    .doc-expired{color:var(--red);font-size:.75rem;font-weight:600}
+    .doc-expiring{color:var(--amber);font-size:.75rem;font-weight:600}
     /* TIME OFF */
     .timeoff-item{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;background:#fff;border:1px solid var(--g200);border-radius:8px;margin-bottom:.5rem}
     .timeoff-name{font-weight:500;font-size:.9rem}
@@ -211,12 +238,13 @@
     .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
     .detail-item label{font-size:.75rem;color:var(--g500);display:block;margin-bottom:2px}
     .detail-item span{font-size:.95rem;font-weight:500}
-    /* DAY DETAIL MODAL */
-    .day-detail-event{padding:.6rem .75rem;border-radius:6px;margin-bottom:.4rem;cursor:pointer;border-left:3px solid var(--blue);background:var(--bfaint);font-size:.875rem;font-weight:500;color:var(--blue)}
-    .day-detail-event.cal-sales{border-color:#a855f7;background:#fdf4ff;color:#7e22ce}
-    .day-detail-event.cal-warehouse{border-color:var(--amber);background:var(--afaint);color:#92400e}
-    .day-detail-event.time-off{border-color:#ca8a04;background:#fef9c3;color:#713f12}
-    .day-detail-event:hover{opacity:.8}
+    /* DAY DETAIL */
+    .day-detail-event{padding:.6rem .75rem;border-radius:6px;margin-bottom:.4rem;cursor:pointer;border-left:4px solid;font-size:.875rem;font-weight:600}
+    .day-detail-event.cal-sales{border-color:var(--sales-border);background:var(--sales-bg);color:var(--sales-text)}
+    .day-detail-event.cal-install{border-color:var(--install-border);background:var(--install-bg);color:var(--install-text)}
+    .day-detail-event.cal-warehouse{border-color:var(--warehouse-border);background:var(--warehouse-bg);color:var(--warehouse-text)}
+    .day-detail-event.time-off{border-color:var(--timeoff-border);background:var(--timeoff-bg);color:var(--timeoff-text)}
+    .day-detail-event:hover{filter:brightness(.95)}
     /* MISC */
     .spinner{display:inline-block;width:20px;height:20px;border:2px solid var(--g200);border-top-color:var(--red);border-radius:50%;animation:spin .7s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
@@ -228,6 +256,10 @@
     #toast.success{background:var(--green)}
     #toast.error{background:var(--red)}
     @media(min-width:769px){#toast{bottom:2rem}}
+    /* MOBILE ONLY */
+    .desktop-only{display:block}
+    .mobile-only{display:none}
+    @media(max-width:768px){.desktop-only{display:none}.mobile-only{display:block}}
   </style>
 </head>
 <body>
@@ -259,7 +291,6 @@
       <button class="btn btn-ghost btn-sm" onclick="handleLogout()" style="color:rgba(255,255,255,.6)">Sign out</button>
     </div>
   </nav>
-
   <div class="app-body">
     <aside class="sidebar" id="sidebar">
       <nav class="sidebar-nav">
@@ -267,127 +298,138 @@
         <button class="sidebar-link active" id="sb-calendar" onclick="showPage('calendar')"><span class="icon">📅</span>Calendar</button>
         <button class="sidebar-link" id="sb-projects" onclick="showPage('projects')"><span class="icon">📋</span>All Projects</button>
         <div class="sidebar-section">Manage</div>
-        <button class="sidebar-link" id="sb-timeoff" onclick="showPage('timeoff')"><span class="icon">🏖</span>Time Off</button>
+        <button class="sidebar-link owner-only hidden" id="sb-timeoff" onclick="showPage('timeoff')"><span class="icon">🏖</span>Time Off</button>
         <button class="sidebar-link" id="sb-crew" onclick="showPage('crew')"><span class="icon">👷</span>Crew & Users</button>
       </nav>
     </aside>
-
     <main class="content" id="content">
 
-      <!-- CALENDAR PAGE -->
+      <!-- CALENDAR -->
       <div class="page active" id="page-calendar">
         <div class="page-header">
           <div><div class="page-title">Schedule</div><div class="page-subtitle" id="cal-subtitle"></div></div>
           <button class="btn btn-primary" id="btn-new-project" onclick="openNewProject()">+ New Project</button>
         </div>
-        <!-- Stats -->
         <div class="stats-grid">
-          <div class="stat-card"><div class="stat-card-label" id="stat-week-label">This Week</div><div class="stat-card-value" id="stat-week">–</div><div class="stat-card-sub" id="stat-week-sub">projects</div></div>
+          <div class="stat-card"><div class="stat-card-label" id="stat-period-label">This Week</div><div class="stat-card-value" id="stat-week">–</div><div class="stat-card-sub" id="stat-week-sub">projects</div></div>
           <div class="stat-card"><div class="stat-card-label">In Progress</div><div class="stat-card-value" id="stat-inprog">–</div><div class="stat-card-sub">active now</div></div>
           <div class="stat-card"><div class="stat-card-label">Scheduled</div><div class="stat-card-value" id="stat-sched">–</div><div class="stat-card-sub">upcoming</div></div>
           <div class="stat-card"><div class="stat-card-label">This Month</div><div class="stat-card-value" id="stat-done">–</div><div class="stat-card-sub">complete</div></div>
         </div>
-        <!-- Controls row -->
         <div style="display:flex;gap:.75rem;align-items:center;margin-bottom:.75rem;flex-wrap:wrap">
           <div class="cal-tabs" id="cal-tabs">
             <button class="cal-tab active" onclick="setCalTab('all',this)">All</button>
-            <button class="cal-tab" onclick="setCalTab('install',this)">Installs</button>
             <button class="cal-tab" onclick="setCalTab('sales',this)">Sales</button>
+            <button class="cal-tab" onclick="setCalTab('install',this)">Installs</button>
             <button class="cal-tab" onclick="setCalTab('warehouse',this)">Warehouse</button>
           </div>
           <select class="who-filter" id="who-filter" onchange="renderCal()">
             <option value="all">👥 All People</option>
           </select>
-          <div class="view-toggle">
+          <div class="view-toggle desktop-only">
             <button class="view-btn active" id="vbtn-week" onclick="setView('week',this)">Week</button>
             <button class="view-btn" id="vbtn-month" onclick="setView('month',this)">Month</button>
           </div>
         </div>
         <div class="cal-legend">
-          <span class="legend-item"><span class="legend-dot" style="background:var(--blue)"></span>Installs</span>
-          <span class="legend-item"><span class="legend-dot" style="background:#a855f7"></span>Sales</span>
-          <span class="legend-item"><span class="legend-dot" style="background:var(--amber)"></span>Warehouse</span>
-          <span class="legend-item"><span class="legend-dot" style="background:#ca8a04"></span>Time Off</span>
+          <span class="legend-item"><span class="legend-dot" style="background:var(--sales-border)"></span>Sales</span>
+          <span class="legend-item"><span class="legend-dot" style="background:var(--install-border)"></span>Installs</span>
+          <span class="legend-item"><span class="legend-dot" style="background:var(--warehouse-border)"></span>Warehouse</span>
         </div>
-        <div class="card">
+        <div class="card desktop-only">
           <div class="card-header">
-            <div class="calendar-nav" style="width:100%">
-              <button class="btn btn-secondary btn-sm" onclick="navBack()">‹</button>
-              <h3 id="cal-nav-label"></h3>
-              <button class="btn btn-secondary btn-sm" onclick="navForward()">›</button>
+            <div class="calendar-nav" style="width:100%;display:flex;align-items:center;gap:.75rem">
+              <button class="btn btn-secondary" onclick="navBack()" style="font-size:1.3rem;padding:.4rem .9rem;line-height:1">‹</button>
+              <h3 id="cal-nav-label" style="flex:1;text-align:center;font-size:1.1rem;font-weight:600"></h3>
+              <button class="btn btn-secondary" onclick="navForward()" style="font-size:1.3rem;padding:.4rem .9rem;line-height:1">›</button>
               <button class="btn btn-ghost btn-sm" onclick="goToday()">Today</button>
             </div>
           </div>
-          <div class="card-body" style="padding:.75rem">
-            <div id="cal-container"></div>
+          <div class="card-body" style="padding:.75rem"><div id="cal-container"></div></div>
+        </div>
+        <!-- MOBILE: vertical day list -->
+        <div class="mobile-only" id="mobile-cal">
+          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:1rem">
+            <button class="btn btn-secondary btn-sm" onclick="mobileNavBack()" style="font-size:1.2rem;padding:.35rem .8rem">‹</button>
+            <div id="mobile-cal-label" style="flex:1;text-align:center;font-size:.95rem;font-weight:600"></div>
+            <button class="btn btn-secondary btn-sm" onclick="mobileNavForward()" style="font-size:1.2rem;padding:.35rem .8rem">›</button>
+            <button class="btn btn-ghost btn-sm" onclick="mobileGoToday()">Today</button>
           </div>
+          <div id="mobile-cal-container"></div>
         </div>
       </div>
 
-      <!-- ALL PROJECTS PAGE -->
+      <!-- ALL PROJECTS -->
       <div class="page" id="page-projects">
         <div class="page-header">
           <div><div class="page-title">All Projects</div><div class="page-subtitle" id="projects-count"></div></div>
           <button class="btn btn-primary" onclick="openNewProject()">+ New Project</button>
         </div>
         <div class="cal-tabs" id="proj-cal-tabs" style="margin-bottom:1rem">
-          <button class="cal-tab active" onclick="setProjectCalTab('all',this)">All</button>
-          <button class="cal-tab" onclick="setProjectCalTab('install',this)">Installs</button>
-          <button class="cal-tab" onclick="setProjectCalTab('sales',this)">Sales</button>
-          <button class="cal-tab" onclick="setProjectCalTab('warehouse',this)">Warehouse</button>
+          <button class="cal-tab active" onclick="setProjCal('all',this)">All</button>
+          <button class="cal-tab" onclick="setProjCal('sales',this)">Sales</button>
+          <button class="cal-tab" onclick="setProjCal('install',this)">Installs</button>
+          <button class="cal-tab" onclick="setProjCal('warehouse',this)">Warehouse</button>
         </div>
         <div class="date-filter-bar">
           <label>From</label><input type="date" id="filter-from" onchange="renderProjectsList()"/>
           <label>To</label><input type="date" id="filter-to" onchange="renderProjectsList()"/>
           <div class="quick-range-btns">
-            <button class="qr-btn active" onclick="setQuickRange('30d',this)">30 days</button>
-            <button class="qr-btn" onclick="setQuickRange('90d',this)">90 days</button>
-            <button class="qr-btn" onclick="setQuickRange('ytd',this)">This year</button>
-            <button class="qr-btn" onclick="setQuickRange('2025',this)">2025</button>
-            <button class="qr-btn" onclick="setQuickRange('2024',this)">2024</button>
-            <button class="qr-btn" onclick="setQuickRange('2023',this)">2023</button>
-            <button class="qr-btn" onclick="setQuickRange('2022',this)">2022</button>
-            <button class="qr-btn" onclick="setQuickRange('all',this)">All time</button>
+            <button class="qr-btn active" onclick="setQR('30d',this)">30 days</button>
+            <button class="qr-btn" onclick="setQR('90d',this)">90 days</button>
+            <button class="qr-btn" onclick="setQR('ytd',this)">This year</button>
+            <button class="qr-btn" onclick="setQR('2025',this)">2025</button>
+            <button class="qr-btn" onclick="setQR('2024',this)">2024</button>
+            <button class="qr-btn" onclick="setQR('2023',this)">2023</button>
+            <button class="qr-btn" onclick="setQR('2022',this)">2022</button>
+            <button class="qr-btn" onclick="setQR('all',this)">All time</button>
           </div>
         </div>
         <div class="filter-bar">
-          <button class="filter-btn active" onclick="filterProjects('all',this)">All</button>
-          <button class="filter-btn" onclick="filterProjects('scheduled',this)">Scheduled</button>
-          <button class="filter-btn" onclick="filterProjects('in_progress',this)">In Progress</button>
-          <button class="filter-btn" onclick="filterProjects('complete',this)">Complete</button>
-          <button class="filter-btn" onclick="filterProjects('invoiced',this)">Invoiced</button>
+          <button class="filter-btn active" onclick="setStatus('all',this)">All</button>
+          <button class="filter-btn" onclick="setStatus('scheduled',this)">Scheduled</button>
+          <button class="filter-btn" onclick="setStatus('in_progress',this)">In Progress</button>
+          <button class="filter-btn" onclick="setStatus('complete',this)">Complete</button>
+          <button class="filter-btn" onclick="setStatus('invoiced',this)">Invoiced</button>
         </div>
         <div id="projects-list"></div>
       </div>
 
-      <!-- TIME OFF PAGE -->
+      <!-- TIME OFF (owner only) -->
       <div class="page" id="page-timeoff">
         <div class="page-header">
-          <div><div class="page-title">Time Off</div><div class="page-subtitle">Shown on each person's calendar</div></div>
+          <div><div class="page-title">Time Off</div><div class="page-subtitle">Staff only · shown on calendar</div></div>
           <button class="btn btn-primary" onclick="openTimeOffModal()">+ Add Time Off</button>
         </div>
         <div id="timeoff-list"></div>
-        <div id="pto-report-section" class="hidden">
+        <div id="pto-section">
           <div class="section-divider" style="margin-top:2rem">PTO Report</div>
-          <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem">
             <label style="font-size:.8rem;font-weight:600;color:var(--g600);text-transform:uppercase;letter-spacing:.05em">Year</label>
-            <select id="pto-year" onchange="renderPTOReport()" style="padding:.4rem .75rem;border:1.5px solid var(--g300);border-radius:6px;font-family:'Inter',sans-serif;font-size:.875rem;background:#fff;outline:none">
-              <option value="2026">2026</option><option value="2025">2025</option><option value="2024">2024</option>
+            <select id="pto-year" onchange="renderPTO()" style="padding:.4rem .75rem;border:1.5px solid var(--g300);border-radius:6px;font-family:'Inter',sans-serif;font-size:.875rem;background:#fff;outline:none">
+              <option>2026</option><option>2025</option><option>2024</option>
             </select>
           </div>
           <div id="pto-report"></div>
         </div>
       </div>
 
-      <!-- CREW PAGE -->
+      <!-- CREW -->
       <div class="page" id="page-crew">
         <div class="page-header">
-          <div><div class="page-title">Crew & Users</div><div class="page-subtitle">Toggle active/inactive with the switch</div></div>
+          <div><div class="page-title">Crew & Users</div></div>
           <button class="btn btn-primary" onclick="openAddUserModal()">+ Add User</button>
         </div>
-        <div class="section-divider">Staff</div>
-        <div id="staff-list"></div>
-        <div class="section-divider" style="margin-top:1.5rem">Installers & Subs</div>
+        <div class="crew-section-header">
+          <div class="section-divider" style="margin:0;flex:1">Staff</div>
+          <div class="crew-toggle" id="crew-toggle">
+            <button class="crew-toggle-btn active" onclick="setCrewFilter('active',this)">Active</button>
+            <button class="crew-toggle-btn" onclick="setCrewFilter('inactive',this)">Inactive</button>
+            <button class="crew-toggle-btn" onclick="setCrewFilter('all',this)">All</button>
+          </div>
+        </div>
+        <div id="staff-list" style="margin-bottom:1.5rem"></div>
+        <div class="section-divider">Installers & Subs</div>
         <div id="installer-list"></div>
       </div>
 
@@ -412,7 +454,7 @@
       <input type="hidden" id="project-id"/>
       <div class="form-row">
         <div class="form-group"><label>Calendar *</label>
-          <select id="f-calendar" onchange="toggleInstallFields()">
+          <select id="f-calendar" onchange="onCalendarChange()">
             <option value="install">Install</option>
             <option value="sales">Sales</option>
             <option value="warehouse">Warehouse</option>
@@ -445,38 +487,31 @@
         <div class="form-group"><label>Materials</label><input type="text" id="f-materials" placeholder="e.g. Shaw #4421"/></div>
       </div>
       <div class="form-row">
-        <div class="form-group"><label>Start Date *</label><input type="date" id="f-start-date" onchange="autoFillEndDate()"/></div>
+        <div class="form-group"><label>Start Date *</label><input type="date" id="f-start-date" onchange="onStartDateChange()"/></div>
         <div class="form-group"><label>End Date</label><input type="date" id="f-end-date"/></div>
       </div>
       <div class="form-row">
-        <div class="form-group">
-          <label>Start Time</label>
-          <input type="time" id="f-start-time" value="08:00" onchange="autoEndTime()"/>
-        </div>
-        <div class="form-group">
-          <label>End Time <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--g400)">(optional)</span></label>
-          <input type="time" id="f-end-time" value="17:00"/>
-        </div>
+        <div class="form-group"><label>Start Time</label><input type="time" id="f-start-time" onchange="onStartTimeChange()"/></div>
+        <div class="form-group"><label>End Time <span style="font-weight:400;font-size:.75rem;color:var(--g400);text-transform:none;letter-spacing:0">(optional)</span></label><input type="time" id="f-end-time"/></div>
       </div>
-      <!-- CREW ASSIGNMENT WITH QUICK ADD -->
       <div class="form-group">
         <label>Assign Crew</label>
-        <div id="crew-checkboxes" style="display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.25rem"></div>
-        <button type="button" class="btn btn-ghost btn-sm" style="margin-top:.5rem;color:var(--blue);padding-left:0" onclick="toggleQuickAdd()">
+        <select id="f-crew-select" style="margin-bottom:.5rem">
+          <option value="">— select a person —</option>
+        </select>
+        <div id="assigned-crew-chips" style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.4rem"></div>
+        <button type="button" class="btn btn-ghost btn-sm" style="margin-top:.4rem;color:var(--blue);padding-left:0" onclick="toggleQuickAdd()">
           <span id="quick-add-icon">＋</span> Add new person
         </button>
         <div id="quick-add-form" class="quick-add-person hidden">
-          <h4>Quick Add Person</h4>
-          <div class="form-group"><label>Full Name *</label><input type="text" id="qa-name" placeholder="Mike Johnson"/></div>
+          <h4>Quick Add</h4>
           <div class="form-row">
+            <div class="form-group"><label>Full Name *</label><input type="text" id="qa-name" placeholder="Mike Johnson"/></div>
             <div class="form-group"><label>Role *</label>
               <select id="qa-role"><option value="installer">Installer / Sub</option><option value="staff">Staff</option></select>
             </div>
-            <div class="form-group"><label>Default Calendar</label>
-              <select id="qa-calendar"><option value="install">Installs</option><option value="sales">Sales</option><option value="warehouse">Warehouse</option></select>
-            </div>
           </div>
-          <div class="form-group"><label>Email (optional)</label><input type="email" id="qa-email" placeholder="mike@example.com"/></div>
+          <div class="form-group"><label>Email (optional — needed for login)</label><input type="email" id="qa-email" placeholder="mike@example.com"/></div>
           <button type="button" class="btn btn-primary btn-sm" onclick="quickAddPerson()">Create & Assign</button>
         </div>
       </div>
@@ -499,7 +534,7 @@
   </div>
 </div>
 
-<!-- DAY DETAIL MODAL -->
+<!-- DAY MODAL -->
 <div class="modal-overlay" id="day-modal">
   <div class="modal" style="max-width:420px">
     <div class="modal-header"><div class="modal-title" id="day-modal-title"></div><button class="modal-close" onclick="closeModal('day-modal')">×</button></div>
@@ -513,25 +548,20 @@
     <div class="modal-header"><div class="modal-title" id="to-modal-title">Add Time Off</div><button class="modal-close" onclick="closeModal('timeoff-modal')">×</button></div>
     <div class="modal-body">
       <input type="hidden" id="to-id"/>
-      <div class="form-group"><label>Person *</label><select id="to-person" onchange="autoSetCalendar()"></select></div>
-      <div class="form-group">
-        <label>Calendar</label>
-        <select id="to-calendar"><option value="install">Installs</option><option value="sales">Sales</option><option value="warehouse">Warehouse</option></select>
-        <div style="font-size:.75rem;color:var(--g400);margin-top:.3rem">Auto-set based on person. Change if needed.</div>
+      <div class="form-group"><label>Person *</label>
+        <select id="to-person" onchange="autoSetToCal()"></select>
+      </div>
+      <div class="form-group"><label>Calendar</label>
+        <select id="to-calendar"><option value="sales">Sales</option><option value="install">Installs</option><option value="warehouse">Warehouse</option></select>
+        <div style="font-size:.75rem;color:var(--g400);margin-top:.3rem">Auto-set from person's default. Adjust if needed.</div>
       </div>
       <div class="form-row">
         <div class="form-group"><label>Start *</label><input type="date" id="to-start"/></div>
         <div class="form-group"><label>End *</label><input type="date" id="to-end"/></div>
       </div>
       <div class="form-row">
-        <div class="form-group">
-          <label>Start Time</label>
-          <input type="time" id="to-start-time" value="08:00"/>
-        </div>
-        <div class="form-group">
-          <label>End Time <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--g400)">(optional)</span></label>
-          <input type="time" id="to-end-time" value="17:00"/>
-        </div>
+        <div class="form-group"><label>Start Time</label><input type="time" id="to-start-time" value="08:00"/></div>
+        <div class="form-group"><label>End Time <span style="font-weight:400;font-size:.75rem;color:var(--g400);text-transform:none;letter-spacing:0">(optional)</span></label><input type="time" id="to-end-time"/></div>
       </div>
       <div class="form-group"><label>Note</label><input type="text" id="to-note" placeholder="Vacation, sick, personal..."/></div>
     </div>
@@ -548,13 +578,16 @@
   <div class="modal" style="max-width:440px">
     <div class="modal-header"><div class="modal-title">Add Team Member</div><button class="modal-close" onclick="closeModal('add-user-modal')">×</button></div>
     <div class="modal-body">
-      <p style="font-size:.875rem;color:var(--g500);margin-bottom:1.25rem">Create a login for a new team member.</p>
       <div class="form-group"><label>Full Name *</label><input type="text" id="new-name" placeholder="Mike Johnson"/></div>
       <div class="form-group"><label>Email *</label><input type="email" id="new-email" placeholder="mike@example.com"/></div>
       <div class="form-group"><label>Role *</label>
-        <select id="new-role"><option value="installer">Installer / Sub</option><option value="staff">Staff</option></select>
+        <select id="new-role" onchange="updateNewCalDefault()">
+          <option value="installer">Installer / Sub</option>
+          <option value="staff">Staff</option>
+        </select>
       </div>
-      <div class="form-group"><label>Default Calendar (for time off)</label>
+      <div class="form-group" id="new-cal-group">
+        <label>Default Calendar (for time off)</label>
         <select id="new-calendar"><option value="install">Installs</option><option value="sales">Sales</option><option value="warehouse">Warehouse</option></select>
       </div>
       <div class="form-group"><label>Temporary Password *</label><input type="text" id="new-password" placeholder="They can change this later"/></div>
@@ -562,6 +595,43 @@
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('add-user-modal')">Cancel</button>
       <button class="btn btn-primary" onclick="createUser()">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- INSTALLER PROFILE MODAL -->
+<div class="modal-overlay" id="profile-modal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="profile-modal-title">Crew Profile</div><button class="modal-close" onclick="closeModal('profile-modal')">×</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="pm-id"/>
+      <div class="form-row">
+        <div class="form-group"><label>Full Name</label><input type="text" id="pm-name"/></div>
+        <div class="form-group"><label>Phone</label><input type="tel" id="pm-phone" placeholder="(913) 555-0000"/></div>
+      </div>
+      <div class="form-group"><label>Email</label><input type="email" id="pm-email" placeholder="mike@example.com"/></div>
+      <div class="section-divider">Documents</div>
+      <div id="pm-docs-list"></div>
+      <div style="margin-top:1rem;padding:1rem;background:var(--g50);border:1.5px dashed var(--g300);border-radius:8px">
+        <div style="font-size:.8rem;font-weight:600;color:var(--g600);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem">Upload Document</div>
+        <div class="form-row">
+          <div class="form-group"><label>Type</label>
+            <select id="pm-doc-type">
+              <option value="coi">COI</option>
+              <option value="w9">W9</option>
+              <option value="contract">Contract</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Expiration (COI)</label><input type="date" id="pm-doc-exp"/></div>
+        </div>
+        <div class="form-group"><label>File</label><input type="file" id="pm-doc-file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="padding:.5rem"/></div>
+        <button class="btn btn-primary btn-sm" onclick="uploadDoc()" id="pm-upload-btn">Upload</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('profile-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveProfile()">Save</button>
     </div>
   </div>
 </div>
@@ -575,30 +645,22 @@ const sb=supabase.createClient(SURL,SKEY);
 const OWNER_EMAIL='cutcojohngilmore@gmail.com';
 
 let me=null,myProfile=null,isOwner=false;
-let projects=[],profiles=[],timeoffs=[];
+let projects=[],profiles=[],timeoffs=[],installerDocs=[];
 let weekStart=weekOf(new Date()),currentMonth=new Date();
+let mobileWeekStart=weekOf(new Date());
 let calView='week',calTab='all',whoFilter='all';
-let projCalTab='all',statusFilter='all';
+let projCalTab='all',statusFilter='all',crewFilter='active';
+let assignedCrew=[]; // array of profile ids assigned to current project
 
-// ── TIME SLIDER ──────────────────────────────────────────────────────────────
-// ── TIME UTILS ───────────────────────────────────────────────────────────────
-function getTime(id){return document.getElementById(id)?.value||''}
-function setTime(id,val){const el=document.getElementById(id);if(el)el.value=val||''}
-function addHour(t){if(!t)return'';const [h,m]=t.split(':').map(Number);const nh=(h+1)%24;return`${nh.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`}
-function autoFillEndDate(){
-  const s=document.getElementById('f-start-date').value;
-  const e=document.getElementById('f-end-date');
-  if(s&&!e.value)e.value=s;
-}
-function autoEndTime(){
-  const cal=document.getElementById('f-calendar')?.value;
-  const st=getTime('f-start-time');
-  if(!st)return;
-  if(cal==='sales'){
-    // Auto-set end time to start + 1 hour
-    setTime('f-end-time',addHour(st));
-  }
-}
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function today(){return new Date().toISOString().split('T')[0]}
+function fd(s){if(!s)return'—';const d=new Date(s+'T00:00:00');return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}
+function fdr(s,e){if(!s)return'—';if(!e||e===s)return fd(s);return`${fd(s)} – ${fd(e)}`}
+function fmtTime(t){if(!t)return'';const[h,m]=t.split(':').map(Number);const ap=h<12?'AM':'PM';const h12=h===0?12:h>12?h-12:h;return`${h12}:${m.toString().padStart(2,'0')} ${ap}`}
+function addHour(t){if(!t)return'';const[h,m]=t.split(':').map(Number);return`${((h+1)%24).toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`}
+function slbl(s){return{scheduled:'Scheduled',in_progress:'In Progress',complete:'Complete',invoiced:'Invoiced'}[s]||s}
+function weekOf(d){const c=new Date(d);const day=c.getDay();c.setDate(c.getDate()-day+(day===0?-6:1));c.setHours(0,0,0,0);return c}
+function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className=`show ${type}`;setTimeout(()=>t.className='',3000)}
 
 // ── AUTH ─────────────────────────────────────────────────────────────────────
 async function handleLogin(){
@@ -608,7 +670,7 @@ async function handleLogin(){
   const err=document.getElementById('login-error');
   if(!email||!pw){showErr(err,'Please enter email and password.');return}
   btn.innerHTML='<div class="spinner"></div>';btn.disabled=true;err.classList.add('hidden');
-  const {data,error}=await sb.auth.signInWithPassword({email,password:pw});
+  const{data,error}=await sb.auth.signInWithPassword({email,password:pw});
   if(error){showErr(err,'Invalid email or password.');btn.innerHTML='Sign In';btn.disabled=false;return}
   await boot(data.user);
 }
@@ -619,14 +681,15 @@ document.getElementById('login-password').addEventListener('keydown',e=>{if(e.ke
 // ── BOOT ─────────────────────────────────────────────────────────────────────
 async function boot(user){
   me=user;
-  const {data:p}=await sb.from('profiles').select('*').eq('id',user.id).single();
+  const{data:p}=await sb.from('profiles').select('*').eq('id',user.id).single();
   myProfile=p;isOwner=(user.email===OWNER_EMAIL);
   if(!p){showToast('Profile not found.','error');await sb.auth.signOut();return}
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').style.display='flex';
   document.getElementById('nav-user-name').textContent=p.full_name;
   document.getElementById('nav-role-badge').textContent=p.role;
-  if(isOwner)document.getElementById('pto-report-section').classList.remove('hidden');
+  // Show time off sidebar link only for owner
+  if(isOwner)document.querySelectorAll('.owner-only').forEach(el=>el.classList.remove('hidden'));
   initDateFilters();
   buildNav(p.role);
   await loadAll();
@@ -643,7 +706,7 @@ function buildNav(role){
     mn.innerHTML=`
       <button class="mobile-nav-btn active" id="mnb-calendar" onclick="showPage('calendar')"><span class="nav-icon">📅</span>Calendar</button>
       <button class="mobile-nav-btn" id="mnb-projects" onclick="showPage('projects')"><span class="nav-icon">📋</span>Projects</button>
-      <button class="mobile-nav-btn" id="mnb-timeoff" onclick="showPage('timeoff')"><span class="nav-icon">🏖</span>Time Off</button>
+      ${isOwner?`<button class="mobile-nav-btn" id="mnb-timeoff" onclick="showPage('timeoff')"><span class="nav-icon">🏖</span>Time Off</button>`:''}
       <button class="mobile-nav-btn" id="mnb-crew" onclick="showPage('crew')"><span class="nav-icon">👷</span>Crew</button>`;
     showPage('calendar');
   }
@@ -657,24 +720,41 @@ async function fetchProjects(){
   const to=document.getElementById('filter-to')?.value||'2099-12-31';
   let q=sb.from('projects').select('*,project_installers(installer_id,profiles(full_name))').order('start_date',{ascending:false});
   if(myProfile?.role==='installer'){
-    const {data:mine}=await sb.from('project_installers').select('project_id').eq('installer_id',me.id);
+    const{data:mine}=await sb.from('project_installers').select('project_id').eq('installer_id',me.id);
     if(mine?.length)q=q.in('id',mine.map(a=>a.project_id));else{projects=[];return}
   } else {
     q=q.gte('start_date',from).lte('start_date',to);
   }
-  const {data}=await q;projects=data||[];
+  const{data}=await q;projects=data||[];
 }
-async function fetchProfiles(){const {data}=await sb.from('profiles').select('*').order('full_name');profiles=data||[];buildWhoFilter()}
-async function fetchTimeOff(){const {data}=await sb.from('time_off').select('*,profiles(full_name,default_calendar)').order('start_date');timeoffs=data||[]}
+
+async function fetchProfiles(){
+  const{data}=await sb.from('profiles').select('*').order('full_name');
+  profiles=data||[];
+  buildWhoFilter();
+}
+
+async function fetchTimeOff(){
+  const{data}=await sb.from('time_off').select('*,profiles(full_name,default_calendar,role)').order('start_date');
+  // Only load staff time off
+  timeoffs=(data||[]).filter(t=>t.profiles?.role==='staff'||t.profiles?.role==='owner');
+}
 
 function defaultFrom(){const d=new Date();d.setDate(d.getDate()-30);return d.toISOString().split('T')[0]}
-function initDateFilters(){document.getElementById('filter-from').value=defaultFrom();document.getElementById('filter-to').value='2099-12-31'}
+function initDateFilters(){
+  document.getElementById('filter-from').value=defaultFrom();
+  document.getElementById('filter-to').value='2099-12-31';
+}
 
 function buildWhoFilter(){
   const sel=document.getElementById('who-filter');
   const cur=sel.value;
-  const active=profiles.filter(p=>p.is_active!==false);
-  sel.innerHTML=`<option value="all">👥 All People</option>`+active.map(p=>`<option value="${p.id}" ${p.id===cur?'selected':''}>${p.full_name.split(' ')[0]}</option>`).join('');
+  // Filter people relevant to current cal tab
+  let relevant=profiles.filter(p=>p.is_active!==false);
+  if(calTab==='sales')relevant=relevant.filter(p=>p.default_calendar==='sales'||p.role==='staff');
+  else if(calTab==='install')relevant=relevant.filter(p=>p.role==='installer'||(p.role==='staff'&&p.default_calendar==='install'));
+  else if(calTab==='warehouse')relevant=relevant.filter(p=>p.default_calendar==='warehouse');
+  sel.innerHTML=`<option value="all">👥 All People</option>`+relevant.map(p=>`<option value="${p.id}" ${p.id===cur?'selected':''}>${p.full_name.split(' ')[0]}</option>`).join('');
 }
 
 // ── NAV ───────────────────────────────────────────────────────────────────────
@@ -691,152 +771,206 @@ function renderActive(){const p=document.querySelector('.page.active');if(p)rend
 function render(name){
   if(name==='calendar')renderCal();
   else if(name==='projects')renderProjectsList();
-  else if(name==='timeoff'){renderTimeOff();if(isOwner)renderPTOReport()}
+  else if(name==='timeoff'){renderTimeOff();renderPTO()}
   else if(name==='crew')renderCrew();
   else if(name==='installer')renderInstaller();
 }
 
 // ── CALENDAR ──────────────────────────────────────────────────────────────────
-function weekOf(d){const c=new Date(d);const day=c.getDay();c.setDate(c.getDate()-day+(day===0?-6:1));c.setHours(0,0,0,0);return c}
 function setView(v,b){calView=v;document.querySelectorAll('.view-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderCal()}
-function setCalTab(v,b){calTab=v;document.querySelectorAll('#cal-tabs .cal-tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderCal()}
+function setCalTab(v,b){
+  calTab=v;
+  document.querySelectorAll('#cal-tabs .cal-tab').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  buildWhoFilter();
+  renderCal();
+}
 function navBack(){if(calView==='week'){weekStart=new Date(weekStart);weekStart.setDate(weekStart.getDate()-7)}else{currentMonth=new Date(currentMonth.getFullYear(),currentMonth.getMonth()-1,1)}renderCal()}
 function navForward(){if(calView==='week'){weekStart=new Date(weekStart);weekStart.setDate(weekStart.getDate()+7)}else{currentMonth=new Date(currentMonth.getFullYear(),currentMonth.getMonth()+1,1)}renderCal()}
 function goToday(){weekStart=weekOf(new Date());currentMonth=new Date();renderCal()}
+// Mobile nav
+function mobileNavBack(){mobileWeekStart=new Date(mobileWeekStart);mobileWeekStart.setDate(mobileWeekStart.getDate()-7);renderMobileCal()}
+function mobileNavForward(){mobileWeekStart=new Date(mobileWeekStart);mobileWeekStart.setDate(mobileWeekStart.getDate()+7);renderMobileCal()}
+function mobileGoToday(){mobileWeekStart=weekOf(new Date());renderMobileCal()}
 
-function filterProjectsForCal(all){
-  let f=all;
-  if(calTab!=='all')f=f.filter(p=>p.calendar_type===calTab);
+function filterForCal(allP,allT){
+  let fp=[...allP],ft=[...allT];
+  if(calTab!=='all'){fp=fp.filter(p=>p.calendar_type===calTab);ft=ft.filter(t=>(t.calendar_type||t.profiles?.default_calendar||'install')===calTab)}
   if(whoFilter!=='all'){
-    // filter by who — check project_installers or assigned_to name
-    f=f.filter(p=>{
+    fp=fp.filter(p=>{
       const ids=p.project_installers?.map(pi=>pi.installer_id)||[];
-      return ids.includes(whoFilter)||p.assigned_to===whoFilter;
+      return ids.includes(whoFilter);
     });
+    ft=ft.filter(t=>t.profile_id===whoFilter);
   }
-  return f;
+  return{fp,ft};
 }
 
-function filterTimeOffForCal(all){
-  let f=all;
-  if(calTab!=='all')f=f.filter(t=>(t.calendar_type||'install')===calTab);
-  if(whoFilter!=='all')f=f.filter(t=>t.profile_id===whoFilter);
-  return f;
+// Sort events: sales first, then installs, then warehouse
+function sortEvents(events){
+  const order={sales:0,install:1,warehouse:2};
+  return events.sort((a,b)=>(order[a.calType]||0)-(order[b.calType]||0));
 }
 
 function renderCal(){
   whoFilter=document.getElementById('who-filter').value;
-  const filteredP=filterProjectsForCal(projects);
-  const filteredT=filterTimeOffForCal(timeoffs);
-  updateStats(filteredP);
-  calView==='week'?renderWeek(filteredP,filteredT):renderMonth(filteredP,filteredT);
+  const{fp,ft}=filterForCal(projects,timeoffs);
+  updateStats(fp);
+  calView==='week'?renderWeek(fp,ft):renderMonth(fp,ft);
+  renderMobileCal();
 }
 
 function updateStats(fp){
-  const today=new Date();today.setHours(0,0,0,0);
+  const todayStr=today();
+  const now=new Date();
   let ws,we;
   if(calView==='week'){
     ws=weekStart.toISOString().split('T')[0];
     const we2=new Date(weekStart);we2.setDate(we2.getDate()+6);we=we2.toISOString().split('T')[0];
+    document.getElementById('stat-period-label').textContent='This Week';
+    document.getElementById('cal-nav-label').textContent=(()=>{const fmt=d=>d.toLocaleDateString('en-US',{month:'short',day:'numeric'});return`${fmt(weekStart)} – ${fmt(new Date(weekStart.getFullYear(),weekStart.getMonth(),weekStart.getDate()+6))}`;})();
+    document.getElementById('cal-subtitle').textContent=weekStart.toLocaleDateString('en-US',{month:'long',year:'numeric'});
   } else {
     ws=new Date(currentMonth.getFullYear(),currentMonth.getMonth(),1).toISOString().split('T')[0];
     we=new Date(currentMonth.getFullYear(),currentMonth.getMonth()+1,0).toISOString().split('T')[0];
-  }
-  const now=new Date();
-  const ms=new Date(now.getFullYear(),now.getMonth(),1).toISOString().split('T')[0];
-  const me2=new Date(now.getFullYear(),now.getMonth()+1,0).toISOString().split('T')[0];
-  const label=calView==='week'?'This Week':'This Month';
-  document.getElementById('stat-week-label').textContent=label;
-  document.getElementById('stat-week').textContent=fp.filter(p=>p.start_date>=ws&&p.start_date<=we).length;
-  document.getElementById('stat-week-sub').textContent=whoFilter==='all'?'projects':`${(profiles.find(x=>x.id===whoFilter)?.full_name||'').split(' ')[0]}'s projects`;
-  document.getElementById('stat-inprog').textContent=fp.filter(p=>p.status==='in_progress').length;
-  document.getElementById('stat-sched').textContent=fp.filter(p=>p.status==='scheduled').length;
-  document.getElementById('stat-done').textContent=fp.filter(p=>p.status==='complete'&&p.start_date>=ms&&p.start_date<=me2).length;
-  // Nav label
-  if(calView==='week'){
-    const we3=new Date(weekStart);we3.setDate(we3.getDate()+6);
-    const fmt=d=>d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
-    document.getElementById('cal-nav-label').textContent=`${fmt(weekStart)} – ${fmt(we3)}`;
-    document.getElementById('cal-subtitle').textContent=weekStart.toLocaleDateString('en-US',{month:'long',year:'numeric'});
-  } else {
+    document.getElementById('stat-period-label').textContent='This Month';
     document.getElementById('cal-nav-label').textContent=currentMonth.toLocaleDateString('en-US',{month:'long',year:'numeric'});
     document.getElementById('cal-subtitle').textContent=currentMonth.getFullYear();
   }
+  const ms=new Date(now.getFullYear(),now.getMonth(),1).toISOString().split('T')[0];
+  const me2=new Date(now.getFullYear(),now.getMonth()+1,0).toISOString().split('T')[0];
+  document.getElementById('stat-week').textContent=fp.filter(p=>p.start_date>=ws&&p.start_date<=we).length;
+  document.getElementById('stat-week-sub').textContent=whoFilter==='all'?'projects':`${(profiles.find(x=>x.id===whoFilter)?.full_name||'').split(' ')[0]}'s jobs`;
+  document.getElementById('stat-inprog').textContent=fp.filter(p=>p.status==='in_progress').length;
+  document.getElementById('stat-sched').textContent=fp.filter(p=>p.status==='scheduled').length;
+  document.getElementById('stat-done').textContent=fp.filter(p=>p.status==='complete'&&p.start_date>=ms&&p.start_date<=me2).length;
 }
 
-function eventClasses(p){return`cal-event cal-${p.calendar_type}${p.status==='complete'?' status-complete':''}`}
+function getEventsForDay(ds,fp,ft){
+  const events=[];
+  const sorted=[...fp].sort((a,b)=>{const o={sales:0,install:1,warehouse:2};return(o[a.calendar_type]||0)-(o[b.calendar_type]||0)});
+  sorted.forEach(p=>{const s=p.start_date,e=p.end_date||s;if(ds>=s&&ds<=e)events.push({type:'project',p,calType:p.calendar_type})});
+  // Time off only for owner
+  if(isOwner)ft.forEach(t=>{if(ds>=t.start_date&&ds<=t.end_date)events.push({type:'to',t,calType:'timeoff'})});
+  return events;
+}
+
+function renderEventChip(item,forMonth=false){
+  const sz=forMonth?'style="font-size:.62rem;padding:1px 3px;margin-bottom:1px"':'';
+  if(item.type==='project'){
+    const p=item.p;
+    const addr=p.address?` · ${p.address.split(',')[0]}`:'';
+    return`<div class="cal-event cal-${p.calendar_type}" onclick="openDetail('${p.id}')" title="${p.customer_name}${addr}" ${sz}>${p.customer_name}</div>`;
+  }
+  const t=item.t;
+  return`<div class="cal-event time-off" ${sz}>🏖 ${(t.profiles?.full_name||'').split(' ')[0]}${t.note?` (${t.note})`:''}</div>`;
+}
 
 function renderWeek(fp,ft){
   const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  const today=new Date();today.setHours(0,0,0,0);
-  let html=days.map(d=>`<div class="week-day-header">${d}</div>`).join('');
+  const todayD=new Date();todayD.setHours(0,0,0,0);
+  let html=days.map((d,i)=>`<div class="week-day-header" style="${i>=5?'color:var(--amber)':''}">${d}</div>`).join('');
   for(let i=0;i<7;i++){
     const cd=new Date(weekStart);cd.setDate(cd.getDate()+i);
-    const isToday=cd.getTime()===today.getTime();
+    const isToday=cd.getTime()===todayD.getTime();
     const ds=cd.toISOString().split('T')[0];
-    const dp=fp.filter(p=>{const s=p.start_date,e=p.end_date||s;return ds>=s&&ds<=e});
-    const dto=ft.filter(t=>ds>=t.start_date&&ds<=t.end_date);
-    const allItems=[...dp.map(p=>({type:'project',p})),...dto.map(t=>({type:'to',t}))];
-    const MAX=3;const shown=allItems.slice(0,MAX);const extra=allItems.length-MAX;
-    const evts=shown.map(item=>{
-      if(item.type==='project'){const p=item.p;return`<div class="${eventClasses(p)}" onclick="openDetail('${p.id}')" title="${p.customer_name}${p.address?' · '+p.address.split(',')[0]:''}">${p.customer_name}</div>`}
-      const t=item.t;return`<div class="cal-event time-off">🏖 ${(t.profiles?.full_name||'').split(' ')[0]}</div>`;
-    }).join('');
+    const isWknd=i>=5;
+    const events=getEventsForDay(ds,fp,ft);
+    const MAX=3;const shown=events.slice(0,MAX);const extra=events.length-MAX;
+    const evts=shown.map(item=>renderEventChip(item)).join('');
     const morePill=extra>0?`<div class="more-pill" onclick="openDayModal('${ds}')">+${extra} more</div>`:'';
-    html+=`<div class="week-day-cell ${isToday?'today':''}"><div class="day-num">${cd.getDate()}</div>${evts}${morePill}</div>`;
+    html+=`<div class="week-day-cell ${isToday?'today':''} ${isWknd?'weekend':''}"><div class="day-num">${cd.getDate()}</div>${evts}${morePill}</div>`;
   }
   document.getElementById('cal-container').innerHTML=`<div class="week-grid">${html}</div>`;
 }
 
 function renderMonth(fp,ft){
   const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  const today=new Date();today.setHours(0,0,0,0);
+  const todayD=new Date();todayD.setHours(0,0,0,0);
   const year=currentMonth.getFullYear(),month=currentMonth.getMonth();
   const firstDay=new Date(year,month,1);
-  const lastDay=new Date(year,month+1,0);
-  // First Monday on/before firstDay
   let start=new Date(firstDay);
-  const fd=start.getDay();start.setDate(start.getDate()-((fd===0?7:fd)-1));
-  let html=days.map(d=>`<div class="month-day-header">${d}</div>`).join('');
+  const fd2=start.getDay();start.setDate(start.getDate()-((fd2===0?7:fd2)-1));
+  const lastDay=new Date(year,month+1,0);
+  let html=days.map((d,i)=>`<div class="month-day-header" style="${i>=5?'color:var(--amber)':''}">${d}</div>`).join('');
   const cur=new Date(start);
-  while(cur<=lastDay||cur.getDay()!==1){
+  while(true){
     const ds=cur.toISOString().split('T')[0];
-    const isToday=cur.getTime()===today.getTime();
+    const isToday=cur.getTime()===todayD.getTime();
     const otherMonth=cur.getMonth()!==month;
-    const dp=fp.filter(p=>{const s=p.start_date,e=p.end_date||s;return ds>=s&&ds<=e});
-    const dto=ft.filter(t=>ds>=t.start_date&&ds<=t.end_date);
-    const allItems=[...dp.map(p=>({type:'project',p})),...dto.map(t=>({type:'to',t}))];
-    const MAX=3;const shown=allItems.slice(0,MAX);const extra=allItems.length-MAX;
-    const numHtml=isToday?`<span>${cur.getDate()}</span>`:`${cur.getDate()}`;
-    const evts=shown.map(item=>{
-      if(item.type==='project'){const p=item.p;return`<div class="${eventClasses(p)}" onclick="openDetail('${p.id}')" style="font-size:.62rem;padding:1px 3px;margin-bottom:1px">${p.customer_name}</div>`}
-      const t=item.t;return`<div class="cal-event time-off" style="font-size:.62rem;padding:1px 3px;margin-bottom:1px">🏖 ${(t.profiles?.full_name||'').split(' ')[0]}</div>`;
-    }).join('');
+    const isWknd=cur.getDay()===0||cur.getDay()===6;
+    const events=getEventsForDay(ds,fp,ft);
+    const MAX=3;const shown=events.slice(0,MAX);const extra=events.length-MAX;
+    const numHtml=isToday?`<span class="dn">${cur.getDate()}</span>`:`${cur.getDate()}`;
+    const evts=shown.map(item=>renderEventChip(item,true)).join('');
     const morePill=extra>0?`<div class="more-pill" onclick="openDayModal('${ds}')">+${extra} more</div>`:'';
-    html+=`<div class="month-day-cell ${isToday?'today':''} ${otherMonth?'other-month':''}"><div class="month-day-num"><span>${numHtml}</span></div>${evts}${morePill}</div>`;
+    html+=`<div class="month-day-cell ${isToday?'today':''} ${otherMonth?'other-month':''} ${isWknd?'weekend':''}"><div class="month-day-num">${numHtml}</div>${evts}${morePill}</div>`;
     cur.setDate(cur.getDate()+1);
     if(cur>lastDay&&cur.getDay()===1)break;
   }
   document.getElementById('cal-container').innerHTML=`<div class="month-grid">${html}</div>`;
 }
 
+function renderMobileCal(){
+  const{fp,ft}=filterForCal(projects,timeoffs);
+  const todayD=new Date();todayD.setHours(0,0,0,0);
+  const todayStr=today();
+  // Show 14 days starting from mobileWeekStart
+  const we=new Date(mobileWeekStart);we.setDate(we.getDate()+6);
+  document.getElementById('mobile-cal-label').textContent=(()=>{const fmt=d=>d.toLocaleDateString('en-US',{month:'short',day:'numeric'});return`${fmt(mobileWeekStart)} – ${fmt(we)}`;})();
+  let html='';
+  for(let i=0;i<7;i++){
+    const cd=new Date(mobileWeekStart);cd.setDate(cd.getDate()+i);
+    const ds=cd.toISOString().split('T')[0];
+    const isToday=cd.getTime()===todayD.getTime();
+    const events=getEventsForDay(ds,fp,ft);
+    if(!events.length&&!isToday)continue; // skip empty days on mobile
+    const dayLabel=isToday?'Today':cd.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+    const evts=events.map(item=>{
+      if(item.type==='project'){
+        const p=item.p;
+        const timeStr=p.start_time?fmtTime(p.start_time):'';
+        return`<div class="mobile-cal-event cal-${p.calendar_type}" onclick="openDetail('${p.id}')">
+          <div><div class="mobile-event-name">${p.customer_name}</div>
+          <div class="mobile-event-sub">${p.address?'📍 '+p.address.split(',')[0]:''}${timeStr?' · 🕐 '+timeStr:''}</div></div>
+        </div>`;
+      }
+      const t=item.t;
+      return`<div class="mobile-cal-event time-off"><div><div class="mobile-event-name">🏖 ${t.profiles?.full_name||''}</div><div class="mobile-event-sub">${t.note||'Time Off'}</div></div></div>`;
+    }).join('');
+    html+=`<div class="mobile-day-block">
+      <div class="mobile-day-label ${isToday?'today-label':''}">${dayLabel}<span style="font-size:.7rem;font-weight:400">${events.length} event${events.length!==1?'s':''}</span></div>
+      <div class="mobile-day-events">${evts||'<div style="font-size:.8rem;color:var(--g400);padding:.25rem .5rem">No events</div>'}</div>
+    </div>`;
+  }
+  document.getElementById('mobile-cal-container').innerHTML=html||'<div class="empty-state"><div class="empty-icon">📅</div><p>No events this week</p></div>';
+}
+
 function openDayModal(ds){
   const d=new Date(ds+'T00:00:00');
   document.getElementById('day-modal-title').textContent=d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
-  const fp=filterProjectsForCal(projects).filter(p=>{const s=p.start_date,e=p.end_date||s;return ds>=s&&ds<=e});
-  const ft=filterTimeOffForCal(timeoffs).filter(t=>ds>=t.start_date&&ds<=t.end_date);
+  const{fp,ft}=filterForCal(projects,timeoffs);
+  const events=getEventsForDay(ds,fp,ft);
   let html='';
-  fp.forEach(p=>{html+=`<div class="day-detail-event cal-${p.calendar_type}" onclick="closeModal('day-modal');openDetail('${p.id}')">${p.customer_name}${p.address?`<div style="font-size:.75rem;margin-top:2px;opacity:.7">📍 ${p.address}</div>`:''}</div>`});
-  ft.forEach(t=>{html+=`<div class="day-detail-event time-off">🏖 ${t.profiles?.full_name||''} - Time Off${t.note?' ('+t.note+')':''}</div>`});
+  events.forEach(item=>{
+    if(item.type==='project'){
+      const p=item.p;
+      html+=`<div class="day-detail-event cal-${p.calendar_type}" onclick="closeModal('day-modal');openDetail('${p.id}')">
+        ${p.customer_name}${p.address?`<div style="font-size:.75rem;margin-top:2px;font-weight:400">📍 ${p.address}</div>`:''}</div>`;
+    } else {
+      const t=item.t;
+      html+=`<div class="day-detail-event time-off">🏖 ${t.profiles?.full_name||''} – Time Off${t.note?' ('+t.note+')':''}</div>`;
+    }
+  });
   if(!html)html=`<div style="color:var(--g400);font-size:.875rem">No events this day.</div>`;
   document.getElementById('day-modal-body').innerHTML=html;
   openModal('day-modal');
 }
 
 // ── PROJECTS LIST ─────────────────────────────────────────────────────────────
-function setProjectCalTab(v,b){projCalTab=v;document.querySelectorAll('#proj-cal-tabs .cal-tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderProjectsList()}
-function filterProjects(v,b){statusFilter=v;document.querySelectorAll('.filter-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderProjectsList()}
-function setQuickRange(r,b){
+function setProjCal(v,b){projCalTab=v;document.querySelectorAll('#proj-cal-tabs .cal-tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderProjectsList()}
+function setStatus(v,b){statusFilter=v;document.querySelectorAll('.filter-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderProjectsList()}
+function setQR(r,b){
   document.querySelectorAll('.qr-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');
   const n=new Date();let from,to;
   if(r==='30d'){const d=new Date();d.setDate(d.getDate()-30);from=d.toISOString().split('T')[0];to='2099-12-31'}
@@ -860,7 +994,7 @@ async function renderProjectsList(){
     const crew=p.project_installers?.map(pi=>pi.profiles?.full_name).filter(Boolean).join(', ')||p.assigned_to||'';
     const m=p.measurement_value?`${p.measurement_value} ${p.measurement_unit}`:'';
     const timeStr=p.start_time?` · ${fmtTime(p.start_time)}`:'';
-    return `<div class="project-card cal-${p.calendar_type}" onclick="openDetail('${p.id}')">
+    return`<div class="project-card cal-${p.calendar_type}" onclick="openDetail('${p.id}')">
       <div class="project-card-top">
         <div><div class="project-customer">${p.customer_name}</div>${p.address?`<div class="project-address">📍 ${p.address}</div>`:''}</div>
         <span class="badge badge-${p.status}">${slbl(p.status)}</span>
@@ -881,18 +1015,18 @@ function renderInstaller(){
   document.getElementById('installer-subtitle').textContent=`Welcome, ${myProfile?.full_name?.split(' ')[0]||''}`;
   const c=document.getElementById('installer-schedule');
   if(!projects.length){c.innerHTML=`<div class="empty-state"><div class="empty-icon">✅</div><p>No projects assigned yet.</p></div>`;return}
-  const today=new Date();today.setHours(0,0,0,0);
+  const todayD=new Date();todayD.setHours(0,0,0,0);
   const sorted=[...projects].sort((a,b)=>a.start_date.localeCompare(b.start_date));
   const grp={};sorted.forEach(p=>{if(!grp[p.start_date])grp[p.start_date]=[];grp[p.start_date].push(p)});
   c.innerHTML=Object.keys(grp).sort().map(ds=>{
-    const d=new Date(ds+'T00:00:00');const diff=Math.round((d-today)/86400000);
+    const d=new Date(ds+'T00:00:00');const diff=Math.round((d-todayD)/86400000);
     let lbl=d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
     if(diff===0)lbl='Today — '+lbl;else if(diff===1)lbl='Tomorrow — '+lbl;
     const jobs=grp[ds].map(p=>{
       const m=p.measurement_value?`${p.measurement_value} ${p.measurement_unit}`:'';
       const murl=`https://maps.google.com/?q=${encodeURIComponent(p.address||'')}`;
       const timeStr=p.start_time?`${fmtTime(p.start_time)}${p.end_time?' – '+fmtTime(p.end_time):''}`:null;
-      return `<div class="installer-job-card">
+      return`<div class="installer-job-card">
         <div class="installer-job-customer">${p.customer_name}</div>
         ${p.address?`<div class="installer-job-address">📍 ${p.address}</div>`:''}
         <div class="installer-job-details">
@@ -905,7 +1039,7 @@ function renderInstaller(){
         ${p.address?`<a href="${murl}" target="_blank" class="map-btn">🗺 Get Directions</a>`:''}
       </div>`;
     }).join('');
-    return `<div class="installer-day"><div class="installer-day-label">${lbl}</div>${jobs}</div>`;
+    return`<div class="installer-day"><div class="installer-day-label">${lbl}</div>${jobs}</div>`;
   }).join('');
 }
 
@@ -913,8 +1047,8 @@ function renderInstaller(){
 function renderTimeOff(){
   const c=document.getElementById('timeoff-list');
   if(!timeoffs.length){c.innerHTML=`<div class="empty-state"><div class="empty-icon">🏖</div><p>No time off scheduled.</p></div>`;return}
-  const today=new Date().toISOString().split('T')[0];
-  const up=timeoffs.filter(t=>t.end_date>=today),past=timeoffs.filter(t=>t.end_date<today);
+  const todayStr=today();
+  const up=timeoffs.filter(t=>t.end_date>=todayStr),past=timeoffs.filter(t=>t.end_date<todayStr);
   let html='';
   if(up.length){html+=`<div class="section-divider">Upcoming & Current</div>`;html+=up.map(toRow).join('')}
   if(past.length){html+=`<div class="section-divider" style="margin-top:1.5rem">Past</div>`;html+=past.map(toRow).join('')}
@@ -924,55 +1058,61 @@ function toRow(t){
   const cal={install:'Installs',sales:'Sales',warehouse:'Warehouse'}[t.calendar_type||'install']||'';
   const st=t.start_time?fmtTime(t.start_time):'',et=t.end_time?fmtTime(t.end_time):'';
   const tr=st?` · ${st}${et?' – '+et:''}`:'' ;
-  return `<div class="timeoff-item">
-    <div><div class="timeoff-name">${t.profiles?.full_name||'Unknown'} <span style="font-size:.75rem;color:var(--g400)">${cal}</span></div>
+  return`<div class="timeoff-item">
+    <div><div class="timeoff-name">${t.profiles?.full_name||'?'} <span style="font-size:.75rem;color:var(--g400)">${cal}</span></div>
     <div class="timeoff-dates">${fd(t.start_date)} – ${fd(t.end_date)}${tr}${t.note?' · '+t.note:''}</div></div>
     <button class="btn btn-ghost btn-sm" onclick="editTimeOff('${t.id}')">Edit</button>
   </div>`;
 }
-function renderPTOReport(){
+function renderPTO(){
   const year=document.getElementById('pto-year').value;
   const yf=`${year}-01-01`,yt=`${year}-12-31`;
   const entries=timeoffs.filter(t=>t.start_date>=yf&&t.start_date<=yt);
   const byP={};entries.forEach(t=>{const n=t.profiles?.full_name||t.profile_id;if(!byP[n])byP[n]=[];byP[n].push(t)});
   const c=document.getElementById('pto-report');
-  if(!Object.keys(byP).length){c.innerHTML=`<div style="color:var(--g400);font-size:.875rem;padding:.5rem 0">No time off recorded for ${year}.</div>`;return}
-  c.innerHTML=Object.entries(byP).sort().map(([name,entries])=>{
-    let days=0;entries.forEach(t=>{const s=new Date(t.start_date+'T00:00:00'),e=new Date(t.end_date+'T00:00:00');days+=Math.round((e-s)/86400000)+1});
-    const details=entries.map(t=>`<div style="font-size:.75rem;color:var(--g500);margin-top:2px">${fd(t.start_date)}${t.end_date!==t.start_date?' – '+fd(t.end_date):''}${t.note?' · '+t.note:''}</div>`).join('');
-    return `<div class="pto-row"><div><div class="pto-name">${name}</div>${details}</div><div class="pto-days"><strong>${days}</strong> day${days!==1?'s':''}</div></div>`;
+  if(!Object.keys(byP).length){c.innerHTML=`<div style="color:var(--g400);font-size:.875rem">No time off for ${year}.</div>`;return}
+  c.innerHTML=Object.entries(byP).sort().map(([name,ents])=>{
+    let days=0;ents.forEach(t=>{const s=new Date(t.start_date+'T00:00:00'),e=new Date(t.end_date+'T00:00:00');days+=Math.round((e-s)/86400000)+1});
+    const details=ents.map(t=>`<div style="font-size:.75rem;color:var(--g500);margin-top:2px">${fd(t.start_date)}${t.end_date!==t.start_date?' – '+fd(t.end_date):''}${t.note?' · '+t.note:''}</div>`).join('');
+    return`<div class="pto-row"><div><div class="pto-name">${name}</div>${details}</div><div class="pto-days"><strong>${days}</strong> day${days!==1?'s':''}</div></div>`;
   }).join('');
 }
 function openTimeOffModal(){
   document.getElementById('to-id').value='';document.getElementById('to-modal-title').textContent='Add Time Off';
   ['to-start','to-end','to-note'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('to-start-time').value='08:00';document.getElementById('to-end-time').value='';
   document.getElementById('to-del-btn').style.display='none';
-  setTime('to-start-time','08:00');setTime('to-end-time','17:00');
-  fillToPeople(null);openModal('timeoff-modal');
+  // Only staff in time off dropdown
+  const staffOnly=profiles.filter(p=>p.role==='staff'&&p.is_active!==false);
+  document.getElementById('to-person').innerHTML=staffOnly.map(p=>`<option value="${p.id}">${p.full_name}</option>`).join('');
+  autoSetToCal();openModal('timeoff-modal');
 }
 function editTimeOff(id){
   const t=timeoffs.find(x=>x.id===id);if(!t)return;
   document.getElementById('to-id').value=id;document.getElementById('to-modal-title').textContent='Edit Time Off';
-  document.getElementById('to-start').value=t.start_date;document.getElementById('to-end').value=t.end_date;document.getElementById('to-note').value=t.note||'';
-  document.getElementById('to-del-btn').style.display='inline-flex';document.getElementById('to-calendar').value=t.calendar_type||'install';
-  setTime('to-start-time',t.start_time||'08:00');setTime('to-end-time',t.end_time||'');fillToPeople(t.profile_id);openModal('timeoff-modal');
+  document.getElementById('to-start').value=t.start_date;document.getElementById('to-end').value=t.end_date;
+  document.getElementById('to-note').value=t.note||'';document.getElementById('to-calendar').value=t.calendar_type||'sales';
+  document.getElementById('to-start-time').value=t.start_time||'08:00';document.getElementById('to-end-time').value=t.end_time||'';
+  document.getElementById('to-del-btn').style.display='inline-flex';
+  const staffOnly=profiles.filter(p=>p.role==='staff'&&p.is_active!==false);
+  document.getElementById('to-person').innerHTML=staffOnly.map(p=>`<option value="${p.id}" ${p.id===t.profile_id?'selected':''}>${p.full_name}</option>`).join('');
+  openModal('timeoff-modal');
 }
-function fillToPeople(sel){
-  document.getElementById('to-person').innerHTML=profiles.filter(p=>p.is_active!==false).map(p=>`<option value="${p.id}" ${p.id===sel?'selected':''}>${p.full_name}</option>`).join('');
-  if(!sel)autoSetCalendar();
-}
-function autoSetCalendar(){
+function autoSetToCal(){
   const pid=document.getElementById('to-person').value;
   const p=profiles.find(x=>x.id===pid);if(!p)return;
   const cal=p.default_calendar||(p.role==='staff'?'sales':'install');
-  document.getElementById('to-calendar').value=cal==='all'?'install':cal;
+  document.getElementById('to-calendar').value=cal==='all'?'sales':cal;
 }
 async function saveTimeOff(){
   const id=document.getElementById('to-id').value;
-  const payload={profile_id:document.getElementById('to-person').value,start_date:document.getElementById('to-start').value,end_date:document.getElementById('to-end').value,note:document.getElementById('to-note').value||null,calendar_type:document.getElementById('to-calendar').value,start_time:getTime('to-start-time')||null,end_time:getTime('to-end-time')||null,created_by:me.id};
-  if(!payload.profile_id||!payload.start_date||!payload.end_date){showToast('Fill in all required fields.','error');return}
+  const profile_id=document.getElementById('to-person').value;
+  const start_date=document.getElementById('to-start').value;
+  const end_date=document.getElementById('to-end').value;
+  if(!profile_id||!start_date||!end_date){showToast('Fill in all required fields.','error');return}
+  const payload={profile_id,start_date,end_date,note:document.getElementById('to-note').value||null,calendar_type:document.getElementById('to-calendar').value,start_time:document.getElementById('to-start-time').value||null,end_time:document.getElementById('to-end-time').value||null,created_by:me.id};
   if(id)await sb.from('time_off').update(payload).eq('id',id);else await sb.from('time_off').insert(payload);
-  closeModal('timeoff-modal');showToast('Saved!','success');await fetchTimeOff();renderTimeOff();if(isOwner)renderPTOReport();
+  closeModal('timeoff-modal');showToast('Saved!','success');await fetchTimeOff();renderTimeOff();renderPTO();
 }
 async function deleteTimeOff(){
   const id=document.getElementById('to-id').value;if(!id||!confirm('Delete?'))return;
@@ -980,136 +1120,274 @@ async function deleteTimeOff(){
 }
 
 // ── CREW ──────────────────────────────────────────────────────────────────────
+function setCrewFilter(v,b){crewFilter=v;document.querySelectorAll('.crew-toggle-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderCrew()}
 function renderCrew(){
-  const staff=profiles.filter(p=>p.role==='staff'),inst=profiles.filter(p=>p.role==='installer');
-  const mk=(arr,isS)=>arr.length?`<div class="crew-list">${arr.map(p=>crewRow(p,isS)).join('')}</div>`:`<div style="color:var(--g400);font-size:.875rem;padding:.5rem 0">None yet.</div>`;
+  let staff=profiles.filter(p=>p.role==='staff');
+  let inst=profiles.filter(p=>p.role==='installer');
+  if(crewFilter==='active'){staff=staff.filter(p=>p.is_active!==false);inst=inst.filter(p=>p.is_active!==false)}
+  else if(crewFilter==='inactive'){staff=staff.filter(p=>p.is_active===false);inst=inst.filter(p=>p.is_active===false)}
+  const mk=(arr,isS)=>arr.length?`<div class="crew-list">${arr.map(p=>crewRow(p,isS)).join('')}</div>`:`<div style="color:var(--g400);font-size:.875rem;padding:.5rem 0">None.</div>`;
   document.getElementById('staff-list').innerHTML=mk(staff,true);
   document.getElementById('installer-list').innerHTML=mk(inst,false);
 }
 function crewRow(p,isStaff){
   const active=p.is_active!==false;
   const calLabel={install:'Installs',sales:'Sales',warehouse:'Warehouse',all:'All'}[p.default_calendar||'install']||'';
-  return `<div class="crew-item ${active?'':'inactive'}">
+  return`<div class="crew-item ${active?'':'inactive'}" onclick="openProfileModal('${p.id}')">
     <div class="crew-item-left">
       <div class="crew-avatar ${isStaff?'staff-av':''}">${p.full_name.charAt(0).toUpperCase()}</div>
-      <div><div class="crew-name">${p.full_name}</div><div class="crew-role">${isStaff?'Staff':'Installer / Sub'} · ${calLabel}${active?'':' · Inactive'}</div></div>
+      <div><div class="crew-name">${p.full_name}</div><div class="crew-role">${isStaff?'Staff':'Installer'} · ${calLabel}${active?'':' · Inactive'}</div></div>
     </div>
-    <label class="toggle"><input type="checkbox" ${active?'checked':''} onchange="toggleActive('${p.id}',this.checked)"/><span class="toggle-track"></span><span class="toggle-thumb"></span></label>
+    <label class="toggle" onclick="event.stopPropagation()">
+      <input type="checkbox" ${active?'checked':''} onchange="toggleActive('${p.id}',this.checked)"/>
+      <span class="toggle-track"></span><span class="toggle-thumb"></span>
+    </label>
   </div>`;
 }
 async function toggleActive(id,val){await sb.from('profiles').update({is_active:val}).eq('id',id);await fetchProfiles();renderCrew();showToast(val?'Marked active':'Marked inactive','')}
-function openAddUserModal(){['new-name','new-email','new-password'].forEach(id=>document.getElementById(id).value='');document.getElementById('new-role').value='installer';document.getElementById('new-calendar').value='install';openModal('add-user-modal')}
+
+function updateNewCalDefault(){
+  const role=document.getElementById('new-role').value;
+  // Staff get all 3 calendars conceptually — we just default to their primary
+  if(role==='staff'){document.getElementById('new-calendar').value='sales'}
+  else{document.getElementById('new-calendar').value='install'}
+}
+function openAddUserModal(){
+  ['new-name','new-email','new-password'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('new-role').value='installer';
+  document.getElementById('new-calendar').value='install';
+  openModal('add-user-modal');
+}
 async function createUser(){
-  const name=document.getElementById('new-name').value.trim(),email=document.getElementById('new-email').value.trim(),role=document.getElementById('new-role').value,pw=document.getElementById('new-password').value,default_calendar=document.getElementById('new-calendar').value;
+  const name=document.getElementById('new-name').value.trim();
+  const email=document.getElementById('new-email').value.trim();
+  const role=document.getElementById('new-role').value;
+  const pw=document.getElementById('new-password').value;
+  const default_calendar=document.getElementById('new-calendar').value;
   if(!name||!email||!pw){showToast('Fill in all fields.','error');return}
-  const {data,error}=await sb.auth.signUp({email,password:pw});
+  const{data,error}=await sb.auth.signUp({email,password:pw});
   if(error){showToast('Error: '+error.message,'error');return}
   await sb.from('profiles').insert({id:data.user.id,full_name:name,role,is_active:true,default_calendar});
   closeModal('add-user-modal');showToast(`Account created for ${name}!`,'success');await fetchProfiles();renderCrew();
 }
 
-// ── QUICK ADD PERSON ──────────────────────────────────────────────────────────
-function toggleQuickAdd(){
-  const f=document.getElementById('quick-add-form');
-  const icon=document.getElementById('quick-add-icon');
-  const showing=!f.classList.contains('hidden');
-  f.classList.toggle('hidden',showing);
-  icon.textContent=showing?'＋':'×';
+// ── INSTALLER PROFILE MODAL ───────────────────────────────────────────────────
+async function openProfileModal(id){
+  const p=profiles.find(x=>x.id===id);if(!p)return;
+  document.getElementById('pm-id').value=id;
+  document.getElementById('profile-modal-title').textContent=p.full_name;
+  document.getElementById('pm-name').value=p.full_name||'';
+  document.getElementById('pm-phone').value=p.phone||'';
+  document.getElementById('pm-email').value=p.email||'';
+  // Load docs
+  const{data:docs}=await sb.from('installer_docs').select('*').eq('profile_id',id).order('created_at',{ascending:false});
+  installerDocs=docs||[];
+  renderDocList();
+  openModal('profile-modal');
 }
-async function quickAddPerson(){
-  const name=document.getElementById('qa-name').value.trim();
-  const role=document.getElementById('qa-role').value;
-  const default_calendar=document.getElementById('qa-calendar').value;
-  const email=document.getElementById('qa-email').value.trim();
-  if(!name){showToast('Name is required.','error');return}
-  let uid=null;
-  if(email){
-    // Create auth user with temp password
-    const tempPw='Temp'+Math.random().toString(36).slice(2,8)+'!';
-    const {data,error}=await sb.auth.signUp({email,password:tempPw});
-    if(error){showToast('Error creating account: '+error.message,'error');return}
-    uid=data.user.id;
-  } else {
-    // Create profile-only (no login) — use a random UUID
-    uid=crypto.randomUUID();
-  }
-  await sb.from('profiles').insert({id:uid,full_name:name,role,is_active:true,default_calendar});
-  await fetchProfiles();
-  buildCrewCb(getCheckedCrew());
-  // Auto-check the new person
-  const newCheckbox=document.querySelector(`#crew-checkboxes input[value="${uid}"]`);
-  if(newCheckbox)newCheckbox.checked=true;
-  showToast(`${name} added and assigned!`,'success');
-  toggleQuickAdd();
-  document.getElementById('qa-name').value='';document.getElementById('qa-email').value='';
+function renderDocList(){
+  const c=document.getElementById('pm-docs-list');
+  if(!installerDocs.length){c.innerHTML=`<div style="color:var(--g400);font-size:.875rem;padding:.5rem 0">No documents uploaded yet.</div>`;return}
+  const todayStr=today();
+  c.innerHTML=`<div class="doc-list">${installerDocs.map(d=>{
+    const expired=d.expiration_date&&d.expiration_date<todayStr;
+    const expiring=d.expiration_date&&!expired&&d.expiration_date<new Date(Date.now()+30*86400000).toISOString().split('T')[0];
+    const expLabel=d.expiration_date?`<span class="${expired?'doc-expired':expiring?'doc-expiring':''}">${expired?'Expired':'Expires'} ${fd(d.expiration_date)}</span>`:'';
+    return`<div class="doc-item">
+      <div class="doc-item-left">
+        <span class="doc-badge ${d.doc_type}">${d.doc_type.toUpperCase()}</span>
+        <span>${d.file_name}</span>
+        ${expLabel}
+      </div>
+      <div style="display:flex;gap:.4rem">
+        <a href="${SURL}/storage/v1/object/sign/installer-docs/${d.file_path}?token=..." class="btn btn-ghost btn-sm" onclick="downloadDoc(event,'${d.id}','${d.file_path}')">↓</a>
+        <button class="btn btn-danger btn-sm" onclick="deleteDoc('${d.id}','${d.file_path}')">×</button>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
 }
-function getCheckedCrew(){return Array.from(document.querySelectorAll('#crew-checkboxes input:checked')).map(i=>i.value)}
+async function downloadDoc(e,docId,path){
+  e.preventDefault();
+  const{data,error}=await sb.storage.from('installer-docs').createSignedUrl(path,60);
+  if(error){showToast('Could not load file.','error');return}
+  window.open(data.signedUrl,'_blank');
+}
+async function uploadDoc(){
+  const pid=document.getElementById('pm-id').value;
+  const type=document.getElementById('pm-doc-type').value;
+  const exp=document.getElementById('pm-doc-exp').value||null;
+  const file=document.getElementById('pm-doc-file').files[0];
+  if(!file){showToast('Please select a file.','error');return}
+  const btn=document.getElementById('pm-upload-btn');
+  btn.textContent='Uploading...';btn.disabled=true;
+  const path=`${pid}/${type}_${Date.now()}_${file.name}`;
+  const{error:upErr}=await sb.storage.from('installer-docs').upload(path,file);
+  if(upErr){showToast('Upload failed: '+upErr.message,'error');btn.textContent='Upload';btn.disabled=false;return}
+  await sb.from('installer_docs').insert({profile_id:pid,doc_type:type,file_name:file.name,file_path:path,expiration_date:exp,uploaded_by:me.id});
+  const{data:docs}=await sb.from('installer_docs').select('*').eq('profile_id',pid).order('created_at',{ascending:false});
+  installerDocs=docs||[];renderDocList();
+  document.getElementById('pm-doc-file').value='';document.getElementById('pm-doc-exp').value='';
+  btn.textContent='Upload';btn.disabled=false;showToast('Uploaded!','success');
+}
+async function deleteDoc(docId,path){
+  if(!confirm('Delete this document?'))return;
+  await sb.storage.from('installer-docs').remove([path]);
+  await sb.from('installer_docs').delete().eq('id',docId);
+  const pid=document.getElementById('pm-id').value;
+  const{data:docs}=await sb.from('installer_docs').select('*').eq('profile_id',pid).order('created_at',{ascending:false});
+  installerDocs=docs||[];renderDocList();showToast('Deleted.','');
+}
+async function saveProfile(){
+  const id=document.getElementById('pm-id').value;
+  await sb.from('profiles').update({full_name:document.getElementById('pm-name').value.trim(),phone:document.getElementById('pm-phone').value.trim()||null,email:document.getElementById('pm-email').value.trim()||null}).eq('id',id);
+  closeModal('profile-modal');showToast('Saved!','success');await fetchProfiles();renderCrew();
+}
 
 // ── PROJECT FORM ──────────────────────────────────────────────────────────────
-function toggleInstallFields(){
+function onCalendarChange(){
   const cal=document.getElementById('f-calendar').value;
   document.getElementById('install-only-fields').style.display=cal==='install'?'block':'none';
-  // Auto-set 1hr for sales when switching to sales calendar
+  // Rebuild crew dropdown for this calendar type
+  buildCrewDropdown(cal,assignedCrew);
+  // Auto end time for sales
   if(cal==='sales'){
-    const st=getTime('f-start-time');
-    if(st)setTime('f-end-time',addHour(st));
+    const st=document.getElementById('f-start-time').value;
+    if(st)document.getElementById('f-end-time').value=addHour(st);
   }
 }
+function onStartDateChange(){
+  const s=document.getElementById('f-start-date').value;
+  const e=document.getElementById('f-end-date');
+  if(s&&!e.value)e.value=s;
+}
+function onStartTimeChange(){
+  const cal=document.getElementById('f-calendar').value;
+  if(cal==='sales'){
+    const st=document.getElementById('f-start-time').value;
+    if(st)document.getElementById('f-end-time').value=addHour(st);
+  }
+}
+
+function buildCrewDropdown(calType,selected){
+  assignedCrew=[...selected];
+  // Who is eligible:
+  // install/warehouse → installers only
+  // sales → staff only (Steve, Mariah etc.)
+  // all → everyone active
+  const eligible=profiles.filter(p=>{
+    if(p.is_active===false)return false;
+    if(calType==='sales')return p.role==='staff';
+    if(calType==='install'||calType==='warehouse')return p.role==='installer';
+    return true;
+  });
+  const sel=document.getElementById('f-crew-select');
+  sel.innerHTML=`<option value="">— select a person —</option>`+eligible.map(p=>`<option value="${p.id}">${p.full_name}</option>`).join('');
+  sel.onchange=()=>{
+    const v=sel.value;if(!v)return;
+    if(!assignedCrew.includes(v)){assignedCrew.push(v);renderCrewChips()}
+    sel.value='';
+  };
+  renderCrewChips();
+}
+
+function renderCrewChips(){
+  const c=document.getElementById('assigned-crew-chips');
+  c.innerHTML=assignedCrew.map(id=>{
+    const p=profiles.find(x=>x.id===id);
+    const name=p?p.full_name.split(' ')[0]:id;
+    return`<span style="display:inline-flex;align-items:center;gap:4px;background:var(--g200);padding:4px 10px;border-radius:20px;font-size:.825rem;font-weight:500">
+      ${name}<button type="button" onclick="removeCrew('${id}')" style="background:none;border:none;cursor:pointer;color:var(--g500);font-size:.9rem;line-height:1;padding:0 2px">×</button>
+    </span>`;
+  }).join('');
+}
+
+function removeCrew(id){assignedCrew=assignedCrew.filter(x=>x!==id);renderCrewChips()}
+
 function openNewProject(){
   document.getElementById('modal-title').textContent='New Project';
   ['project-id','f-customer','f-address','f-measurement','f-notes','f-materials'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('f-flooring').value='';document.getElementById('f-status').value='scheduled';document.getElementById('f-calendar').value='install';
-  document.getElementById('f-start-date').value=new Date().toISOString().split('T')[0];document.getElementById('f-end-date').value='';
-  setTime('f-start-time','08:00');setTime('f-end-time','17:00');
+  // Default dates to today
+  const t=today();
+  document.getElementById('f-start-date').value=t;document.getElementById('f-end-date').value=t;
+  // Default times: 8:30 for install
+  document.getElementById('f-start-time').value='08:30';document.getElementById('f-end-time').value='';
   document.getElementById('btn-delete').style.display='none';
   document.getElementById('quick-add-form').classList.add('hidden');document.getElementById('quick-add-icon').textContent='＋';
-  toggleInstallFields();updateUnit();buildCrewCb([]);openModal('project-modal');
+  document.getElementById('install-only-fields').style.display='block';
+  updateUnit();assignedCrew=[];buildCrewDropdown('install',[]);
+  openModal('project-modal');
 }
+
 function openEditProject(p){
   document.getElementById('modal-title').textContent='Edit Project';
   document.getElementById('project-id').value=p.id;
   document.getElementById('f-customer').value=p.customer_name||'';document.getElementById('f-address').value=p.address||'';
   document.getElementById('f-flooring').value=p.flooring_type||'';document.getElementById('f-measurement').value=p.measurement_value||'';
-  document.getElementById('f-start-date').value=p.start_date||'';document.getElementById('f-end-date').value=p.end_date||'';
+  document.getElementById('f-start-date').value=p.start_date||'';document.getElementById('f-end-date').value=p.end_date||p.start_date||'';
   document.getElementById('f-notes').value=p.notes||'';document.getElementById('f-materials').value=p.materials||'';
   document.getElementById('f-status').value=p.status||'scheduled';document.getElementById('f-calendar').value=p.calendar_type||'install';
-  setTime('f-start-time',p.start_time||'08:00');setTime('f-end-time',p.end_time||'');
+  document.getElementById('f-start-time').value=p.start_time||'';document.getElementById('f-end-time').value=p.end_time||'';
   document.getElementById('btn-delete').style.display='inline-flex';
   document.getElementById('quick-add-form').classList.add('hidden');document.getElementById('quick-add-icon').textContent='＋';
-  toggleInstallFields();updateUnit();buildCrewCb(p.project_installers?.map(pi=>pi.installer_id)||[]);openModal('project-modal');
+  document.getElementById('install-only-fields').style.display=p.calendar_type==='install'?'block':'none';
+  updateUnit();
+  const sel=p.project_installers?.map(pi=>pi.installer_id)||[];
+  assignedCrew=[...sel];buildCrewDropdown(p.calendar_type||'install',sel);
+  openModal('project-modal');
 }
-function buildCrewCb(sel){
-  const active=profiles.filter(p=>p.is_active!==false);
-  const c=document.getElementById('crew-checkboxes');
-  c.innerHTML=active.length?active.map(p=>`
-    <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--g100);padding:5px 10px;border-radius:20px;font-size:.825rem;font-weight:500">
-      <input type="checkbox" value="${p.id}" ${sel.includes(p.id)?'checked':''} style="accent-color:var(--red)"/>
-      ${p.full_name.split(' ')[0]}
-    </label>`).join(''):
-    `<span style="font-size:.8rem;color:var(--g400)">No active people yet.</span>`;
-}
+
 function updateUnit(){const t=document.getElementById('f-flooring').value;document.getElementById('measure-label').textContent=`Measurement (${t==='Carpet'||t==='Pad'?'SY':'SF'})`}
+
 async function saveProject(){
   const id=document.getElementById('project-id').value;
   const customer=document.getElementById('f-customer').value.trim();
   const start=document.getElementById('f-start-date').value;
   if(!customer||!start){showToast('Customer name and start date are required.','error');return}
   const ft=document.getElementById('f-flooring').value,ct=document.getElementById('f-calendar').value;
-  const payload={customer_name:customer,address:document.getElementById('f-address').value.trim()||null,flooring_type:ct==='install'?(ft||null):null,measurement_value:ct==='install'?(parseFloat(document.getElementById('f-measurement').value)||null):null,measurement_unit:(ft==='Carpet'||ft==='Pad'?'SY':'SF'),materials:ct==='install'?(document.getElementById('f-materials').value.trim()||null):null,start_date:start,end_date:document.getElementById('f-end-date').value||null,start_time:getTime('f-start-time')||null,end_time:getTime('f-end-time')||null,status:document.getElementById('f-status').value,notes:document.getElementById('f-notes').value.trim()||null,calendar_type:ct,created_by:me.id};
+  const payload={customer_name:customer,address:document.getElementById('f-address').value.trim()||null,flooring_type:ct==='install'?(ft||null):null,measurement_value:ct==='install'?(parseFloat(document.getElementById('f-measurement').value)||null):null,measurement_unit:(ft==='Carpet'||ft==='Pad'?'SY':'SF'),materials:ct==='install'?(document.getElementById('f-materials').value.trim()||null):null,start_date:start,end_date:document.getElementById('f-end-date').value||start,start_time:document.getElementById('f-start-time').value||null,end_time:document.getElementById('f-end-time').value||null,status:document.getElementById('f-status').value,notes:document.getElementById('f-notes').value.trim()||null,calendar_type:ct,created_by:me.id};
   let pid=id;
   if(id)await sb.from('projects').update(payload).eq('id',id);
-  else{const {data}=await sb.from('projects').insert(payload).select().single();pid=data?.id}
+  else{const{data}=await sb.from('projects').insert(payload).select().single();pid=data?.id}
   if(pid){
     await sb.from('project_installers').delete().eq('project_id',pid);
-    const checked=Array.from(document.querySelectorAll('#crew-checkboxes input:checked')).map(i=>({project_id:pid,installer_id:i.value}));
-    if(checked.length)await sb.from('project_installers').insert(checked);
+    if(assignedCrew.length)await sb.from('project_installers').insert(assignedCrew.map(cid=>({project_id:pid,installer_id:cid})));
   }
   closeModal('project-modal');showToast(id?'Updated!':'Created!','success');await fetchProjects();renderActive();
 }
+
 async function deleteProject(){
   const id=document.getElementById('project-id').value;if(!id||!confirm('Delete this project?'))return;
   await sb.from('project_installers').delete().eq('project_id',id);await sb.from('projects').delete().eq('id',id);
   closeModal('project-modal');showToast('Deleted.','');await fetchProjects();renderActive();
+}
+
+// ── QUICK ADD ─────────────────────────────────────────────────────────────────
+function toggleQuickAdd(){
+  const f=document.getElementById('quick-add-form');const icon=document.getElementById('quick-add-icon');
+  const showing=!f.classList.contains('hidden');f.classList.toggle('hidden',showing);icon.textContent=showing?'＋':'×';
+}
+async function quickAddPerson(){
+  const name=document.getElementById('qa-name').value.trim();
+  const role=document.getElementById('qa-role').value;
+  const email=document.getElementById('qa-email').value.trim();
+  if(!name){showToast('Name is required.','error');return}
+  const cal=document.getElementById('f-calendar').value;
+  const default_calendar=role==='staff'?'sales':cal;
+  let uid=crypto.randomUUID();
+  if(email){
+    const tempPw='Temp'+Math.random().toString(36).slice(2,8)+'!1';
+    const{data,error}=await sb.auth.signUp({email,password:tempPw});
+    if(error){showToast('Error: '+error.message,'error');return}
+    uid=data.user.id;
+  }
+  await sb.from('profiles').insert({id:uid,full_name:name,role,is_active:true,default_calendar});
+  await fetchProfiles();
+  buildCrewDropdown(cal,assignedCrew);
+  // Auto-assign new person
+  if(!assignedCrew.includes(uid)){assignedCrew.push(uid);renderCrewChips()}
+  showToast(`${name} added and assigned!`,'success');
+  toggleQuickAdd();document.getElementById('qa-name').value='';document.getElementById('qa-email').value='';
 }
 
 // ── DETAIL ────────────────────────────────────────────────────────────────────
@@ -1152,13 +1430,6 @@ function openDetail(id){
 function openModal(id){document.getElementById(id).classList.add('open')}
 function closeModal(id){document.getElementById(id).classList.remove('open')}
 document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open')}));
-
-// ── UTILS ─────────────────────────────────────────────────────────────────────
-function slbl(s){return{scheduled:'Scheduled',in_progress:'In Progress',complete:'Complete',invoiced:'Invoiced'}[s]||s}
-function fd(s){if(!s)return'—';const d=new Date(s+'T00:00:00');return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}
-function fdr(s,e){if(!s)return'—';if(!e||e===s)return fd(s);return`${fd(s)} – ${fd(e)}`}
-function fmtTime(t){if(!t)return'';const [h,m]=t.split(':').map(Number);const ap=h<12?'AM':'PM';const h12=h===0?12:h>12?h-12:h;return`${h12}:${m.toString().padStart(2,'0')} ${ap}`}
-function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className=`show ${type}`;setTimeout(()=>t.className='',3000)}
 
 // ── AUTO-LOGIN ────────────────────────────────────────────────────────────────
 sb.auth.getSession().then(({data:{session}})=>{if(session)boot(session.user)});
