@@ -1,1029 +1,364 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
   <title>A&M Flooring – Scheduler</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --red: #b91c1c;
-      --red-dark: #7f1d1d;
-      --red-light: #ef4444;
-      --red-faint: #fef2f2;
-      --black: #0f0f0f;
-      --charcoal: #1c1c1c;
-      --gray-900: #111827;
-      --gray-800: #1f2937;
-      --gray-700: #374151;
-      --gray-600: #4b5563;
-      --gray-500: #6b7280;
-      --gray-400: #9ca3af;
-      --gray-300: #d1d5db;
-      --gray-200: #e5e7eb;
-      --gray-100: #f3f4f6;
-      --gray-50: #f9fafb;
-      --white: #ffffff;
-      --gold: #c9a84c;
-      --green: #16a34a;
-      --green-faint: #f0fdf4;
-      --blue: #2563eb;
-      --blue-faint: #eff6ff;
-      --amber: #d97706;
-      --amber-faint: #fffbeb;
-    }
-
-    html, body { height: 100%; font-family: 'Inter', sans-serif; background: var(--gray-50); color: var(--gray-900); }
-
-    /* ── UTILITIES ── */
-    .hidden { display: none !important; }
-    .btn {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 0.6rem 1.2rem; border-radius: 6px; border: none;
-      font-family: 'Inter', sans-serif; font-size: 0.875rem; font-weight: 500;
-      cursor: pointer; transition: all 0.15s; text-decoration: none;
-      white-space: nowrap;
-    }
-    .btn-primary { background: var(--red); color: white; }
-    .btn-primary:hover { background: var(--red-dark); }
-    .btn-secondary { background: var(--white); color: var(--gray-700); border: 1.5px solid var(--gray-300); }
-    .btn-secondary:hover { background: var(--gray-50); border-color: var(--gray-400); }
-    .btn-ghost { background: transparent; color: var(--gray-600); }
-    .btn-ghost:hover { background: var(--gray-100); }
-    .btn-danger { background: var(--red-faint); color: var(--red); border: 1.5px solid #fecaca; }
-    .btn-danger:hover { background: #fee2e2; }
-    .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
-    .btn-lg { padding: 0.85rem 1.8rem; font-size: 1rem; }
-    .btn-full { width: 100%; justify-content: center; }
-
-    /* ── STATUS BADGES ── */
-    .badge {
-      display: inline-flex; align-items: center; gap: 4px;
-      padding: 2px 8px; border-radius: 20px; font-size: 0.75rem; font-weight: 500;
-    }
-    .badge-scheduled { background: var(--blue-faint); color: var(--blue); }
-    .badge-in_progress { background: var(--amber-faint); color: var(--amber); }
-    .badge-complete { background: var(--green-faint); color: var(--green); }
-    .badge-invoiced { background: var(--gray-100); color: var(--gray-600); }
-
-    /* ── LOGIN SCREEN ── */
-    #login-screen {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--charcoal);
-      padding: 1rem;
-    }
-
-    .login-card {
-      background: var(--white);
-      border-radius: 12px;
-      padding: 2.5rem;
-      width: 100%;
-      max-width: 400px;
-      box-shadow: 0 25px 60px rgba(0,0,0,0.3);
-    }
-
-    .login-logo {
-      text-align: center;
-      margin-bottom: 2rem;
-    }
-
-    .login-logo img {
-      height: 60px;
-      margin-bottom: 0.75rem;
-    }
-
-    .login-logo h1 {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.4rem;
-      color: var(--gray-900);
-    }
-
-    .login-logo p {
-      font-size: 0.8rem;
-      color: var(--gray-500);
-      margin-top: 0.25rem;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-    }
-
-    .form-group { margin-bottom: 1.2rem; }
-    .form-group label {
-      display: block;
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--gray-700);
-      margin-bottom: 0.4rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-    .form-group input, .form-group select, .form-group textarea {
-      width: 100%;
-      padding: 0.7rem 0.9rem;
-      border: 1.5px solid var(--gray-300);
-      border-radius: 6px;
-      font-family: 'Inter', sans-serif;
-      font-size: 0.95rem;
-      color: var(--gray-900);
-      background: var(--white);
-      outline: none;
-      transition: border-color 0.15s;
-      -webkit-appearance: none;
-    }
-    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-      border-color: var(--red);
-    }
-    .form-group textarea { min-height: 90px; resize: vertical; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-
-    .login-error {
-      background: var(--red-faint);
-      color: var(--red);
-      border: 1px solid #fecaca;
-      border-radius: 6px;
-      padding: 0.75rem;
-      font-size: 0.875rem;
-      margin-bottom: 1rem;
-    }
-
-    /* ── APP SHELL ── */
-    #app { display: none; min-height: 100vh; flex-direction: column; }
-
-    /* ── TOP NAV ── */
-    .topnav {
-      background: var(--charcoal);
-      padding: 0 1.5rem;
-      height: 60px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 50;
-      border-bottom: 1px solid rgba(185,28,28,0.4);
-    }
-
-    .topnav-left {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-
-    .topnav-logo {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-    }
-
-    .topnav-logo img { height: 36px; }
-
-    .topnav-title {
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: white;
-      display: none;
-    }
-
-    @media (min-width: 600px) { .topnav-title { display: block; } }
-
-    .role-badge {
-      background: rgba(185,28,28,0.3);
-      color: #fca5a5;
-      font-size: 0.7rem;
-      font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 20px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    .topnav-right {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .user-name {
-      font-size: 0.875rem;
-      color: rgba(255,255,255,0.7);
-      display: none;
-    }
-    @media (min-width: 480px) { .user-name { display: block; } }
-
-    /* ── MAIN LAYOUT ── */
-    .app-body {
-      flex: 1;
-      display: flex;
-      overflow: hidden;
-    }
-
-    /* ── SIDEBAR (office/owner only) ── */
-    .sidebar {
-      width: 220px;
-      background: var(--white);
-      border-right: 1px solid var(--gray-200);
-      display: flex;
-      flex-direction: column;
-      flex-shrink: 0;
-      overflow-y: auto;
-    }
-
-    .sidebar-nav {
-      padding: 1rem 0.75rem;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .sidebar-section {
-      font-size: 0.7rem;
-      font-weight: 700;
-      color: var(--gray-400);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      padding: 0.75rem 0.75rem 0.35rem;
-    }
-
-    .sidebar-link {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      padding: 0.6rem 0.75rem;
-      border-radius: 6px;
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: var(--gray-600);
-      cursor: pointer;
-      transition: all 0.15s;
-      border: none;
-      background: none;
-      width: 100%;
-      text-align: left;
-    }
-
-    .sidebar-link:hover { background: var(--gray-100); color: var(--gray-900); }
-    .sidebar-link.active { background: var(--red-faint); color: var(--red); font-weight: 600; }
-    .sidebar-link .icon { font-size: 1rem; width: 20px; text-align: center; }
-
-    /* ── CONTENT ── */
-    .content {
-      flex: 1;
-      overflow-y: auto;
-      padding: 1.5rem;
-    }
-
-    @media (max-width: 768px) {
-      .sidebar { display: none; }
-      .content { padding: 1rem; }
-    }
-
-    /* ── MOBILE BOTTOM NAV ── */
-    .mobile-nav {
-      display: none;
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      background: var(--white);
-      border-top: 1px solid var(--gray-200);
-      padding: 0.5rem 0 calc(0.5rem + env(safe-area-inset-bottom));
-      z-index: 50;
-    }
-
-    .mobile-nav-inner {
-      display: flex;
-      justify-content: space-around;
-    }
-
-    .mobile-nav-btn {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 3px;
-      padding: 0.4rem 1rem;
-      border: none;
-      background: none;
-      cursor: pointer;
-      color: var(--gray-500);
-      font-size: 0.7rem;
-      font-weight: 500;
-      font-family: 'Inter', sans-serif;
-      transition: color 0.15s;
-    }
-    .mobile-nav-btn .nav-icon { font-size: 1.3rem; }
-    .mobile-nav-btn.active { color: var(--red); }
-
-    @media (max-width: 768px) {
-      .mobile-nav { display: block; }
-      .content { padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
-    }
-
-    /* ── PAGE SECTIONS ── */
-    .page { display: none; }
-    .page.active { display: block; }
-
-    .page-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 1.5rem;
-      flex-wrap: wrap;
-      gap: 0.75rem;
-    }
-
-    .page-title {
-      font-size: 1.4rem;
-      font-weight: 700;
-      color: var(--gray-900);
-    }
-
-    .page-subtitle {
-      font-size: 0.875rem;
-      color: var(--gray-500);
-      margin-top: 2px;
-    }
-
-    /* ── CARDS ── */
-    .card {
-      background: var(--white);
-      border: 1px solid var(--gray-200);
-      border-radius: 10px;
-      overflow: hidden;
-    }
-
-    .card-header {
-      padding: 1rem 1.25rem;
-      border-bottom: 1px solid var(--gray-100);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .card-title {
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: var(--gray-900);
-    }
-
-    .card-body { padding: 1.25rem; }
-
-    /* ── PROJECT CARDS (mobile-first) ── */
-    .project-card {
-      background: var(--white);
-      border: 1px solid var(--gray-200);
-      border-radius: 10px;
-      padding: 1rem 1.25rem;
-      margin-bottom: 0.75rem;
-      border-left: 4px solid var(--gray-300);
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-
-    .project-card:hover { border-color: var(--red); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-    .project-card.status-scheduled { border-left-color: var(--blue); }
-    .project-card.status-in_progress { border-left-color: var(--amber); }
-    .project-card.status-complete { border-left-color: var(--green); }
-    .project-card.status-invoiced { border-left-color: var(--gray-400); }
-
-    .project-card-top {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 0.5rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .project-customer {
-      font-size: 1rem;
-      font-weight: 600;
-      color: var(--gray-900);
-    }
-
-    .project-address {
-      font-size: 0.8rem;
-      color: var(--gray-500);
-      margin-top: 2px;
-    }
-
-    .project-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-top: 0.6rem;
-      font-size: 0.8rem;
-      color: var(--gray-600);
-    }
-
-    .project-meta-item {
-      display: flex;
-      align-items: center;
-      gap: 3px;
-      background: var(--gray-100);
-      padding: 2px 8px;
-      border-radius: 20px;
-    }
-
-    /* ── INSTALLER SCHEDULE (big mobile cards) ── */
-    .installer-day {
-      margin-bottom: 1.5rem;
-    }
-
-    .installer-day-label {
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: var(--gray-400);
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      margin-bottom: 0.6rem;
-      padding-bottom: 0.4rem;
-      border-bottom: 1px solid var(--gray-200);
-    }
-
-    .installer-job-card {
-      background: var(--white);
-      border: 1.5px solid var(--gray-200);
-      border-radius: 12px;
-      padding: 1.1rem 1.25rem;
-      margin-bottom: 0.75rem;
-      border-left: 5px solid var(--blue);
-    }
-
-    .installer-job-card.status-in_progress { border-left-color: var(--amber); }
-    .installer-job-card.status-complete { border-left-color: var(--green); }
-
-    .installer-job-customer {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--gray-900);
-      margin-bottom: 0.3rem;
-    }
-
-    .installer-job-address {
-      font-size: 0.9rem;
-      color: var(--gray-600);
-      margin-bottom: 0.75rem;
-    }
-
-    .installer-job-details {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-bottom: 0.75rem;
-    }
-
-    .installer-detail-pill {
-      background: var(--gray-100);
-      padding: 0.3rem 0.7rem;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: 500;
-      color: var(--gray-700);
-    }
-
-    .installer-job-notes {
-      font-size: 0.85rem;
-      color: var(--gray-500);
-      font-style: italic;
-      padding-top: 0.5rem;
-      border-top: 1px solid var(--gray-100);
-    }
-
-    .map-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      background: var(--blue-faint);
-      color: var(--blue);
-      border: 1px solid #bfdbfe;
-      padding: 0.45rem 0.9rem;
-      border-radius: 6px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      text-decoration: none;
-      transition: background 0.15s;
-      margin-top: 0.5rem;
-    }
-    .map-btn:hover { background: #dbeafe; }
-
-    /* ── CALENDAR GRID ── */
-    .calendar-nav {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 1rem;
-    }
-
-    .calendar-nav h3 {
-      font-size: 1.1rem;
-      font-weight: 600;
-      flex: 1;
-      text-align: center;
-    }
-
-    .week-grid {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 4px;
-    }
-
-    .week-day-header {
-      text-align: center;
-      font-size: 0.7rem;
-      font-weight: 700;
-      color: var(--gray-400);
-      text-transform: uppercase;
-      padding: 0.5rem 0;
-    }
-
-    .week-day-cell {
-      background: var(--white);
-      border: 1px solid var(--gray-200);
-      border-radius: 8px;
-      min-height: 100px;
-      padding: 0.5rem;
-      position: relative;
-    }
-
-    .week-day-cell.today { border-color: var(--red); background: var(--red-faint); }
-
-    .day-num {
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--gray-400);
-      margin-bottom: 4px;
-    }
-
-    .week-day-cell.today .day-num { color: var(--red); }
-
-    .cal-event {
-      background: var(--blue-faint);
-      border-left: 3px solid var(--blue);
-      border-radius: 3px;
-      padding: 2px 4px;
-      font-size: 0.68rem;
-      font-weight: 500;
-      color: var(--blue);
-      margin-bottom: 2px;
-      cursor: pointer;
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      transition: opacity 0.15s;
-    }
-    .cal-event:hover { opacity: 0.75; }
-    .cal-event.status-in_progress { background: var(--amber-faint); border-color: var(--amber); color: var(--amber); }
-    .cal-event.status-complete { background: var(--green-faint); border-color: var(--green); color: var(--green); }
-
-    @media (max-width: 600px) {
-      .week-grid { grid-template-columns: repeat(7, 1fr); gap: 2px; }
-      .week-day-cell { min-height: 70px; padding: 3px; }
-      .cal-event { font-size: 0.6rem; padding: 1px 2px; }
-      .week-day-header { font-size: 0.6rem; }
-    }
-
-    /* ── PROJECT LIST ── */
-    .projects-list { }
-
-    .filter-bar {
-      display: flex;
-      gap: 0.5rem;
-      margin-bottom: 1rem;
-      flex-wrap: wrap;
-    }
-
-    .filter-btn {
-      padding: 0.35rem 0.9rem;
-      border-radius: 20px;
-      border: 1.5px solid var(--gray-300);
-      background: var(--white);
-      font-size: 0.8rem;
-      font-weight: 500;
-      color: var(--gray-600);
-      cursor: pointer;
-      transition: all 0.15s;
-      font-family: 'Inter', sans-serif;
-    }
-    .filter-btn:hover { border-color: var(--red); color: var(--red); }
-    .filter-btn.active { background: var(--red); border-color: var(--red); color: white; }
-
-    /* ── MODAL ── */
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.5);
-      z-index: 200;
-      align-items: center;
-      justify-content: center;
-      padding: 1rem;
-    }
-    .modal-overlay.open { display: flex; }
-
-    .modal {
-      background: var(--white);
-      border-radius: 12px;
-      width: 100%;
-      max-width: 560px;
-      max-height: 90vh;
-      overflow-y: auto;
-      box-shadow: 0 25px 60px rgba(0,0,0,0.3);
-    }
-
-    .modal-header {
-      padding: 1.25rem 1.5rem;
-      border-bottom: 1px solid var(--gray-200);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      background: var(--white);
-      z-index: 1;
-    }
-
-    .modal-title {
-      font-size: 1.1rem;
-      font-weight: 700;
-    }
-
-    .modal-close {
-      background: none;
-      border: none;
-      font-size: 1.4rem;
-      cursor: pointer;
-      color: var(--gray-400);
-      padding: 0.2rem;
-      line-height: 1;
-    }
-
-    .modal-body { padding: 1.5rem; }
-    .modal-footer {
-      padding: 1rem 1.5rem;
-      border-top: 1px solid var(--gray-200);
-      display: flex;
-      gap: 0.75rem;
-      justify-content: flex-end;
-    }
-
-    /* ── PROJECT DETAIL VIEW ── */
-    .detail-section {
-      margin-bottom: 1.5rem;
-    }
-
-    .detail-section-title {
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: var(--gray-400);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      margin-bottom: 0.75rem;
-    }
-
-    .detail-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.75rem;
-    }
-
-    .detail-item label {
-      font-size: 0.75rem;
-      color: var(--gray-500);
-      display: block;
-      margin-bottom: 2px;
-    }
-
-    .detail-item span {
-      font-size: 0.95rem;
-      font-weight: 500;
-      color: var(--gray-900);
-    }
-
-    /* ── STATS CARDS ── */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-    }
-
-    @media (min-width: 600px) {
-      .stats-grid { grid-template-columns: repeat(4, 1fr); }
-    }
-
-    .stat-card {
-      background: var(--white);
-      border: 1px solid var(--gray-200);
-      border-radius: 10px;
-      padding: 1.1rem;
-    }
-
-    .stat-card-label {
-      font-size: 0.75rem;
-      font-weight: 500;
-      color: var(--gray-500);
-      margin-bottom: 0.4rem;
-    }
-
-    .stat-card-value {
-      font-size: 1.8rem;
-      font-weight: 700;
-      color: var(--gray-900);
-      line-height: 1;
-    }
-
-    .stat-card-sub {
-      font-size: 0.75rem;
-      color: var(--gray-400);
-      margin-top: 0.25rem;
-    }
-
-    /* ── CREW MANAGEMENT ── */
-    .crew-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    .crew-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.75rem 1rem;
-      background: var(--white);
-      border: 1px solid var(--gray-200);
-      border-radius: 8px;
-    }
-
-    .crew-item-info { display: flex; align-items: center; gap: 0.75rem; }
-
-    .crew-avatar {
-      width: 36px; height: 36px;
-      background: var(--red-faint);
-      color: var(--red);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 0.875rem;
-      flex-shrink: 0;
-    }
-
-    .crew-name { font-weight: 500; font-size: 0.95rem; }
-    .crew-role { font-size: 0.8rem; color: var(--gray-500); }
-
-    /* ── LOADING ── */
-    .spinner {
-      display: inline-block;
-      width: 20px; height: 20px;
-      border: 2px solid var(--gray-200);
-      border-top-color: var(--red);
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .loading-screen {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 200px;
-      color: var(--gray-400);
-      flex-direction: column;
-      gap: 0.75rem;
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 3rem 1rem;
-      color: var(--gray-400);
-    }
-    .empty-state .empty-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
-    .empty-state p { font-size: 0.95rem; }
-
-    /* ── TOAST ── */
-    #toast {
-      position: fixed;
-      bottom: 90px;
-      left: 50%;
-      transform: translateX(-50%) translateY(20px);
-      background: var(--gray-900);
-      color: white;
-      padding: 0.75rem 1.5rem;
-      border-radius: 8px;
-      font-size: 0.875rem;
-      font-weight: 500;
-      z-index: 999;
-      opacity: 0;
-      transition: all 0.3s;
-      white-space: nowrap;
-      pointer-events: none;
-    }
-    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-    #toast.success { background: var(--green); }
-    #toast.error { background: var(--red); }
-
-    @media (min-width: 769px) { #toast { bottom: 2rem; } }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --red:#b91c1c;--red-dark:#7f1d1d;--red-light:#ef4444;--red-faint:#fef2f2;
+      --black:#0f0f0f;--charcoal:#1c1c1c;
+      --g900:#111827;--g800:#1f2937;--g700:#374151;--g600:#4b5563;
+      --g500:#6b7280;--g400:#9ca3af;--g300:#d1d5db;--g200:#e5e7eb;
+      --g100:#f3f4f6;--g50:#f9fafb;--white:#fff;--gold:#c9a84c;
+      --green:#16a34a;--gfaint:#f0fdf4;
+      --blue:#2563eb;--bfaint:#eff6ff;
+      --amber:#d97706;--afaint:#fffbeb;
+      --purple:#7c3aed;--pfaint:#f5f3ff;
+    }
+    html,body{height:100%;font-family:'Inter',sans-serif;background:var(--g50);color:var(--g900)}
+    .hidden{display:none!important}
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:.6rem 1.2rem;border-radius:6px;border:none;font-family:'Inter',sans-serif;font-size:.875rem;font-weight:500;cursor:pointer;transition:all .15s;text-decoration:none;white-space:nowrap}
+    .btn-primary{background:var(--red);color:#fff}.btn-primary:hover{background:var(--red-dark)}
+    .btn-secondary{background:#fff;color:var(--g700);border:1.5px solid var(--g300)}.btn-secondary:hover{background:var(--g50)}
+    .btn-ghost{background:transparent;color:var(--g600)}.btn-ghost:hover{background:var(--g100)}
+    .btn-danger{background:var(--red-faint);color:var(--red);border:1.5px solid #fecaca}.btn-danger:hover{background:#fee2e2}
+    .btn-sm{padding:.4rem .8rem;font-size:.8rem}.btn-lg{padding:.85rem 1.8rem;font-size:1rem}.btn-full{width:100%;justify-content:center}
+    .badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:.75rem;font-weight:500}
+    .badge-scheduled{background:var(--bfaint);color:var(--blue)}
+    .badge-in_progress{background:var(--afaint);color:var(--amber)}
+    .badge-complete{background:var(--gfaint);color:var(--green)}
+    .badge-invoiced{background:var(--g100);color:var(--g600)}
+    /* LOGIN */
+    #login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--charcoal);padding:1rem}
+    .login-card{background:#fff;border-radius:12px;padding:2.5rem;width:100%;max-width:400px;box-shadow:0 25px 60px rgba(0,0,0,.3)}
+    .login-logo{text-align:center;margin-bottom:2rem}
+    .login-logo img{height:60px;margin-bottom:.75rem}
+    .login-logo h1{font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--g900)}
+    .form-group{margin-bottom:1.2rem}
+    .form-group label{display:block;font-size:.8rem;font-weight:600;color:var(--g700);margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.05em}
+    .form-group input,.form-group select,.form-group textarea{width:100%;padding:.7rem .9rem;border:1.5px solid var(--g300);border-radius:6px;font-family:'Inter',sans-serif;font-size:.95rem;color:var(--g900);background:#fff;outline:none;transition:border-color .15s;-webkit-appearance:none}
+    .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--red)}
+    .form-group textarea{min-height:90px;resize:vertical}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+    .login-error{background:var(--red-faint);color:var(--red);border:1px solid #fecaca;border-radius:6px;padding:.75rem;font-size:.875rem;margin-bottom:1rem}
+    /* APP */
+    #app{display:none;min-height:100vh;flex-direction:column}
+    .topnav{background:var(--charcoal);padding:0 1.5rem;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;border-bottom:1px solid rgba(185,28,28,.4)}
+    .topnav-left{display:flex;align-items:center;gap:1rem}
+    .topnav-logo img{height:36px}
+    .topnav-title{font-size:.95rem;font-weight:600;color:#fff;display:none}
+    @media(min-width:600px){.topnav-title{display:block}}
+    .role-badge{background:rgba(185,28,28,.3);color:#fca5a5;font-size:.7rem;font-weight:600;padding:2px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.08em}
+    .topnav-right{display:flex;align-items:center;gap:.75rem}
+    .user-name{font-size:.875rem;color:rgba(255,255,255,.7);display:none}
+    @media(min-width:480px){.user-name{display:block}}
+    .app-body{flex:1;display:flex;overflow:hidden}
+    .sidebar{width:220px;background:#fff;border-right:1px solid var(--g200);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+    .sidebar-nav{padding:1rem .75rem;display:flex;flex-direction:column;gap:2px}
+    .sidebar-section{font-size:.7rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.1em;padding:.75rem .75rem .35rem}
+    .sidebar-link{display:flex;align-items:center;gap:.6rem;padding:.6rem .75rem;border-radius:6px;font-size:.875rem;font-weight:500;color:var(--g600);cursor:pointer;transition:all .15s;border:none;background:none;width:100%;text-align:left}
+    .sidebar-link:hover{background:var(--g100);color:var(--g900)}
+    .sidebar-link.active{background:var(--red-faint);color:var(--red);font-weight:600}
+    .sidebar-link .icon{font-size:1rem;width:20px;text-align:center}
+    .content{flex:1;overflow-y:auto;padding:1.5rem}
+    @media(max-width:768px){.sidebar{display:none}.content{padding:1rem}}
+    .mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--g200);padding:.5rem 0 calc(.5rem + env(safe-area-inset-bottom));z-index:50}
+    .mobile-nav-inner{display:flex;justify-content:space-around}
+    .mobile-nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:.4rem .75rem;border:none;background:none;cursor:pointer;color:var(--g500);font-size:.7rem;font-weight:500;font-family:'Inter',sans-serif;transition:color .15s}
+    .mobile-nav-btn .nav-icon{font-size:1.3rem}
+    .mobile-nav-btn.active{color:var(--red)}
+    @media(max-width:768px){.mobile-nav{display:block}.content{padding-bottom:calc(80px + env(safe-area-inset-bottom))}}
+    .page{display:none}.page.active{display:block}
+    .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:.75rem}
+    .page-title{font-size:1.4rem;font-weight:700}
+    .page-subtitle{font-size:.875rem;color:var(--g500);margin-top:2px}
+    .card{background:#fff;border:1px solid var(--g200);border-radius:10px;overflow:hidden}
+    .card-header{padding:1rem 1.25rem;border-bottom:1px solid var(--g100);display:flex;align-items:center;justify-content:space-between}
+    .card-title{font-size:.95rem;font-weight:600}
+    .card-body{padding:1.25rem}
+    /* CAL TABS */
+    .cal-tabs{display:flex;gap:4px;margin-bottom:1rem;background:var(--g100);padding:4px;border-radius:8px;width:fit-content;flex-wrap:wrap}
+    .cal-tab{padding:.45rem 1rem;border-radius:6px;font-size:.825rem;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--g600);font-family:'Inter',sans-serif;transition:all .15s}
+    .cal-tab.active{background:#fff;color:var(--g900);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+    /* DATE FILTER */
+    .date-filter-bar{display:flex;align-items:center;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap}
+    .date-filter-bar label{font-size:.8rem;font-weight:600;color:var(--g600);text-transform:uppercase;letter-spacing:.05em}
+    .date-filter-bar input[type=date]{padding:.4rem .75rem;border:1.5px solid var(--g300);border-radius:6px;font-family:'Inter',sans-serif;font-size:.85rem;outline:none;background:#fff}
+    .date-filter-bar input[type=date]:focus{border-color:var(--red)}
+    .quick-range-btns{display:flex;gap:4px;flex-wrap:wrap}
+    .qr-btn{padding:.35rem .75rem;border-radius:20px;border:1.5px solid var(--g300);background:#fff;font-size:.75rem;font-weight:500;color:var(--g600);cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s}
+    .qr-btn:hover{border-color:var(--red);color:var(--red)}
+    .qr-btn.active{background:var(--red);border-color:var(--red);color:#fff}
+    /* STATS */
+    .stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;margin-bottom:1.5rem}
+    @media(min-width:600px){.stats-grid{grid-template-columns:repeat(4,1fr)}}
+    .stat-card{background:#fff;border:1px solid var(--g200);border-radius:10px;padding:1.1rem}
+    .stat-card-label{font-size:.75rem;font-weight:500;color:var(--g500);margin-bottom:.4rem}
+    .stat-card-value{font-size:1.8rem;font-weight:700;line-height:1}
+    .stat-card-sub{font-size:.75rem;color:var(--g400);margin-top:.25rem}
+    /* WEEK CAL */
+    .calendar-nav{display:flex;align-items:center;gap:1rem;margin-bottom:1rem}
+    .calendar-nav h3{font-size:1.1rem;font-weight:600;flex:1;text-align:center}
+    .week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+    .week-day-header{text-align:center;font-size:.7rem;font-weight:700;color:var(--g400);text-transform:uppercase;padding:.5rem 0}
+    .week-day-cell{background:#fff;border:1px solid var(--g200);border-radius:8px;min-height:100px;padding:.5rem}
+    .week-day-cell.today{border-color:var(--red);background:var(--red-faint)}
+    .day-num{font-size:.75rem;font-weight:600;color:var(--g400);margin-bottom:4px}
+    .week-day-cell.today .day-num{color:var(--red)}
+    .cal-event{background:var(--bfaint);border-left:3px solid var(--blue);border-radius:3px;padding:2px 4px;font-size:.68rem;font-weight:500;color:var(--blue);margin-bottom:2px;cursor:pointer;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;transition:opacity .15s}
+    .cal-event:hover{opacity:.75}
+    .cal-event.cal-sales{background:#fdf4ff;border-color:#a855f7;color:#7e22ce}
+    .cal-event.cal-warehouse{background:var(--afaint);border-color:var(--amber);color:#92400e}
+    .cal-event.status-complete{opacity:.5}
+    .cal-event.time-off{background:#fef9c3;border-color:#ca8a04;color:#713f12}
+    @media(max-width:600px){.week-day-cell{min-height:70px;padding:3px}.cal-event{font-size:.6rem}.week-day-header{font-size:.6rem}}
+    .cal-legend{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:.75rem}
+    .legend-item{display:flex;align-items:center;gap:4px;font-size:.75rem;color:var(--g600)}
+    .legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+    /* PROJECT CARDS */
+    .project-card{background:#fff;border:1px solid var(--g200);border-radius:10px;padding:1rem 1.25rem;margin-bottom:.75rem;border-left:4px solid var(--g300);cursor:pointer;transition:all .15s}
+    .project-card:hover{box-shadow:0 4px 12px rgba(0,0,0,.08)}
+    .project-card.cal-install{border-left-color:var(--blue)}
+    .project-card.cal-sales{border-left-color:#a855f7}
+    .project-card.cal-warehouse{border-left-color:var(--amber)}
+    .project-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem;margin-bottom:.5rem}
+    .project-customer{font-size:1rem;font-weight:600}
+    .project-address{font-size:.8rem;color:var(--g500);margin-top:2px}
+    .project-meta{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.6rem}
+    .project-meta-item{display:flex;align-items:center;gap:3px;background:var(--g100);padding:2px 8px;border-radius:20px;font-size:.8rem;color:var(--g600)}
+    /* INSTALLER VIEW */
+    .installer-day{margin-bottom:1.5rem}
+    .installer-day-label{font-size:.75rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.12em;margin-bottom:.6rem;padding-bottom:.4rem;border-bottom:1px solid var(--g200)}
+    .installer-job-card{background:#fff;border:1.5px solid var(--g200);border-radius:12px;padding:1.1rem 1.25rem;margin-bottom:.75rem;border-left:5px solid var(--blue)}
+    .installer-job-customer{font-size:1.1rem;font-weight:700;margin-bottom:.3rem}
+    .installer-job-address{font-size:.9rem;color:var(--g600);margin-bottom:.75rem}
+    .installer-job-details{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.75rem}
+    .installer-detail-pill{background:var(--g100);padding:.3rem .7rem;border-radius:20px;font-size:.8rem;font-weight:500;color:var(--g700)}
+    .installer-job-notes{font-size:.85rem;color:var(--g500);font-style:italic;padding-top:.5rem;border-top:1px solid var(--g100)}
+    .map-btn{display:inline-flex;align-items:center;gap:5px;background:var(--bfaint);color:var(--blue);border:1px solid #bfdbfe;padding:.45rem .9rem;border-radius:6px;font-size:.8rem;font-weight:600;text-decoration:none;margin-top:.5rem}
+    .map-btn:hover{background:#dbeafe}
+    /* FILTER */
+    .filter-bar{display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap}
+    .filter-btn{padding:.35rem .9rem;border-radius:20px;border:1.5px solid var(--g300);background:#fff;font-size:.8rem;font-weight:500;color:var(--g600);cursor:pointer;transition:all .15s;font-family:'Inter',sans-serif}
+    .filter-btn:hover{border-color:var(--red);color:var(--red)}
+    .filter-btn.active{background:var(--red);border-color:var(--red);color:#fff}
+    /* MODAL */
+    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:1rem}
+    .modal-overlay.open{display:flex}
+    .modal{background:#fff;border-radius:12px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 25px 60px rgba(0,0,0,.3)}
+    .modal-header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--g200);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1}
+    .modal-title{font-size:1.1rem;font-weight:700}
+    .modal-close{background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--g400);padding:.2rem;line-height:1}
+    .modal-body{padding:1.5rem}
+    .modal-footer{padding:1rem 1.5rem;border-top:1px solid var(--g200);display:flex;gap:.75rem;justify-content:flex-end}
+    /* CREW */
+    .crew-list{display:flex;flex-direction:column;gap:.5rem}
+    .crew-item{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;background:#fff;border:1px solid var(--g200);border-radius:8px;transition:opacity .2s}
+    .crew-item.inactive{opacity:.45}
+    .crew-item-left{display:flex;align-items:center;gap:.75rem}
+    .crew-avatar{width:36px;height:36px;background:var(--red-faint);color:var(--red);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.875rem;flex-shrink:0}
+    .crew-avatar.staff-av{background:var(--pfaint);color:var(--purple)}
+    .crew-name{font-weight:500;font-size:.95rem}
+    .crew-role{font-size:.8rem;color:var(--g500)}
+    /* TOGGLE */
+    .toggle{position:relative;width:36px;height:20px;cursor:pointer;flex-shrink:0;display:inline-block}
+    .toggle input{opacity:0;width:0;height:0;position:absolute}
+    .toggle-track{position:absolute;inset:0;background:var(--g300);border-radius:20px;transition:background .2s}
+    .toggle input:checked~.toggle-track{background:var(--green)}
+    .toggle-thumb{position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+    .toggle input:checked~.toggle-thumb{transform:translateX(16px)}
+    /* TIME OFF */
+    .timeoff-item{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;background:#fff;border:1px solid var(--g200);border-radius:8px;margin-bottom:.5rem}
+    .timeoff-name{font-weight:500;font-size:.9rem}
+    .timeoff-dates{font-size:.8rem;color:var(--g500);margin-top:2px}
+    /* DETAIL */
+    .detail-section{margin-bottom:1.5rem}
+    .detail-section-title{font-size:.75rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.75rem}
+    .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+    .detail-item label{font-size:.75rem;color:var(--g500);display:block;margin-bottom:2px}
+    .detail-item span{font-size:.95rem;font-weight:500}
+    /* MISC */
+    .spinner{display:inline-block;width:20px;height:20px;border:2px solid var(--g200);border-top-color:var(--red);border-radius:50%;animation:spin .7s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .loading-screen{display:flex;align-items:center;justify-content:center;min-height:200px;color:var(--g400);flex-direction:column;gap:.75rem}
+    .empty-state{text-align:center;padding:3rem 1rem;color:var(--g400)}
+    .empty-state .empty-icon{font-size:2.5rem;margin-bottom:.75rem}
+    .section-divider{font-size:.75rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.1em;margin:1.25rem 0 .5rem;padding-bottom:.35rem;border-bottom:1px solid var(--g200)}
+    #toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--g900);color:#fff;padding:.75rem 1.5rem;border-radius:8px;font-size:.875rem;font-weight:500;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;pointer-events:none}
+    #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    #toast.success{background:var(--green)}
+    #toast.error{background:var(--red)}
+    @media(min-width:769px){#toast{bottom:2rem}}
   </style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════
-     LOGIN SCREEN
-═══════════════════════════════════════ -->
+<!-- LOGIN -->
 <div id="login-screen">
   <div class="login-card">
     <div class="login-logo">
-      <img src="https://img1.wsimg.com/isteam/ip/e3787bf5-a95d-4a2d-a165-6ec0ee691508/logo/90a0cdf6-b848-46fc-af4c-9b6a025db3ae.PNG/:/rs=h:80,cg:true,m/qt=q:95" alt="A&M Flooring" />
+      <img src="https://img1.wsimg.com/isteam/ip/e3787bf5-a95d-4a2d-a165-6ec0ee691508/logo/90a0cdf6-b848-46fc-af4c-9b6a025db3ae.PNG/:/rs=h:80,cg:true,m/qt=q:95" alt="A&M Flooring"/>
       <h1>A&M Flooring</h1>
-      <p>Project Scheduler</p>
     </div>
     <div id="login-error" class="login-error hidden"></div>
-    <div class="form-group">
-      <label>Email</label>
-      <input type="email" id="login-email" placeholder="you@amflooringllc.com" autocomplete="email" />
-    </div>
-    <div class="form-group">
-      <label>Password</label>
-      <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" />
-    </div>
-    <button class="btn btn-primary btn-full btn-lg" id="login-btn" onclick="handleLogin()">
-      Sign In
-    </button>
+    <div class="form-group"><label>Email</label><input type="email" id="login-email" autocomplete="email" placeholder="you@amflooringllc.com"/></div>
+    <div class="form-group"><label>Password</label><input type="password" id="login-password" autocomplete="current-password" placeholder="••••••••"/></div>
+    <button class="btn btn-primary btn-full btn-lg" id="login-btn" onclick="handleLogin()">Sign In</button>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════
-     APP SHELL
-═══════════════════════════════════════ -->
-<div id="app" style="display:none; flex-direction:column; min-height:100vh;">
-
-  <!-- Top Nav -->
+<!-- APP -->
+<div id="app" style="display:none;flex-direction:column;min-height:100vh">
   <nav class="topnav">
     <div class="topnav-left">
-      <div class="topnav-logo">
-        <img src="https://img1.wsimg.com/isteam/ip/e3787bf5-a95d-4a2d-a165-6ec0ee691508/logo/90a0cdf6-b848-46fc-af4c-9b6a025db3ae.PNG/:/rs=h:80,cg:true,m/qt=q:95" alt="A&M Flooring" />
-        <span class="topnav-title">A&M Flooring</span>
-      </div>
+      <div class="topnav-logo"><img src="https://img1.wsimg.com/isteam/ip/e3787bf5-a95d-4a2d-a165-6ec0ee691508/logo/90a0cdf6-b848-46fc-af4c-9b6a025db3ae.PNG/:/rs=h:80,cg:true,m/qt=q:95" alt="A&M"/></div>
+      <span class="topnav-title">A&M Flooring</span>
       <span class="role-badge" id="nav-role-badge"></span>
     </div>
     <div class="topnav-right">
       <span class="user-name" id="nav-user-name"></span>
-      <button class="btn btn-ghost btn-sm" onclick="handleLogout()" style="color:rgba(255,255,255,0.6)">Sign out</button>
+      <button class="btn btn-ghost btn-sm" onclick="handleLogout()" style="color:rgba(255,255,255,.6)">Sign out</button>
     </div>
   </nav>
-
-  <!-- Body -->
   <div class="app-body">
-
-    <!-- Sidebar (office/owner) -->
     <aside class="sidebar" id="sidebar">
       <nav class="sidebar-nav">
-        <div class="sidebar-section">Views</div>
-        <button class="sidebar-link active" id="sb-calendar" onclick="showPage('calendar')">
-          <span class="icon">📅</span> Calendar
-        </button>
-        <button class="sidebar-link" id="sb-projects" onclick="showPage('projects')">
-          <span class="icon">📋</span> All Projects
-        </button>
-        <div class="sidebar-section" id="sb-admin-section">Manage</div>
-        <button class="sidebar-link" id="sb-crew" onclick="showPage('crew')" style="display:none">
-          <span class="icon">👷</span> Crew & Users
-        </button>
+        <div class="sidebar-section">Calendars</div>
+        <button class="sidebar-link active" id="sb-calendar" onclick="showPage('calendar')"><span class="icon">📅</span>Schedule</button>
+        <button class="sidebar-link" id="sb-projects" onclick="showPage('projects')"><span class="icon">📋</span>All Projects</button>
+        <div class="sidebar-section">Manage</div>
+        <button class="sidebar-link" id="sb-timeoff" onclick="showPage('timeoff')"><span class="icon">🏖</span>Time Off</button>
+        <button class="sidebar-link" id="sb-crew" onclick="showPage('crew')"><span class="icon">👷</span>Crew & Users</button>
       </nav>
     </aside>
-
-    <!-- Content -->
     <main class="content" id="content">
 
-      <!-- ── CALENDAR PAGE ── -->
+      <!-- CALENDAR -->
       <div class="page active" id="page-calendar">
         <div class="page-header">
-          <div>
-            <div class="page-title">Schedule</div>
-            <div class="page-subtitle" id="cal-subtitle"></div>
-          </div>
-          <button class="btn btn-primary" id="btn-new-project" onclick="openNewProject()">
-            + New Project
-          </button>
+          <div><div class="page-title">Schedule</div><div class="page-subtitle" id="cal-subtitle"></div></div>
+          <button class="btn btn-primary" id="btn-new-project" onclick="openNewProject()">+ New Project</button>
         </div>
-
-        <div class="stats-grid" id="stats-grid">
-          <div class="stat-card">
-            <div class="stat-card-label">This Week</div>
-            <div class="stat-card-value" id="stat-week">–</div>
-            <div class="stat-card-sub">projects</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-card-label">In Progress</div>
-            <div class="stat-card-value" id="stat-inprog">–</div>
-            <div class="stat-card-sub">active now</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-card-label">Scheduled</div>
-            <div class="stat-card-value" id="stat-sched">–</div>
-            <div class="stat-card-sub">upcoming</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-card-label">Complete</div>
-            <div class="stat-card-value" id="stat-done">–</div>
-            <div class="stat-card-sub">this month</div>
-          </div>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-card-label">This Week</div><div class="stat-card-value" id="stat-week">–</div><div class="stat-card-sub">projects</div></div>
+          <div class="stat-card"><div class="stat-card-label">In Progress</div><div class="stat-card-value" id="stat-inprog">–</div><div class="stat-card-sub">active now</div></div>
+          <div class="stat-card"><div class="stat-card-label">Scheduled</div><div class="stat-card-value" id="stat-sched">–</div><div class="stat-card-sub">upcoming</div></div>
+          <div class="stat-card"><div class="stat-card-label">This Month</div><div class="stat-card-value" id="stat-done">–</div><div class="stat-card-sub">complete</div></div>
         </div>
-
+        <div class="cal-tabs" id="cal-tabs">
+          <button class="cal-tab active" onclick="setCalTab('all',this)">All</button>
+          <button class="cal-tab" onclick="setCalTab('install',this)">Installs</button>
+          <button class="cal-tab" onclick="setCalTab('sales',this)">Sales</button>
+          <button class="cal-tab" onclick="setCalTab('warehouse',this)">Warehouse</button>
+        </div>
+        <div class="cal-legend">
+          <span class="legend-item"><span class="legend-dot" style="background:var(--blue)"></span>Installs</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#a855f7"></span>Sales</span>
+          <span class="legend-item"><span class="legend-dot" style="background:var(--amber)"></span>Warehouse</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#ca8a04"></span>Time Off</span>
+        </div>
         <div class="card">
           <div class="card-header">
-            <div class="calendar-nav" style="width:100%; margin-bottom:0">
+            <div class="calendar-nav" style="width:100%;margin-bottom:0">
               <button class="btn btn-secondary btn-sm" onclick="changeWeek(-1)">‹</button>
               <h3 id="cal-week-label"></h3>
               <button class="btn btn-secondary btn-sm" onclick="changeWeek(1)">›</button>
               <button class="btn btn-ghost btn-sm" onclick="goToday()">Today</button>
             </div>
           </div>
-          <div class="card-body" style="padding: 0.75rem;">
-            <div class="week-grid" id="week-grid"></div>
-          </div>
+          <div class="card-body" style="padding:.75rem"><div class="week-grid" id="week-grid"></div></div>
         </div>
       </div>
 
-      <!-- ── PROJECTS PAGE ── -->
+      <!-- PROJECTS -->
       <div class="page" id="page-projects">
         <div class="page-header">
-          <div>
-            <div class="page-title">All Projects</div>
-            <div class="page-subtitle" id="projects-count"></div>
-          </div>
+          <div><div class="page-title">All Projects</div><div class="page-subtitle" id="projects-count"></div></div>
           <button class="btn btn-primary" onclick="openNewProject()">+ New Project</button>
         </div>
-
-        <div class="filter-bar">
-          <button class="filter-btn active" onclick="filterProjects('all', this)">All</button>
-          <button class="filter-btn" onclick="filterProjects('scheduled', this)">Scheduled</button>
-          <button class="filter-btn" onclick="filterProjects('in_progress', this)">In Progress</button>
-          <button class="filter-btn" onclick="filterProjects('complete', this)">Complete</button>
-          <button class="filter-btn" onclick="filterProjects('invoiced', this)">Invoiced</button>
+        <div class="cal-tabs" id="proj-cal-tabs">
+          <button class="cal-tab active" onclick="setProjectCalTab('all',this)">All</button>
+          <button class="cal-tab" onclick="setProjectCalTab('install',this)">Installs</button>
+          <button class="cal-tab" onclick="setProjectCalTab('sales',this)">Sales</button>
+          <button class="cal-tab" onclick="setProjectCalTab('warehouse',this)">Warehouse</button>
         </div>
-
+        <div class="date-filter-bar">
+          <label>From</label><input type="date" id="filter-from" onchange="renderProjectsList()"/>
+          <label>To</label><input type="date" id="filter-to" onchange="renderProjectsList()"/>
+          <div class="quick-range-btns">
+            <button class="qr-btn active" onclick="setQuickRange('90d',this)">90 days</button>
+            <button class="qr-btn" onclick="setQuickRange('ytd',this)">This year</button>
+            <button class="qr-btn" onclick="setQuickRange('2025',this)">2025</button>
+            <button class="qr-btn" onclick="setQuickRange('2024',this)">2024</button>
+            <button class="qr-btn" onclick="setQuickRange('2023',this)">2023</button>
+            <button class="qr-btn" onclick="setQuickRange('2022',this)">2022</button>
+            <button class="qr-btn" onclick="setQuickRange('all',this)">All time</button>
+          </div>
+        </div>
+        <div class="filter-bar">
+          <button class="filter-btn active" onclick="filterProjects('all',this)">All</button>
+          <button class="filter-btn" onclick="filterProjects('scheduled',this)">Scheduled</button>
+          <button class="filter-btn" onclick="filterProjects('in_progress',this)">In Progress</button>
+          <button class="filter-btn" onclick="filterProjects('complete',this)">Complete</button>
+          <button class="filter-btn" onclick="filterProjects('invoiced',this)">Invoiced</button>
+        </div>
         <div id="projects-list"></div>
       </div>
 
-      <!-- ── CREW PAGE (owner only) ── -->
-      <div class="page" id="page-crew">
+      <!-- TIME OFF -->
+      <div class="page" id="page-timeoff">
         <div class="page-header">
-          <div>
-            <div class="page-title">Crew & Users</div>
-            <div class="page-subtitle">Manage your team members</div>
-          </div>
-          <button class="btn btn-primary" onclick="openInviteUser()">+ Add User</button>
+          <div><div class="page-title">Time Off</div><div class="page-subtitle">Track crew availability</div></div>
+          <button class="btn btn-primary" onclick="openTimeOffModal()">+ Add Time Off</button>
         </div>
-        <div id="crew-list-container">
-          <div class="loading-screen"><div class="spinner"></div></div>
-        </div>
+        <div id="timeoff-list"><div class="loading-screen"><div class="spinner"></div></div></div>
       </div>
 
-      <!-- ── INSTALLER SCHEDULE ── -->
+      <!-- CREW -->
+      <div class="page" id="page-crew">
+        <div class="page-header">
+          <div><div class="page-title">Crew & Users</div><div class="page-subtitle">Toggle active/inactive with the switch</div></div>
+          <button class="btn btn-primary" onclick="openAddUserModal()">+ Add User</button>
+        </div>
+        <div class="section-divider">Staff</div>
+        <div id="staff-list"></div>
+        <div class="section-divider" style="margin-top:1.5rem">Installers & Subs</div>
+        <div id="installer-list"></div>
+      </div>
+
+      <!-- INSTALLER SCHEDULE -->
       <div class="page" id="page-installer">
         <div class="page-header">
-          <div>
-            <div class="page-title">My Schedule</div>
-            <div class="page-subtitle" id="installer-subtitle"></div>
-          </div>
+          <div><div class="page-title">My Schedule</div><div class="page-subtitle" id="installer-subtitle"></div></div>
         </div>
         <div id="installer-schedule"></div>
       </div>
 
     </main>
   </div>
-
-  <!-- Mobile Bottom Nav -->
-  <nav class="mobile-nav" id="mobile-nav">
-    <div class="mobile-nav-inner" id="mobile-nav-inner"></div>
-  </nav>
+  <nav class="mobile-nav"><div class="mobile-nav-inner" id="mobile-nav-inner"></div></nav>
 </div>
 
-<!-- ═══════════════════════════════════════
-     PROJECT MODAL
-═══════════════════════════════════════ -->
+<!-- PROJECT MODAL -->
 <div class="modal-overlay" id="project-modal">
   <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title" id="modal-title">New Project</div>
-      <button class="modal-close" onclick="closeModal('project-modal')">×</button>
-    </div>
+    <div class="modal-header"><div class="modal-title" id="modal-title">New Project</div><button class="modal-close" onclick="closeModal('project-modal')">×</button></div>
     <div class="modal-body">
-      <input type="hidden" id="project-id" />
+      <input type="hidden" id="project-id"/>
       <div class="form-row">
-        <div class="form-group">
-          <label>Customer Name *</label>
-          <input type="text" id="f-customer" placeholder="John Smith" />
+        <div class="form-group"><label>Calendar *</label>
+          <select id="f-calendar">
+            <option value="install">Install</option>
+            <option value="sales">Sales</option>
+            <option value="warehouse">Warehouse</option>
+          </select>
         </div>
-        <div class="form-group">
-          <label>Status</label>
+        <div class="form-group"><label>Status</label>
           <select id="f-status">
             <option value="scheduled">Scheduled</option>
             <option value="in_progress">In Progress</option>
@@ -1032,798 +367,538 @@
           </select>
         </div>
       </div>
-      <div class="form-group">
-        <label>Address *</label>
-        <input type="text" id="f-address" placeholder="123 Main St, Olathe, KS 66062" />
-      </div>
+      <div class="form-group"><label>Customer / Job Name *</label><input type="text" id="f-customer" placeholder="John Smith"/></div>
+      <div class="form-group"><label>Address</label><input type="text" id="f-address" placeholder="123 Main St, Olathe, KS"/></div>
       <div class="form-row">
-        <div class="form-group">
-          <label>Flooring Type *</label>
+        <div class="form-group"><label>Flooring Type</label>
           <select id="f-flooring" onchange="updateUnit()">
-            <option value="">Select type...</option>
-            <option value="Carpet">Carpet</option>
-            <option value="Pad">Pad</option>
-            <option value="Hardwood">Hardwood</option>
-            <option value="LVP">LVP</option>
-            <option value="LVT">LVT</option>
-            <option value="Tile">Tile</option>
-            <option value="Stone">Stone</option>
-            <option value="Laminate">Laminate</option>
-            <option value="VCT">VCT</option>
-            <option value="Exercise Mat">Exercise Mat</option>
+            <option value="">Select...</option>
+            <option value="Carpet">Carpet</option><option value="Pad">Pad</option>
+            <option value="Hardwood">Hardwood</option><option value="LVP">LVP</option>
+            <option value="LVT">LVT</option><option value="Tile">Tile</option>
+            <option value="Stone">Stone</option><option value="Laminate">Laminate</option>
+            <option value="VCT">VCT</option><option value="Exercise Mat">Exercise Mat</option>
             <option value="Other">Other</option>
           </select>
         </div>
-        <div class="form-group">
-          <label id="measure-label">Measurement (SF)</label>
-          <input type="number" id="f-measurement" placeholder="0" min="0" step="0.01" />
-        </div>
+        <div class="form-group"><label id="measure-label">Measurement (SF)</label><input type="number" id="f-measurement" placeholder="0" min="0" step="0.01"/></div>
       </div>
       <div class="form-row">
-        <div class="form-group">
-          <label>Start Date *</label>
-          <input type="date" id="f-start-date" />
-        </div>
-        <div class="form-group">
-          <label>End Date</label>
-          <input type="date" id="f-end-date" />
-        </div>
+        <div class="form-group"><label>Start Date *</label><input type="date" id="f-start-date"/></div>
+        <div class="form-group"><label>End Date</label><input type="date" id="f-end-date"/></div>
       </div>
-      <div class="form-group">
-        <label>Assign Crew Members</label>
-        <div id="crew-checkboxes" style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-top:0.25rem;"></div>
-      </div>
-      <div class="form-group">
-        <label>Notes</label>
-        <textarea id="f-notes" placeholder="Room details, special instructions, customer access info..."></textarea>
-      </div>
-      <div class="form-group">
-        <label>Materials</label>
-        <input type="text" id="f-materials" placeholder="e.g. Shaw Floors #4421, ordered 6/1" />
-      </div>
+      <div class="form-group"><label>Assign Crew</label><div id="crew-checkboxes" style="display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.25rem"></div></div>
+      <div class="form-group"><label>Notes</label><textarea id="f-notes" placeholder="Room details, instructions, access info..."></textarea></div>
+      <div class="form-group"><label>Materials</label><input type="text" id="f-materials" placeholder="e.g. Shaw #4421, ordered 6/1"/></div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-danger btn-sm" id="btn-delete" onclick="deleteProject()" style="display:none; margin-right:auto">Delete</button>
+      <button class="btn btn-danger btn-sm" id="btn-delete" onclick="deleteProject()" style="display:none;margin-right:auto">Delete</button>
       <button class="btn btn-secondary" onclick="closeModal('project-modal')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveProject()">Save Project</button>
+      <button class="btn btn-primary" onclick="saveProject()">Save</button>
     </div>
   </div>
 </div>
 
-<!-- PROJECT DETAIL MODAL -->
+<!-- DETAIL MODAL -->
 <div class="modal-overlay" id="detail-modal">
   <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title" id="detail-customer"></div>
-      <button class="modal-close" onclick="closeModal('detail-modal')">×</button>
-    </div>
+    <div class="modal-header"><div class="modal-title" id="detail-customer"></div><button class="modal-close" onclick="closeModal('detail-modal')">×</button></div>
     <div class="modal-body" id="detail-body"></div>
     <div class="modal-footer" id="detail-footer"></div>
   </div>
 </div>
 
-<!-- INVITE USER MODAL -->
-<div class="modal-overlay" id="invite-modal">
-  <div class="modal" style="max-width:420px">
-    <div class="modal-header">
-      <div class="modal-title">Add Team Member</div>
-      <button class="modal-close" onclick="closeModal('invite-modal')">×</button>
-    </div>
+<!-- TIME OFF MODAL -->
+<div class="modal-overlay" id="timeoff-modal">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-header"><div class="modal-title" id="to-modal-title">Add Time Off</div><button class="modal-close" onclick="closeModal('timeoff-modal')">×</button></div>
     <div class="modal-body">
-      <p style="font-size:0.875rem; color:var(--gray-500); margin-bottom:1.25rem;">
-        Create a login for a new team member. They'll receive an email to set their password.
-      </p>
-      <div class="form-group">
-        <label>Full Name *</label>
-        <input type="text" id="invite-name" placeholder="Mike Johnson" />
+      <input type="hidden" id="to-id"/>
+      <div class="form-group"><label>Person *</label><select id="to-person"></select></div>
+      <div class="form-row">
+        <div class="form-group"><label>Start *</label><input type="date" id="to-start"/></div>
+        <div class="form-group"><label>End *</label><input type="date" id="to-end"/></div>
       </div>
-      <div class="form-group">
-        <label>Email *</label>
-        <input type="email" id="invite-email" placeholder="mike@amflooringllc.com" />
-      </div>
-      <div class="form-group">
-        <label>Role *</label>
-        <select id="invite-role">
-          <option value="installer">Installer</option>
-          <option value="office">Office</option>
-          <option value="owner">Owner</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Temporary Password *</label>
-        <input type="text" id="invite-password" placeholder="They should change this on first login" />
-      </div>
+      <div class="form-group"><label>Note</label><input type="text" id="to-note" placeholder="Vacation, sick, personal..."/></div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('invite-modal')">Cancel</button>
+      <button class="btn btn-danger btn-sm" id="to-del-btn" onclick="deleteTimeOff()" style="display:none;margin-right:auto">Delete</button>
+      <button class="btn btn-secondary" onclick="closeModal('timeoff-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTimeOff()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD USER MODAL -->
+<div class="modal-overlay" id="add-user-modal">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-header"><div class="modal-title">Add Team Member</div><button class="modal-close" onclick="closeModal('add-user-modal')">×</button></div>
+    <div class="modal-body">
+      <p style="font-size:.875rem;color:var(--g500);margin-bottom:1.25rem">Create a login for a new team member.</p>
+      <div class="form-group"><label>Full Name *</label><input type="text" id="new-name" placeholder="Mike Johnson"/></div>
+      <div class="form-group"><label>Email *</label><input type="email" id="new-email" placeholder="mike@example.com"/></div>
+      <div class="form-group"><label>Role *</label>
+        <select id="new-role"><option value="installer">Installer / Sub</option><option value="staff">Staff</option></select>
+      </div>
+      <div class="form-group"><label>Temporary Password *</label><input type="text" id="new-password" placeholder="They can change this later"/></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('add-user-modal')">Cancel</button>
       <button class="btn btn-primary" onclick="createUser()">Create Account</button>
     </div>
   </div>
 </div>
 
-<!-- TOAST -->
 <div id="toast"></div>
 
 <script>
-// ═══════════════════════════════════════
-// SUPABASE INIT
-// ═══════════════════════════════════════
-const SUPABASE_URL = 'https://gijtwufwkrhyfrdzsvkv.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdpanR3dWZ3a3JoeWZyZHpzdmt2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTk0MDMsImV4cCI6MjA4OTg5NTQwM30.tPt-oLIDg5UdkIJO3Tbuz-jqBUHgIl8fxyDhSultPpY';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+const SURL='https://gijtwufwkrhyfrdzsvkv.supabase.co';
+const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdpanR3dWZ3a3JoeWZyZHpzdmt2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTk0MDMsImV4cCI6MjA4OTg5NTQwM30.tPt-oLIDg5UdkIJO3Tbuz-jqBUHgIl8fxyDhSultPpY';
+const sb=supabase.createClient(SURL,SKEY);
 
-// ═══════════════════════════════════════
-// STATE
-// ═══════════════════════════════════════
-let currentUser = null;
-let currentProfile = null;
-let allProjects = [];
-let allProfiles = [];
-let currentWeekStart = getWeekStart(new Date());
-let currentFilter = 'all';
+let me=null,myProfile=null;
+let projects=[],profiles=[],timeoffs=[];
+let weekStart=weekOf(new Date());
+let calTab='all',projCalTab='all',statusFilter='all';
 
-// ═══════════════════════════════════════
-// AUTH
-// ═══════════════════════════════════════
-async function handleLogin() {
-  const email = document.getElementById('login-email').value.trim();
-  const password = document.getElementById('login-password').value;
-  const btn = document.getElementById('login-btn');
-  const err = document.getElementById('login-error');
+// ─── AUTH ───────────────────────────────────────────────────────────────────
+async function handleLogin(){
+  const email=document.getElementById('login-email').value.trim();
+  const pw=document.getElementById('login-password').value;
+  const btn=document.getElementById('login-btn');
+  const err=document.getElementById('login-error');
+  if(!email||!pw){showErr(err,'Please enter email and password.');return}
+  btn.innerHTML='<div class="spinner"></div>';btn.disabled=true;err.classList.add('hidden');
+  const {data,error}=await sb.auth.signInWithPassword({email,password:pw});
+  if(error){showErr(err,'Invalid email or password.');btn.innerHTML='Sign In';btn.disabled=false;return}
+  await boot(data.user);
+}
+async function handleLogout(){
+  await sb.auth.signOut();me=null;myProfile=null;
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+}
+function showErr(el,msg){el.textContent=msg;el.classList.remove('hidden')}
+document.getElementById('login-password').addEventListener('keydown',e=>{if(e.key==='Enter')handleLogin()});
 
-  if (!email || !password) { showError(err, 'Please enter your email and password.'); return; }
-
-  btn.innerHTML = '<div class="spinner"></div> Signing in...';
-  btn.disabled = true;
-  err.classList.add('hidden');
-
-  const { data, error } = await sb.auth.signInWithPassword({ email, password });
-
-  if (error) {
-    showError(err, 'Invalid email or password. Please try again.');
-    btn.innerHTML = 'Sign In';
-    btn.disabled = false;
-    return;
-  }
-
-  await initApp(data.user);
+// ─── BOOT ───────────────────────────────────────────────────────────────────
+async function boot(user){
+  me=user;
+  const {data:p}=await sb.from('profiles').select('*').eq('id',user.id).single();
+  myProfile=p;
+  if(!p){showToast('Profile not found. Contact admin.','error');await sb.auth.signOut();return}
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='flex';
+  document.getElementById('nav-user-name').textContent=p.full_name;
+  document.getElementById('nav-role-badge').textContent=p.role;
+  initDateFilters();
+  buildNav(p.role);
+  await loadAll();
 }
 
-async function handleLogout() {
-  await sb.auth.signOut();
-  currentUser = null; currentProfile = null;
-  document.getElementById('app').style.display = 'none';
-  document.getElementById('login-screen').style.display = 'flex';
-}
-
-function showError(el, msg) {
-  el.textContent = msg;
-  el.classList.remove('hidden');
-}
-
-// Enter key on login
-document.getElementById('login-password').addEventListener('keydown', e => {
-  if (e.key === 'Enter') handleLogin();
-});
-
-// ═══════════════════════════════════════
-// APP INIT
-// ═══════════════════════════════════════
-async function initApp(user) {
-  currentUser = user;
-
-  // Load profile
-  const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
-  currentProfile = profile;
-
-  if (!profile) {
-    showToast('Profile not found. Contact your administrator.', 'error');
-    await sb.auth.signOut();
-    return;
-  }
-
-  // Hide login, show app
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'flex';
-
-  // Set nav
-  document.getElementById('nav-user-name').textContent = profile.full_name;
-  document.getElementById('nav-role-badge').textContent = profile.role;
-
-  // Setup UI based on role
-  setupRoleUI(profile.role);
-
-  // Load data
-  await loadData();
-}
-
-function setupRoleUI(role) {
-  const sidebar = document.getElementById('sidebar');
-  const mobileNav = document.getElementById('mobile-nav-inner');
-
-  if (role === 'installer') {
-    // Installer: simple schedule view, no sidebar
-    sidebar.style.display = 'none';
-    document.getElementById('btn-new-project').style.display = 'none';
-    document.getElementById('stats-grid').style.display = 'none';
-
-    mobileNav.innerHTML = `
-      <button class="mobile-nav-btn active" onclick="showPage('installer')">
-        <span class="nav-icon">📅</span> Schedule
-      </button>`;
-
+function buildNav(role){
+  const mn=document.getElementById('mobile-nav-inner');
+  if(role==='installer'){
+    document.getElementById('sidebar').style.display='none';
+    document.getElementById('btn-new-project').style.display='none';
+    mn.innerHTML=`<button class="mobile-nav-btn active" onclick="showPage('installer')"><span class="nav-icon">📅</span>My Jobs</button>`;
     showPage('installer');
   } else {
-    // Office / Owner
-    if (role === 'owner') {
-      document.getElementById('sb-crew').style.display = 'flex';
-    }
-
-    mobileNav.innerHTML = `
-      <button class="mobile-nav-btn active" id="mnb-calendar" onclick="showPage('calendar')">
-        <span class="nav-icon">📅</span> Calendar
-      </button>
-      <button class="mobile-nav-btn" id="mnb-projects" onclick="showPage('projects')">
-        <span class="nav-icon">📋</span> Projects
-      </button>
-      ${role === 'owner' ? `<button class="mobile-nav-btn" id="mnb-crew" onclick="showPage('crew')">
-        <span class="nav-icon">👷</span> Crew
-      </button>` : ''}`;
-
+    mn.innerHTML=`
+      <button class="mobile-nav-btn active" id="mnb-calendar" onclick="showPage('calendar')"><span class="nav-icon">📅</span>Calendar</button>
+      <button class="mobile-nav-btn" id="mnb-projects" onclick="showPage('projects')"><span class="nav-icon">📋</span>Projects</button>
+      <button class="mobile-nav-btn" id="mnb-timeoff" onclick="showPage('timeoff')"><span class="nav-icon">🏖</span>Time Off</button>
+      <button class="mobile-nav-btn" id="mnb-crew" onclick="showPage('crew')"><span class="nav-icon">👷</span>Crew</button>`;
     showPage('calendar');
   }
 }
 
-// ═══════════════════════════════════════
-// DATA LOADING
-// ═══════════════════════════════════════
-async function loadData() {
-  await Promise.all([loadProjects(), loadProfiles()]);
-  renderCurrentPage();
-}
+// ─── DATA ───────────────────────────────────────────────────────────────────
+async function loadAll(){await Promise.all([fetchProjects(),fetchProfiles(),fetchTimeOff()]);renderActive()}
 
-async function loadProjects() {
-  let query = sb.from('projects').select(`
-    *, 
-    project_installers(installer_id, profiles(full_name))
-  `).order('start_date', { ascending: true });
-
-  // Installers only see their own
-  if (currentProfile.role === 'installer') {
-    const { data: myAssignments } = await sb.from('project_installers')
-      .select('project_id').eq('installer_id', currentUser.id);
-    if (myAssignments && myAssignments.length > 0) {
-      const ids = myAssignments.map(a => a.project_id);
-      query = query.in('id', ids);
-    } else {
-      allProjects = [];
-      return;
-    }
+async function fetchProjects(){
+  const from=document.getElementById('filter-from')?.value||defaultFrom();
+  const to=document.getElementById('filter-to')?.value||'2099-12-31';
+  let q=sb.from('projects').select('*,project_installers(installer_id,profiles(full_name))').order('start_date');
+  if(myProfile?.role==='installer'){
+    const {data:mine}=await sb.from('project_installers').select('project_id').eq('installer_id',me.id);
+    if(mine?.length)q=q.in('id',mine.map(a=>a.project_id));
+    else{projects=[];return}
+  } else {
+    q=q.gte('start_date',from).lte('start_date',to);
   }
-
-  const { data, error } = await query;
-  if (!error) allProjects = data || [];
+  const {data}=await q;projects=data||[];
 }
 
-async function loadProfiles() {
-  const { data } = await sb.from('profiles').select('*').order('full_name');
-  allProfiles = data || [];
+async function fetchProfiles(){const {data}=await sb.from('profiles').select('*').order('full_name');profiles=data||[]}
+async function fetchTimeOff(){const {data}=await sb.from('time_off').select('*,profiles(full_name)').order('start_date');timeoffs=data||[]}
+
+function defaultFrom(){const d=new Date();d.setDate(d.getDate()-90);return d.toISOString().split('T')[0]}
+function initDateFilters(){
+  document.getElementById('filter-from').value=defaultFrom();
+  document.getElementById('filter-to').value='2099-12-31';
 }
 
-// ═══════════════════════════════════════
-// NAVIGATION
-// ═══════════════════════════════════════
-function showPage(name) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
-  document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
-
-  const page = document.getElementById('page-' + name);
-  if (page) page.classList.add('active');
-
-  const sbLink = document.getElementById('sb-' + name);
-  if (sbLink) sbLink.classList.add('active');
-
-  const mnbLink = document.getElementById('mnb-' + name);
-  if (mnbLink) mnbLink.classList.add('active');
-
-  renderPage(name);
+// ─── NAVIGATION ─────────────────────────────────────────────────────────────
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-link').forEach(l=>l.classList.remove('active'));
+  document.querySelectorAll('.mobile-nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+name)?.classList.add('active');
+  document.getElementById('sb-'+name)?.classList.add('active');
+  document.getElementById('mnb-'+name)?.classList.add('active');
+  render(name);
+}
+function renderActive(){
+  const p=document.querySelector('.page.active');
+  if(p)render(p.id.replace('page-',''));
+}
+function render(name){
+  if(name==='calendar')renderCal();
+  else if(name==='projects')renderProjectsList();
+  else if(name==='timeoff')renderTimeOff();
+  else if(name==='crew')renderCrew();
+  else if(name==='installer')renderInstaller();
 }
 
-function renderCurrentPage() {
-  const active = document.querySelector('.page.active');
-  if (!active) return;
-  const name = active.id.replace('page-', '');
-  renderPage(name);
-}
+// ─── CALENDAR ───────────────────────────────────────────────────────────────
+function weekOf(d){const c=new Date(d);const day=c.getDay();c.setDate(c.getDate()-day+(day===0?-6:1));c.setHours(0,0,0,0);return c}
+function changeWeek(n){weekStart=new Date(weekStart);weekStart.setDate(weekStart.getDate()+n*7);renderCal()}
+function goToday(){weekStart=weekOf(new Date());renderCal()}
+function setCalTab(v,b){calTab=v;document.querySelectorAll('#cal-tabs .cal-tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderCal()}
 
-function renderPage(name) {
-  if (name === 'calendar') renderCalendar();
-  else if (name === 'projects') renderProjectsList();
-  else if (name === 'crew') renderCrew();
-  else if (name === 'installer') renderInstallerSchedule();
-}
-
-// ═══════════════════════════════════════
-// CALENDAR
-// ═══════════════════════════════════════
-function getWeekStart(date) {
-  const d = new Date(date);
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-  d.setDate(diff);
-  d.setHours(0,0,0,0);
-  return d;
-}
-
-function changeWeek(dir) {
-  currentWeekStart = new Date(currentWeekStart);
-  currentWeekStart.setDate(currentWeekStart.getDate() + dir * 7);
-  renderCalendar();
-}
-
-function goToday() {
-  currentWeekStart = getWeekStart(new Date());
-  renderCalendar();
-}
-
-function renderCalendar() {
-  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  const today = new Date(); today.setHours(0,0,0,0);
-
-  // Week label
-  const weekEnd = new Date(currentWeekStart);
-  weekEnd.setDate(weekEnd.getDate() + 6);
-  const opts = { month: 'short', day: 'numeric' };
-  document.getElementById('cal-week-label').textContent =
-    `${currentWeekStart.toLocaleDateString('en-US', opts)} – ${weekEnd.toLocaleDateString('en-US', opts)}`;
-
-  document.getElementById('cal-subtitle').textContent =
-    currentWeekStart.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-
-  // Stats
-  const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-
-  const weekProjects = allProjects.filter(p => {
-    const s = new Date(p.start_date);
-    const ws = currentWeekStart;
-    const we = weekEnd;
-    return s >= ws && s <= we;
-  });
-
-  document.getElementById('stat-week').textContent = weekProjects.length;
-  document.getElementById('stat-inprog').textContent = allProjects.filter(p => p.status === 'in_progress').length;
-  document.getElementById('stat-sched').textContent = allProjects.filter(p => p.status === 'scheduled').length;
-  document.getElementById('stat-done').textContent = allProjects.filter(p => {
-    const s = new Date(p.start_date);
-    return p.status === 'complete' && s >= monthStart && s <= monthEnd;
-  }).length;
-
-  // Build grid
-  const grid = document.getElementById('week-grid');
-  grid.innerHTML = days.map(d => `<div class="week-day-header">${d}</div>`).join('');
-
-  for (let i = 0; i < 7; i++) {
-    const cellDate = new Date(currentWeekStart);
-    cellDate.setDate(cellDate.getDate() + i);
-    const isToday = cellDate.getTime() === today.getTime();
-    const dateStr = cellDate.toISOString().split('T')[0];
-
-    const dayProjects = allProjects.filter(p => {
-      if (!p.start_date) return false;
-      const start = p.start_date;
-      const end = p.end_date || p.start_date;
-      return dateStr >= start && dateStr <= end;
-    });
-
-    const events = dayProjects.map(p =>
-      `<div class="cal-event status-${p.status}" title="${p.customer_name}" onclick="openDetail('${p.id}')">${p.customer_name}</div>`
-    ).join('');
-
-    grid.innerHTML += `
-      <div class="week-day-cell ${isToday ? 'today' : ''}">
-        <div class="day-num">${cellDate.getDate()}</div>
-        ${events}
-      </div>`;
+function renderCal(){
+  const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const today=new Date();today.setHours(0,0,0,0);
+  const we=new Date(weekStart);we.setDate(we.getDate()+6);
+  const fmt=d=>d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  document.getElementById('cal-week-label').textContent=`${fmt(weekStart)} – ${fmt(we)}`;
+  document.getElementById('cal-subtitle').textContent=weekStart.toLocaleDateString('en-US',{month:'long',year:'numeric'});
+  const ws=weekStart.toISOString().split('T')[0],we2=we.toISOString().split('T')[0];
+  const now=new Date(),ms=new Date(now.getFullYear(),now.getMonth(),1).toISOString().split('T')[0],me2=new Date(now.getFullYear(),now.getMonth()+1,0).toISOString().split('T')[0];
+  document.getElementById('stat-week').textContent=projects.filter(p=>p.start_date>=ws&&p.start_date<=we2).length;
+  document.getElementById('stat-inprog').textContent=projects.filter(p=>p.status==='in_progress').length;
+  document.getElementById('stat-sched').textContent=projects.filter(p=>p.status==='scheduled').length;
+  document.getElementById('stat-done').textContent=projects.filter(p=>p.status==='complete'&&p.start_date>=ms&&p.start_date<=me2).length;
+  const grid=document.getElementById('week-grid');
+  grid.innerHTML=days.map(d=>`<div class="week-day-header">${d}</div>`).join('');
+  for(let i=0;i<7;i++){
+    const cd=new Date(weekStart);cd.setDate(cd.getDate()+i);
+    const isToday=cd.getTime()===today.getTime();
+    const ds=cd.toISOString().split('T')[0];
+    let dp=projects.filter(p=>{const s=p.start_date,e=p.end_date||s;return ds>=s&&ds<=e});
+    if(calTab!=='all')dp=dp.filter(p=>p.calendar_type===calTab);
+    const dto=timeoffs.filter(t=>ds>=t.start_date&&ds<=t.end_date);
+    const evts=dp.map(p=>`<div class="cal-event cal-${p.calendar_type} ${p.status==='complete'?'status-complete':''}" onclick="openDetail('${p.id}')" title="${p.customer_name}">${p.customer_name}</div>`).join('');
+    const toEvts=dto.map(t=>`<div class="cal-event time-off">🏖 ${(t.profiles?.full_name||'').split(' ')[0]}</div>`).join('');
+    grid.innerHTML+=`<div class="week-day-cell ${isToday?'today':''}"><div class="day-num">${cd.getDate()}</div>${evts}${toEvts}</div>`;
   }
 }
 
-// ═══════════════════════════════════════
-// PROJECTS LIST
-// ═══════════════════════════════════════
-function filterProjects(status, btn) {
-  currentFilter = status;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderProjectsList();
+// ─── PROJECTS LIST ───────────────────────────────────────────────────────────
+function setProjectCalTab(v,b){projCalTab=v;document.querySelectorAll('#proj-cal-tabs .cal-tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderProjectsList()}
+function filterProjects(v,b){statusFilter=v;document.querySelectorAll('.filter-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderProjectsList()}
+
+function setQuickRange(r,b){
+  document.querySelectorAll('.qr-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');
+  const n=new Date();let from,to;
+  if(r==='90d'){const d=new Date();d.setDate(d.getDate()-90);from=d.toISOString().split('T')[0];to='2099-12-31'}
+  else if(r==='ytd'){from=`${n.getFullYear()}-01-01`;to='2099-12-31'}
+  else if(r==='all'){from='2000-01-01';to='2099-12-31'}
+  else{from=`${r}-01-01`;to=`${r}-12-31`}
+  document.getElementById('filter-from').value=from;
+  document.getElementById('filter-to').value=to;
+  fetchProjects().then(renderProjectsList);
 }
 
-function renderProjectsList() {
-  const filtered = currentFilter === 'all'
-    ? allProjects
-    : allProjects.filter(p => p.status === currentFilter);
-
-  document.getElementById('projects-count').textContent = `${filtered.length} project${filtered.length !== 1 ? 's' : ''}`;
-
-  const container = document.getElementById('projects-list');
-
-  if (filtered.length === 0) {
-    container.innerHTML = `<div class="empty-state">
-      <div class="empty-icon">📋</div>
-      <p>No projects found</p>
-    </div>`;
-    return;
-  }
-
-  container.innerHTML = filtered.map(p => {
-    const installers = p.project_installers?.map(pi => pi.profiles?.full_name).filter(Boolean).join(', ') || '—';
-    const unit = (p.flooring_type === 'Carpet' || p.flooring_type === 'Pad') ? 'SY' : 'SF';
-    const measure = p.measurement_value ? `${p.measurement_value} ${p.measurement_unit || unit}` : '';
-    const dateStr = formatDateRange(p.start_date, p.end_date);
-
-    return `<div class="project-card status-${p.status}" onclick="openDetail('${p.id}')">
+async function renderProjectsList(){
+  await fetchProjects();
+  let f=projects;
+  if(projCalTab!=='all')f=f.filter(p=>p.calendar_type===projCalTab);
+  if(statusFilter!=='all')f=f.filter(p=>p.status===statusFilter);
+  document.getElementById('projects-count').textContent=`${f.length} project${f.length!==1?'s':''}`;
+  const c=document.getElementById('projects-list');
+  if(!f.length){c.innerHTML=`<div class="empty-state"><div class="empty-icon">📋</div><p>No projects found</p></div>`;return}
+  const calMap={install:'Install',sales:'Sales',warehouse:'Warehouse'};
+  c.innerHTML=f.map(p=>{
+    const crew=p.project_installers?.map(pi=>pi.profiles?.full_name).filter(Boolean).join(', ')||p.assigned_to||'';
+    const m=p.measurement_value?`${p.measurement_value} ${p.measurement_unit}`:'';
+    return `<div class="project-card cal-${p.calendar_type}" onclick="openDetail('${p.id}')">
       <div class="project-card-top">
-        <div>
-          <div class="project-customer">${p.customer_name}</div>
-          <div class="project-address">📍 ${p.address}</div>
-        </div>
-        <span class="badge badge-${p.status}">${statusLabel(p.status)}</span>
+        <div><div class="project-customer">${p.customer_name}</div>${p.address?`<div class="project-address">📍 ${p.address}</div>`:''}</div>
+        <span class="badge badge-${p.status}">${slbl(p.status)}</span>
       </div>
       <div class="project-meta">
-        <span class="project-meta-item">🗓 ${dateStr}</span>
-        ${p.flooring_type ? `<span class="project-meta-item">🪵 ${p.flooring_type}</span>` : ''}
-        ${measure ? `<span class="project-meta-item">📐 ${measure}</span>` : ''}
-        ${installers !== '—' ? `<span class="project-meta-item">👷 ${installers}</span>` : ''}
+        <span class="project-meta-item">🗓 ${fdr(p.start_date,p.end_date)}</span>
+        <span class="project-meta-item">${calMap[p.calendar_type]||''}</span>
+        ${p.flooring_type?`<span class="project-meta-item">🪵 ${p.flooring_type}</span>`:''}
+        ${m?`<span class="project-meta-item">📐 ${m}</span>`:''}
+        ${crew?`<span class="project-meta-item">👷 ${crew}</span>`:''}
       </div>
     </div>`;
   }).join('');
 }
 
-// ═══════════════════════════════════════
-// INSTALLER SCHEDULE
-// ═══════════════════════════════════════
-function renderInstallerSchedule() {
-  const sub = document.getElementById('installer-subtitle');
-  sub.textContent = `Welcome back, ${currentProfile?.full_name?.split(' ')[0] || ''}`;
-
-  const container = document.getElementById('installer-schedule');
-
-  if (allProjects.length === 0) {
-    container.innerHTML = `<div class="empty-state">
-      <div class="empty-icon">✅</div>
-      <p>No projects assigned yet.</p>
-    </div>`;
-    return;
-  }
-
-  // Group by date
-  const today = new Date(); today.setHours(0,0,0,0);
-  const grouped = {};
-
-  allProjects.forEach(p => {
-    const key = p.start_date;
-    if (!grouped[key]) grouped[key] = [];
-    grouped[key].push(p);
-  });
-
-  const sortedDates = Object.keys(grouped).sort();
-
-  container.innerHTML = sortedDates.map(dateStr => {
-    const d = new Date(dateStr + 'T00:00:00');
-    const diff = Math.round((d - today) / 86400000);
-    let label = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-    if (diff === 0) label = 'Today — ' + label;
-    else if (diff === 1) label = 'Tomorrow — ' + label;
-    else if (diff < 0) label = `${label} (${Math.abs(diff)} days ago)`;
-
-    const jobs = grouped[dateStr].map(p => {
-      const unit = (p.flooring_type === 'Carpet' || p.flooring_type === 'Pad') ? 'SY' : 'SF';
-      const measure = p.measurement_value ? `${p.measurement_value} ${p.measurement_unit || unit}` : '';
-      const mapsUrl = `https://maps.google.com/?q=${encodeURIComponent(p.address)}`;
-
-      return `<div class="installer-job-card status-${p.status}">
+// ─── INSTALLER ───────────────────────────────────────────────────────────────
+function renderInstaller(){
+  document.getElementById('installer-subtitle').textContent=`Welcome, ${myProfile?.full_name?.split(' ')[0]||''}`;
+  const c=document.getElementById('installer-schedule');
+  if(!projects.length){c.innerHTML=`<div class="empty-state"><div class="empty-icon">✅</div><p>No projects assigned yet.</p></div>`;return}
+  const today=new Date();today.setHours(0,0,0,0);
+  const grp={};projects.forEach(p=>{if(!grp[p.start_date])grp[p.start_date]=[];grp[p.start_date].push(p)});
+  c.innerHTML=Object.keys(grp).sort().map(ds=>{
+    const d=new Date(ds+'T00:00:00');
+    const diff=Math.round((d-today)/86400000);
+    let lbl=d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+    if(diff===0)lbl='Today — '+lbl;else if(diff===1)lbl='Tomorrow — '+lbl;
+    const jobs=grp[ds].map(p=>{
+      const m=p.measurement_value?`${p.measurement_value} ${p.measurement_unit}`:'';
+      const murl=`https://maps.google.com/?q=${encodeURIComponent(p.address||'')}`;
+      return `<div class="installer-job-card">
         <div class="installer-job-customer">${p.customer_name}</div>
-        <div class="installer-job-address">📍 ${p.address}</div>
+        ${p.address?`<div class="installer-job-address">📍 ${p.address}</div>`:''}
         <div class="installer-job-details">
-          ${p.flooring_type ? `<span class="installer-detail-pill">🪵 ${p.flooring_type}</span>` : ''}
-          ${measure ? `<span class="installer-detail-pill">📐 ${measure}</span>` : ''}
-          ${p.end_date && p.end_date !== p.start_date ? `<span class="installer-detail-pill">📅 Through ${formatDate(p.end_date)}</span>` : ''}
+          ${p.flooring_type?`<span class="installer-detail-pill">🪵 ${p.flooring_type}</span>`:''}
+          ${m?`<span class="installer-detail-pill">📐 ${m}</span>`:''}
+          ${p.end_date&&p.end_date!==ds?`<span class="installer-detail-pill">📅 Through ${fd(p.end_date)}</span>`:''}
         </div>
-        ${p.notes ? `<div class="installer-job-notes">${p.notes}</div>` : ''}
-        <a href="${mapsUrl}" target="_blank" class="map-btn">🗺 Get Directions</a>
+        ${p.notes?`<div class="installer-job-notes">${p.notes}</div>`:''}
+        ${p.address?`<a href="${murl}" target="_blank" class="map-btn">🗺 Get Directions</a>`:''}
       </div>`;
     }).join('');
-
-    return `<div class="installer-day">
-      <div class="installer-day-label">${label}</div>
-      ${jobs}
-    </div>`;
+    return `<div class="installer-day"><div class="installer-day-label">${lbl}</div>${jobs}</div>`;
   }).join('');
 }
 
-// ═══════════════════════════════════════
-// CREW PAGE
-// ═══════════════════════════════════════
-async function renderCrew() {
-  const container = document.getElementById('crew-list-container');
-
-  if (allProfiles.length === 0) {
-    container.innerHTML = `<div class="empty-state"><div class="empty-icon">👷</div><p>No team members yet.</p></div>`;
-    return;
-  }
-
-  const roleOrder = { owner: 0, office: 1, installer: 2 };
-  const sorted = [...allProfiles].sort((a, b) => (roleOrder[a.role] || 3) - (roleOrder[b.role] || 3));
-
-  container.innerHTML = `<div class="crew-list">${sorted.map(p => `
-    <div class="crew-item">
-      <div class="crew-item-info">
-        <div class="crew-avatar">${p.full_name.charAt(0).toUpperCase()}</div>
-        <div>
-          <div class="crew-name">${p.full_name}</div>
-          <div class="crew-role">${p.role.charAt(0).toUpperCase() + p.role.slice(1)}</div>
-        </div>
-      </div>
-      <span class="badge badge-${p.role === 'owner' ? 'complete' : p.role === 'office' ? 'in_progress' : 'scheduled'}">${p.role}</span>
-    </div>`).join('')}
+// ─── TIME OFF ────────────────────────────────────────────────────────────────
+function renderTimeOff(){
+  const c=document.getElementById('timeoff-list');
+  if(!timeoffs.length){c.innerHTML=`<div class="empty-state"><div class="empty-icon">🏖</div><p>No time off scheduled.</p></div>`;return}
+  const today=new Date().toISOString().split('T')[0];
+  const up=timeoffs.filter(t=>t.end_date>=today);
+  const past=timeoffs.filter(t=>t.end_date<today);
+  let html='';
+  if(up.length){html+=`<div class="section-divider">Upcoming & Current</div>`;html+=up.map(toRow).join('')}
+  if(past.length){html+=`<div class="section-divider" style="margin-top:1.5rem">Past</div>`;html+=past.map(toRow).join('')}
+  c.innerHTML=html;
+}
+function toRow(t){
+  return `<div class="timeoff-item">
+    <div><div class="timeoff-name">${t.profiles?.full_name||'Unknown'}</div>
+    <div class="timeoff-dates">${fd(t.start_date)} – ${fd(t.end_date)}${t.note?` · ${t.note}`:''}</div></div>
+    <button class="btn btn-ghost btn-sm" onclick="editTimeOff('${t.id}')">Edit</button>
   </div>`;
 }
-
-// ═══════════════════════════════════════
-// PROJECT MODAL — NEW / EDIT
-// ═══════════════════════════════════════
-function openNewProject(dateStr = null) {
-  document.getElementById('modal-title').textContent = 'New Project';
-  document.getElementById('project-id').value = '';
-  document.getElementById('f-customer').value = '';
-  document.getElementById('f-address').value = '';
-  document.getElementById('f-flooring').value = '';
-  document.getElementById('f-measurement').value = '';
-  document.getElementById('f-start-date').value = dateStr || new Date().toISOString().split('T')[0];
-  document.getElementById('f-end-date').value = '';
-  document.getElementById('f-notes').value = '';
-  document.getElementById('f-materials').value = '';
-  document.getElementById('f-status').value = 'scheduled';
-  document.getElementById('btn-delete').style.display = 'none';
-  updateUnit();
-  buildCrewCheckboxes([]);
-  openModal('project-modal');
+function openTimeOffModal(){
+  document.getElementById('to-id').value='';
+  document.getElementById('to-modal-title').textContent='Add Time Off';
+  document.getElementById('to-start').value='';document.getElementById('to-end').value='';document.getElementById('to-note').value='';
+  document.getElementById('to-del-btn').style.display='none';
+  fillToPeople(null);openModal('timeoff-modal');
+}
+function editTimeOff(id){
+  const t=timeoffs.find(x=>x.id===id);if(!t)return;
+  document.getElementById('to-id').value=id;
+  document.getElementById('to-modal-title').textContent='Edit Time Off';
+  document.getElementById('to-start').value=t.start_date;document.getElementById('to-end').value=t.end_date;document.getElementById('to-note').value=t.note||'';
+  document.getElementById('to-del-btn').style.display='inline-flex';
+  fillToPeople(t.profile_id);openModal('timeoff-modal');
+}
+function fillToPeople(sel){
+  document.getElementById('to-person').innerHTML=profiles.map(p=>`<option value="${p.id}" ${p.id===sel?'selected':''}>${p.full_name}</option>`).join('');
+}
+async function saveTimeOff(){
+  const id=document.getElementById('to-id').value;
+  const payload={profile_id:document.getElementById('to-person').value,start_date:document.getElementById('to-start').value,end_date:document.getElementById('to-end').value,note:document.getElementById('to-note').value||null,created_by:me.id};
+  if(!payload.profile_id||!payload.start_date||!payload.end_date){showToast('Fill in all fields.','error');return}
+  if(id)await sb.from('time_off').update(payload).eq('id',id);
+  else await sb.from('time_off').insert(payload);
+  closeModal('timeoff-modal');showToast('Saved!','success');
+  await fetchTimeOff();renderTimeOff();
+}
+async function deleteTimeOff(){
+  const id=document.getElementById('to-id').value;if(!id)return;
+  if(!confirm('Delete this time off?'))return;
+  await sb.from('time_off').delete().eq('id',id);
+  closeModal('timeoff-modal');showToast('Deleted.','');
+  await fetchTimeOff();renderTimeOff();
 }
 
-function openEditProject(project) {
-  document.getElementById('modal-title').textContent = 'Edit Project';
-  document.getElementById('project-id').value = project.id;
-  document.getElementById('f-customer').value = project.customer_name || '';
-  document.getElementById('f-address').value = project.address || '';
-  document.getElementById('f-flooring').value = project.flooring_type || '';
-  document.getElementById('f-measurement').value = project.measurement_value || '';
-  document.getElementById('f-start-date').value = project.start_date || '';
-  document.getElementById('f-end-date').value = project.end_date || '';
-  document.getElementById('f-notes').value = project.notes || '';
-  document.getElementById('f-materials').value = project.materials || '';
-  document.getElementById('f-status').value = project.status || 'scheduled';
-  document.getElementById('btn-delete').style.display = 'inline-flex';
-  updateUnit();
-
-  const assignedIds = project.project_installers?.map(pi => pi.installer_id) || [];
-  buildCrewCheckboxes(assignedIds);
-  openModal('project-modal');
+// ─── CREW ────────────────────────────────────────────────────────────────────
+function renderCrew(){
+  const staff=profiles.filter(p=>p.role==='staff');
+  const inst=profiles.filter(p=>p.role==='installer');
+  const mkList=(arr,isStaff)=>arr.length?`<div class="crew-list">${arr.map(p=>crewRow(p,isStaff)).join('')}</div>`:`<div style="color:var(--g400);font-size:.875rem;padding:.5rem 0">None yet.</div>`;
+  document.getElementById('staff-list').innerHTML=mkList(staff,true);
+  document.getElementById('installer-list').innerHTML=mkList(inst,false);
+}
+function crewRow(p,isStaff){
+  const active=p.is_active!==false;
+  return `<div class="crew-item ${active?'':'inactive'}">
+    <div class="crew-item-left">
+      <div class="crew-avatar ${isStaff?'staff-av':''}">${p.full_name.charAt(0).toUpperCase()}</div>
+      <div><div class="crew-name">${p.full_name}</div><div class="crew-role">${isStaff?'Staff':'Installer / Sub'}${active?'':' · Inactive'}</div></div>
+    </div>
+    <label class="toggle" title="${active?'Mark inactive':'Mark active'}">
+      <input type="checkbox" ${active?'checked':''} onchange="toggleActive('${p.id}',this.checked)"/>
+      <span class="toggle-track"></span><span class="toggle-thumb"></span>
+    </label>
+  </div>`;
+}
+async function toggleActive(id,val){
+  await sb.from('profiles').update({is_active:val}).eq('id',id);
+  await fetchProfiles();renderCrew();showToast(val?'Marked active':'Marked inactive','');
+}
+function openAddUserModal(){
+  document.getElementById('new-name').value='';document.getElementById('new-email').value='';
+  document.getElementById('new-password').value='';document.getElementById('new-role').value='installer';
+  openModal('add-user-modal');
+}
+async function createUser(){
+  const name=document.getElementById('new-name').value.trim();
+  const email=document.getElementById('new-email').value.trim();
+  const role=document.getElementById('new-role').value;
+  const pw=document.getElementById('new-password').value;
+  if(!name||!email||!pw){showToast('Fill in all fields.','error');return}
+  const {data,error}=await sb.auth.signUp({email,password:pw});
+  if(error){showToast('Error: '+error.message,'error');return}
+  await sb.from('profiles').insert({id:data.user.id,full_name:name,role,is_active:true});
+  closeModal('add-user-modal');showToast(`Account created for ${name}!`,'success');
+  await fetchProfiles();renderCrew();
 }
 
-function buildCrewCheckboxes(selectedIds) {
-  const installers = allProfiles.filter(p => p.role === 'installer');
-  const container = document.getElementById('crew-checkboxes');
-  container.innerHTML = installers.map(p => `
-    <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--gray-100);padding:5px 10px;border-radius:20px;font-size:0.825rem;font-weight:500;">
-      <input type="checkbox" value="${p.id}" ${selectedIds.includes(p.id) ? 'checked' : ''} style="accent-color:var(--red);" />
+// ─── PROJECT FORM ────────────────────────────────────────────────────────────
+function openNewProject(){
+  document.getElementById('modal-title').textContent='New Project';
+  ['project-id','f-customer','f-address','f-measurement','f-notes','f-materials'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-flooring').value='';document.getElementById('f-status').value='scheduled';
+  document.getElementById('f-calendar').value='install';
+  document.getElementById('f-start-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('f-end-date').value='';
+  document.getElementById('btn-delete').style.display='none';
+  updateUnit();buildCrewCb([]);openModal('project-modal');
+}
+function openEditProject(p){
+  document.getElementById('modal-title').textContent='Edit Project';
+  document.getElementById('project-id').value=p.id;
+  document.getElementById('f-customer').value=p.customer_name||'';
+  document.getElementById('f-address').value=p.address||'';
+  document.getElementById('f-flooring').value=p.flooring_type||'';
+  document.getElementById('f-measurement').value=p.measurement_value||'';
+  document.getElementById('f-start-date').value=p.start_date||'';
+  document.getElementById('f-end-date').value=p.end_date||'';
+  document.getElementById('f-notes').value=p.notes||'';
+  document.getElementById('f-materials').value=p.materials||'';
+  document.getElementById('f-status').value=p.status||'scheduled';
+  document.getElementById('f-calendar').value=p.calendar_type||'install';
+  document.getElementById('btn-delete').style.display='inline-flex';
+  updateUnit();buildCrewCb(p.project_installers?.map(pi=>pi.installer_id)||[]);
+  openModal('project-modal');
+}
+function buildCrewCb(sel){
+  const active=profiles.filter(p=>p.role==='installer'&&p.is_active!==false);
+  const c=document.getElementById('crew-checkboxes');
+  c.innerHTML=active.length?active.map(p=>`
+    <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--g100);padding:5px 10px;border-radius:20px;font-size:.825rem;font-weight:500">
+      <input type="checkbox" value="${p.id}" ${sel.includes(p.id)?'checked':''} style="accent-color:var(--red)"/>
       ${p.full_name.split(' ')[0]}
-    </label>`).join('');
-
-  if (installers.length === 0) {
-    container.innerHTML = `<span style="font-size:0.8rem;color:var(--gray-400)">No installers added yet. Add them in Crew & Users.</span>`;
-  }
+    </label>`).join(''):
+    `<span style="font-size:.8rem;color:var(--g400)">No active installers yet.</span>`;
 }
-
-function updateUnit() {
-  const type = document.getElementById('f-flooring').value;
-  const isSY = type === 'Carpet' || type === 'Pad';
-  document.getElementById('measure-label').textContent = `Measurement (${isSY ? 'SY' : 'SF'})`;
+function updateUnit(){
+  const t=document.getElementById('f-flooring').value;
+  document.getElementById('measure-label').textContent=`Measurement (${t==='Carpet'||t==='Pad'?'SY':'SF'})`;
 }
-
-async function saveProject() {
-  const id = document.getElementById('project-id').value;
-  const customer = document.getElementById('f-customer').value.trim();
-  const address = document.getElementById('f-address').value.trim();
-  const flooring = document.getElementById('f-flooring').value;
-  const startDate = document.getElementById('f-start-date').value;
-
-  if (!customer || !address || !startDate) {
-    showToast('Please fill in customer name, address, and start date.', 'error');
-    return;
-  }
-
-  const isSY = flooring === 'Carpet' || flooring === 'Pad';
-
-  const payload = {
-    customer_name: customer,
-    address,
-    flooring_type: flooring,
-    measurement_value: parseFloat(document.getElementById('f-measurement').value) || null,
-    measurement_unit: isSY ? 'SY' : 'SF',
-    start_date: startDate,
-    end_date: document.getElementById('f-end-date').value || null,
-    status: document.getElementById('f-status').value,
-    notes: document.getElementById('f-notes').value.trim() || null,
-    materials: document.getElementById('f-materials').value.trim() || null,
-    created_by: currentUser.id,
+async function saveProject(){
+  const id=document.getElementById('project-id').value;
+  const customer=document.getElementById('f-customer').value.trim();
+  const start=document.getElementById('f-start-date').value;
+  if(!customer||!start){showToast('Customer name and start date are required.','error');return}
+  const ft=document.getElementById('f-flooring').value;
+  const payload={
+    customer_name:customer,address:document.getElementById('f-address').value.trim()||null,
+    flooring_type:ft||null,measurement_value:parseFloat(document.getElementById('f-measurement').value)||null,
+    measurement_unit:(ft==='Carpet'||ft==='Pad'?'SY':'SF'),
+    start_date:start,end_date:document.getElementById('f-end-date').value||null,
+    status:document.getElementById('f-status').value,
+    notes:document.getElementById('f-notes').value.trim()||null,
+    materials:document.getElementById('f-materials').value.trim()||null,
+    calendar_type:document.getElementById('f-calendar').value,created_by:me.id,
   };
-
-  let projectId = id;
-
-  if (id) {
-    const { error } = await sb.from('projects').update(payload).eq('id', id);
-    if (error) { showToast('Error saving project.', 'error'); return; }
-  } else {
-    const { data, error } = await sb.from('projects').insert(payload).select().single();
-    if (error) { showToast('Error creating project.', 'error'); return; }
-    projectId = data.id;
+  let pid=id;
+  if(id){await sb.from('projects').update(payload).eq('id',id)}
+  else{const {data}=await sb.from('projects').insert(payload).select().single();pid=data?.id}
+  if(pid){
+    await sb.from('project_installers').delete().eq('project_id',pid);
+    const checked=Array.from(document.querySelectorAll('#crew-checkboxes input:checked')).map(i=>({project_id:pid,installer_id:i.value}));
+    if(checked.length)await sb.from('project_installers').insert(checked);
   }
-
-  // Save crew assignments
-  await sb.from('project_installers').delete().eq('project_id', projectId);
-  const checked = Array.from(document.querySelectorAll('#crew-checkboxes input:checked')).map(i => ({
-    project_id: projectId,
-    installer_id: i.value
-  }));
-  if (checked.length > 0) {
-    await sb.from('project_installers').insert(checked);
-  }
-
-  closeModal('project-modal');
-  showToast(id ? 'Project updated!' : 'Project created!', 'success');
-  await loadData();
+  closeModal('project-modal');showToast(id?'Updated!':'Created!','success');
+  await fetchProjects();renderActive();
+}
+async function deleteProject(){
+  const id=document.getElementById('project-id').value;if(!id)return;
+  if(!confirm('Delete this project?'))return;
+  await sb.from('project_installers').delete().eq('project_id',id);
+  await sb.from('projects').delete().eq('id',id);
+  closeModal('project-modal');showToast('Deleted.','');
+  await fetchProjects();renderActive();
 }
 
-async function deleteProject() {
-  const id = document.getElementById('project-id').value;
-  if (!id) return;
-  if (!confirm('Delete this project? This cannot be undone.')) return;
-  await sb.from('project_installers').delete().eq('project_id', id);
-  await sb.from('projects').delete().eq('id', id);
-  closeModal('project-modal');
-  showToast('Project deleted.', '');
-  await loadData();
-}
-
-// ═══════════════════════════════════════
-// PROJECT DETAIL MODAL
-// ═══════════════════════════════════════
-function openDetail(id) {
-  const p = allProjects.find(x => x.id === id);
-  if (!p) return;
-
-  document.getElementById('detail-customer').textContent = p.customer_name;
-
-  const unit = (p.flooring_type === 'Carpet' || p.flooring_type === 'Pad') ? 'SY' : 'SF';
-  const measure = p.measurement_value ? `${p.measurement_value} ${p.measurement_unit || unit}` : '—';
-  const installers = p.project_installers?.map(pi => pi.profiles?.full_name).filter(Boolean).join(', ') || '—';
-  const mapsUrl = `https://maps.google.com/?q=${encodeURIComponent(p.address)}`;
-
-  document.getElementById('detail-body').innerHTML = `
-    <div style="margin-bottom:1rem">
-      <span class="badge badge-${p.status}" style="font-size:0.85rem">${statusLabel(p.status)}</span>
+// ─── DETAIL ──────────────────────────────────────────────────────────────────
+function openDetail(id){
+  const p=projects.find(x=>x.id===id);if(!p)return;
+  document.getElementById('detail-customer').textContent=p.customer_name;
+  const crew=p.project_installers?.map(pi=>pi.profiles?.full_name).filter(Boolean).join(', ')||p.assigned_to||'—';
+  const m=p.measurement_value?`${p.measurement_value} ${p.measurement_unit}`:'—';
+  const calMap={install:'Install',sales:'Sales',warehouse:'Warehouse'};
+  const murl=`https://maps.google.com/?q=${encodeURIComponent(p.address||'')}`;
+  document.getElementById('detail-body').innerHTML=`
+    <div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap">
+      <span class="badge badge-${p.status}">${slbl(p.status)}</span>
+      <span class="badge" style="background:var(--g100);color:var(--g700)">${calMap[p.calendar_type]||''}</span>
     </div>
     <div class="detail-section">
-      <div class="detail-section-title">Project Details</div>
+      <div class="detail-section-title">Details</div>
       <div class="detail-grid">
-        <div class="detail-item"><label>Customer</label><span>${p.customer_name}</span></div>
-        <div class="detail-item"><label>Status</label><span>${statusLabel(p.status)}</span></div>
-        <div class="detail-item" style="grid-column:span 2"><label>Address</label><span>${p.address}</span></div>
-        <div class="detail-item"><label>Flooring Type</label><span>${p.flooring_type || '—'}</span></div>
-        <div class="detail-item"><label>Measurement</label><span>${measure}</span></div>
-        <div class="detail-item"><label>Start Date</label><span>${formatDate(p.start_date)}</span></div>
-        <div class="detail-item"><label>End Date</label><span>${p.end_date ? formatDate(p.end_date) : '—'}</span></div>
-        <div class="detail-item" style="grid-column:span 2"><label>Crew Assigned</label><span>${installers}</span></div>
-        ${p.notes ? `<div class="detail-item" style="grid-column:span 2"><label>Notes</label><span>${p.notes}</span></div>` : ''}
-        ${p.materials ? `<div class="detail-item" style="grid-column:span 2"><label>Materials</label><span>${p.materials}</span></div>` : ''}
+        <div class="detail-item" style="grid-column:span 2"><label>Customer</label><span>${p.customer_name}</span></div>
+        ${p.address?`<div class="detail-item" style="grid-column:span 2"><label>Address</label><span>${p.address}</span></div>`:''}
+        ${p.flooring_type?`<div class="detail-item"><label>Flooring</label><span>${p.flooring_type}</span></div>`:''}
+        <div class="detail-item"><label>Measurement</label><span>${m}</span></div>
+        <div class="detail-item"><label>Start</label><span>${fd(p.start_date)}</span></div>
+        <div class="detail-item"><label>End</label><span>${p.end_date?fd(p.end_date):'—'}</span></div>
+        <div class="detail-item" style="grid-column:span 2"><label>Crew</label><span>${crew}</span></div>
+        ${p.notes?`<div class="detail-item" style="grid-column:span 2"><label>Notes</label><span>${p.notes}</span></div>`:''}
+        ${p.materials?`<div class="detail-item" style="grid-column:span 2"><label>Materials</label><span>${p.materials}</span></div>`:''}
       </div>
     </div>
-    <a href="${mapsUrl}" target="_blank" class="map-btn">🗺 Open in Maps</a>`;
-
-  const footer = document.getElementById('detail-footer');
-  if (currentProfile.role !== 'installer') {
-    footer.innerHTML = `
-      <button class="btn btn-secondary" onclick="closeModal('detail-modal')">Close</button>
-      <button class="btn btn-primary" onclick="closeModal('detail-modal'); openEditProject(${JSON.stringify(p).replace(/"/g, '&quot;')})">Edit Project</button>`;
+    ${p.address?`<a href="${murl}" target="_blank" class="map-btn">🗺 Open in Maps</a>`:''}`;
+  const ft=document.getElementById('detail-footer');
+  if(myProfile?.role==='staff'){
+    ft.innerHTML=`<button class="btn btn-secondary" onclick="closeModal('detail-modal')">Close</button>
+      <button class="btn btn-primary" onclick="closeModal('detail-modal');openEditProject(${JSON.stringify(p).replace(/"/g,'&quot;')})">Edit</button>`;
   } else {
-    footer.innerHTML = `<button class="btn btn-secondary btn-full" onclick="closeModal('detail-modal')">Close</button>`;
+    ft.innerHTML=`<button class="btn btn-secondary btn-full" onclick="closeModal('detail-modal')">Close</button>`;
   }
-
   openModal('detail-modal');
 }
 
-// ═══════════════════════════════════════
-// CREATE USER
-// ═══════════════════════════════════════
-function openInviteUser() { openModal('invite-modal'); }
+// ─── MODAL HELPERS ────────────────────────────────────────────────────────────
+function openModal(id){document.getElementById(id).classList.add('open')}
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open')}));
 
-async function createUser() {
-  const name = document.getElementById('invite-name').value.trim();
-  const email = document.getElementById('invite-email').value.trim();
-  const role = document.getElementById('invite-role').value;
-  const password = document.getElementById('invite-password').value;
-
-  if (!name || !email || !password) {
-    showToast('Please fill in all fields.', 'error');
-    return;
-  }
-
-  // Create auth user
-  const { data, error } = await sb.auth.signUp({ email, password });
-  if (error) { showToast('Error: ' + error.message, 'error'); return; }
-
-  // Create profile
-  const { error: profileError } = await sb.from('profiles').insert({
-    id: data.user.id,
-    full_name: name,
-    role,
-  });
-
-  if (profileError) { showToast('User created but profile failed. Check Supabase.', 'error'); return; }
-
-  closeModal('invite-modal');
-  showToast(`Account created for ${name}!`, 'success');
-  await loadProfiles();
-  renderCrew();
+// ─── UTILS ────────────────────────────────────────────────────────────────────
+function slbl(s){return{scheduled:'Scheduled',in_progress:'In Progress',complete:'Complete',invoiced:'Invoiced'}[s]||s}
+function fd(s){if(!s)return'—';const d=new Date(s+'T00:00:00');return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}
+function fdr(s,e){if(!s)return'—';if(!e||e===s)return fd(s);return`${fd(s)} – ${fd(e)}`}
+function showToast(msg,type=''){
+  const t=document.getElementById('toast');t.textContent=msg;t.className=`show ${type}`;
+  setTimeout(()=>t.className='',3000);
 }
 
-// ═══════════════════════════════════════
-// MODAL HELPERS
-// ═══════════════════════════════════════
-function openModal(id) { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-
-// Close on overlay click
-document.querySelectorAll('.modal-overlay').forEach(overlay => {
-  overlay.addEventListener('click', e => {
-    if (e.target === overlay) overlay.classList.remove('open');
-  });
-});
-
-// ═══════════════════════════════════════
-// UTILITIES
-// ═══════════════════════════════════════
-function statusLabel(s) {
-  return { scheduled: 'Scheduled', in_progress: 'In Progress', complete: 'Complete', invoiced: 'Invoiced' }[s] || s;
-}
-
-function formatDate(str) {
-  if (!str) return '—';
-  const d = new Date(str + 'T00:00:00');
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-}
-
-function formatDateRange(start, end) {
-  if (!start) return '—';
-  if (!end || end === start) return formatDate(start);
-  return `${formatDate(start)} – ${formatDate(end)}`;
-}
-
-function showToast(msg, type = '') {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = `show ${type}`;
-  setTimeout(() => t.className = '', 3000);
-}
-
-// ═══════════════════════════════════════
-// AUTO LOGIN CHECK
-// ═══════════════════════════════════════
-sb.auth.getSession().then(({ data: { session } }) => {
-  if (session) initApp(session.user);
-});
+// ─── AUTO-LOGIN ────────────────────────────────────────────────────────────────
+sb.auth.getSession().then(({data:{session}})=>{if(session)boot(session.user)});
 </script>
 </body>
 </html>
