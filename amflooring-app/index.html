@@ -173,12 +173,8 @@
     .modal-close{background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--g400);padding:.2rem;line-height:1}
     .modal-body{padding:1.5rem}
     .modal-footer{padding:1rem 1.5rem;border-top:1px solid var(--g200);display:flex;gap:.75rem;justify-content:flex-end}
-    /* TIME SLIDER */
-    .time-slider-group{margin-bottom:1.2rem}
-    .time-slider-group label{display:block;font-size:.8rem;font-weight:600;color:var(--g700);margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.05em}
-    .time-slider-row{display:flex;align-items:center;gap:1rem}
-    .time-display{font-size:1rem;font-weight:600;color:var(--g900);min-width:56px;text-align:center;background:var(--g100);padding:.35rem .75rem;border-radius:6px}
-    .time-slider-row input[type=range]{flex:1;accent-color:var(--red);cursor:pointer}
+    /* TIME INPUT */
+    .time-hint{font-size:.75rem;color:var(--g400);margin-top:.25rem}
     /* QUICK ADD PERSON */
     .quick-add-person{margin-top:.75rem;border:1.5px dashed var(--g300);border-radius:8px;padding:1rem;background:var(--g50)}
     .quick-add-person h4{font-size:.8rem;font-weight:600;color:var(--g600);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem}
@@ -449,23 +445,17 @@
         <div class="form-group"><label>Materials</label><input type="text" id="f-materials" placeholder="e.g. Shaw #4421"/></div>
       </div>
       <div class="form-row">
-        <div class="form-group"><label>Start Date *</label><input type="date" id="f-start-date"/></div>
+        <div class="form-group"><label>Start Date *</label><input type="date" id="f-start-date" onchange="autoFillEndDate()"/></div>
         <div class="form-group"><label>End Date</label><input type="date" id="f-end-date"/></div>
       </div>
       <div class="form-row">
-        <div class="time-slider-group">
+        <div class="form-group">
           <label>Start Time</label>
-          <div class="time-slider-row">
-            <input type="range" id="f-start-time" min="0" max="95" step="1" value="32" oninput="updateTimeDisplay('fstart')"/>
-            <span class="time-display" id="fstart-display">8:00 AM</span>
-          </div>
+          <input type="time" id="f-start-time" value="08:00" onchange="autoEndTime()"/>
         </div>
-        <div class="time-slider-group">
-          <label>End Time</label>
-          <div class="time-slider-row">
-            <input type="range" id="f-end-time" min="0" max="95" step="1" value="68" oninput="updateTimeDisplay('fend')"/>
-            <span class="time-display" id="fend-display">5:00 PM</span>
-          </div>
+        <div class="form-group">
+          <label>End Time <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--g400)">(optional)</span></label>
+          <input type="time" id="f-end-time" value="17:00"/>
         </div>
       </div>
       <!-- CREW ASSIGNMENT WITH QUICK ADD -->
@@ -534,19 +524,13 @@
         <div class="form-group"><label>End *</label><input type="date" id="to-end"/></div>
       </div>
       <div class="form-row">
-        <div class="time-slider-group">
+        <div class="form-group">
           <label>Start Time</label>
-          <div class="time-slider-row">
-            <input type="range" id="to-start-time" min="0" max="95" step="1" value="32" oninput="updateTimeDisplay('tostart')"/>
-            <span class="time-display" id="tostart-display">8:00 AM</span>
-          </div>
+          <input type="time" id="to-start-time" value="08:00"/>
         </div>
-        <div class="time-slider-group">
-          <label>End Time</label>
-          <div class="time-slider-row">
-            <input type="range" id="to-end-time" min="0" max="95" step="1" value="68" oninput="updateTimeDisplay('toend')"/>
-            <span class="time-display" id="toend-display">5:00 PM</span>
-          </div>
+        <div class="form-group">
+          <label>End Time <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--g400)">(optional)</span></label>
+          <input type="time" id="to-end-time" value="17:00"/>
         </div>
       </div>
       <div class="form-group"><label>Note</label><input type="text" id="to-note" placeholder="Vacation, sick, personal..."/></div>
@@ -597,13 +581,23 @@ let calView='week',calTab='all',whoFilter='all';
 let projCalTab='all',statusFilter='all';
 
 // ── TIME SLIDER ──────────────────────────────────────────────────────────────
-function s2t(v){const m=v*15,h=Math.floor(m/60),min=m%60,ap=h<12?'AM':'PM',h12=h===0?12:h>12?h-12:h;return`${h12}:${min.toString().padStart(2,'0')} ${ap}`}
-function s2str(v){const m=v*15,h=Math.floor(m/60),min=m%60;return`${h.toString().padStart(2,'0')}:${min.toString().padStart(2,'0')}`}
-function str2s(t){if(!t)return 32;const [h,m]=(t||'08:00').split(':').map(Number);return Math.round((h*60+m)/15)}
-function updateTimeDisplay(prefix){
-  const map={fstart:['f-start-time','fstart-display'],fend:['f-end-time','fend-display'],tostart:['to-start-time','tostart-display'],toend:['to-end-time','toend-display']};
-  const [sid,did]=map[prefix]||[];if(!sid)return;
-  document.getElementById(did).textContent=s2t(parseInt(document.getElementById(sid).value));
+// ── TIME UTILS ───────────────────────────────────────────────────────────────
+function getTime(id){return document.getElementById(id)?.value||''}
+function setTime(id,val){const el=document.getElementById(id);if(el)el.value=val||''}
+function addHour(t){if(!t)return'';const [h,m]=t.split(':').map(Number);const nh=(h+1)%24;return`${nh.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`}
+function autoFillEndDate(){
+  const s=document.getElementById('f-start-date').value;
+  const e=document.getElementById('f-end-date');
+  if(s&&!e.value)e.value=s;
+}
+function autoEndTime(){
+  const cal=document.getElementById('f-calendar')?.value;
+  const st=getTime('f-start-time');
+  if(!st)return;
+  if(cal==='sales'){
+    // Auto-set end time to start + 1 hour
+    setTime('f-end-time',addHour(st));
+  }
 }
 
 // ── AUTH ─────────────────────────────────────────────────────────────────────
@@ -953,8 +947,7 @@ function openTimeOffModal(){
   document.getElementById('to-id').value='';document.getElementById('to-modal-title').textContent='Add Time Off';
   ['to-start','to-end','to-note'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('to-del-btn').style.display='none';
-  document.getElementById('to-start-time').value=32;document.getElementById('to-end-time').value=68;
-  updateTimeDisplay('tostart');updateTimeDisplay('toend');
+  setTime('to-start-time','08:00');setTime('to-end-time','17:00');
   fillToPeople(null);openModal('timeoff-modal');
 }
 function editTimeOff(id){
@@ -962,8 +955,7 @@ function editTimeOff(id){
   document.getElementById('to-id').value=id;document.getElementById('to-modal-title').textContent='Edit Time Off';
   document.getElementById('to-start').value=t.start_date;document.getElementById('to-end').value=t.end_date;document.getElementById('to-note').value=t.note||'';
   document.getElementById('to-del-btn').style.display='inline-flex';document.getElementById('to-calendar').value=t.calendar_type||'install';
-  document.getElementById('to-start-time').value=str2s(t.start_time);document.getElementById('to-end-time').value=str2s(t.end_time);
-  updateTimeDisplay('tostart');updateTimeDisplay('toend');fillToPeople(t.profile_id);openModal('timeoff-modal');
+  setTime('to-start-time',t.start_time||'08:00');setTime('to-end-time',t.end_time||'');fillToPeople(t.profile_id);openModal('timeoff-modal');
 }
 function fillToPeople(sel){
   document.getElementById('to-person').innerHTML=profiles.filter(p=>p.is_active!==false).map(p=>`<option value="${p.id}" ${p.id===sel?'selected':''}>${p.full_name}</option>`).join('');
@@ -977,7 +969,7 @@ function autoSetCalendar(){
 }
 async function saveTimeOff(){
   const id=document.getElementById('to-id').value;
-  const payload={profile_id:document.getElementById('to-person').value,start_date:document.getElementById('to-start').value,end_date:document.getElementById('to-end').value,note:document.getElementById('to-note').value||null,calendar_type:document.getElementById('to-calendar').value,start_time:s2str(parseInt(document.getElementById('to-start-time').value)),end_time:s2str(parseInt(document.getElementById('to-end-time').value)),created_by:me.id};
+  const payload={profile_id:document.getElementById('to-person').value,start_date:document.getElementById('to-start').value,end_date:document.getElementById('to-end').value,note:document.getElementById('to-note').value||null,calendar_type:document.getElementById('to-calendar').value,start_time:getTime('to-start-time')||null,end_time:getTime('to-end-time')||null,created_by:me.id};
   if(!payload.profile_id||!payload.start_date||!payload.end_date){showToast('Fill in all required fields.','error');return}
   if(id)await sb.from('time_off').update(payload).eq('id',id);else await sb.from('time_off').insert(payload);
   closeModal('timeoff-modal');showToast('Saved!','success');await fetchTimeOff();renderTimeOff();if(isOwner)renderPTOReport();
@@ -1054,14 +1046,21 @@ async function quickAddPerson(){
 function getCheckedCrew(){return Array.from(document.querySelectorAll('#crew-checkboxes input:checked')).map(i=>i.value)}
 
 // ── PROJECT FORM ──────────────────────────────────────────────────────────────
-function toggleInstallFields(){const cal=document.getElementById('f-calendar').value;document.getElementById('install-only-fields').style.display=cal==='install'?'block':'none'}
+function toggleInstallFields(){
+  const cal=document.getElementById('f-calendar').value;
+  document.getElementById('install-only-fields').style.display=cal==='install'?'block':'none';
+  // Auto-set 1hr for sales when switching to sales calendar
+  if(cal==='sales'){
+    const st=getTime('f-start-time');
+    if(st)setTime('f-end-time',addHour(st));
+  }
+}
 function openNewProject(){
   document.getElementById('modal-title').textContent='New Project';
   ['project-id','f-customer','f-address','f-measurement','f-notes','f-materials'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('f-flooring').value='';document.getElementById('f-status').value='scheduled';document.getElementById('f-calendar').value='install';
   document.getElementById('f-start-date').value=new Date().toISOString().split('T')[0];document.getElementById('f-end-date').value='';
-  document.getElementById('f-start-time').value=32;document.getElementById('f-end-time').value=68;
-  updateTimeDisplay('fstart');updateTimeDisplay('fend');
+  setTime('f-start-time','08:00');setTime('f-end-time','17:00');
   document.getElementById('btn-delete').style.display='none';
   document.getElementById('quick-add-form').classList.add('hidden');document.getElementById('quick-add-icon').textContent='＋';
   toggleInstallFields();updateUnit();buildCrewCb([]);openModal('project-modal');
@@ -1074,8 +1073,7 @@ function openEditProject(p){
   document.getElementById('f-start-date').value=p.start_date||'';document.getElementById('f-end-date').value=p.end_date||'';
   document.getElementById('f-notes').value=p.notes||'';document.getElementById('f-materials').value=p.materials||'';
   document.getElementById('f-status').value=p.status||'scheduled';document.getElementById('f-calendar').value=p.calendar_type||'install';
-  document.getElementById('f-start-time').value=str2s(p.start_time);document.getElementById('f-end-time').value=str2s(p.end_time);
-  updateTimeDisplay('fstart');updateTimeDisplay('fend');
+  setTime('f-start-time',p.start_time||'08:00');setTime('f-end-time',p.end_time||'');
   document.getElementById('btn-delete').style.display='inline-flex';
   document.getElementById('quick-add-form').classList.add('hidden');document.getElementById('quick-add-icon').textContent='＋';
   toggleInstallFields();updateUnit();buildCrewCb(p.project_installers?.map(pi=>pi.installer_id)||[]);openModal('project-modal');
@@ -1097,7 +1095,7 @@ async function saveProject(){
   const start=document.getElementById('f-start-date').value;
   if(!customer||!start){showToast('Customer name and start date are required.','error');return}
   const ft=document.getElementById('f-flooring').value,ct=document.getElementById('f-calendar').value;
-  const payload={customer_name:customer,address:document.getElementById('f-address').value.trim()||null,flooring_type:ct==='install'?(ft||null):null,measurement_value:ct==='install'?(parseFloat(document.getElementById('f-measurement').value)||null):null,measurement_unit:(ft==='Carpet'||ft==='Pad'?'SY':'SF'),materials:ct==='install'?(document.getElementById('f-materials').value.trim()||null):null,start_date:start,end_date:document.getElementById('f-end-date').value||null,start_time:s2str(parseInt(document.getElementById('f-start-time').value)),end_time:s2str(parseInt(document.getElementById('f-end-time').value)),status:document.getElementById('f-status').value,notes:document.getElementById('f-notes').value.trim()||null,calendar_type:ct,created_by:me.id};
+  const payload={customer_name:customer,address:document.getElementById('f-address').value.trim()||null,flooring_type:ct==='install'?(ft||null):null,measurement_value:ct==='install'?(parseFloat(document.getElementById('f-measurement').value)||null):null,measurement_unit:(ft==='Carpet'||ft==='Pad'?'SY':'SF'),materials:ct==='install'?(document.getElementById('f-materials').value.trim()||null):null,start_date:start,end_date:document.getElementById('f-end-date').value||null,start_time:getTime('f-start-time')||null,end_time:getTime('f-end-time')||null,status:document.getElementById('f-status').value,notes:document.getElementById('f-notes').value.trim()||null,calendar_type:ct,created_by:me.id};
   let pid=id;
   if(id)await sb.from('projects').update(payload).eq('id',id);
   else{const {data}=await sb.from('projects').insert(payload).select().single();pid=data?.id}
