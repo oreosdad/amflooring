@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>A&M Flooring – TeamUp Import</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:system-ui,sans-serif;background:#0f0f0f;color:#fff;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem}
+    .card{background:#1c1c1c;border:1px solid #333;border-radius:12px;padding:2.5rem;max-width:580px;width:100%}
+    h1{font-size:1.4rem;margin-bottom:.5rem}
+    .sub{color:#888;font-size:.9rem;margin-bottom:1.5rem;line-height:1.6}
+    /* login */
+    #login-section{margin-bottom:1.5rem}
+    .field{margin-bottom:.75rem}
+    .field label{display:block;font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#888;margin-bottom:.35rem}
+    .field input{width:100%;padding:.65rem .9rem;background:#111;border:1.5px solid #333;border-radius:6px;color:#fff;font-size:.95rem;font-family:inherit;outline:none}
+    .field input:focus{border-color:#b91c1c}
+    .login-btn{background:#333;color:#fff;border:none;padding:.7rem 1.5rem;border-radius:6px;font-size:.875rem;font-weight:600;cursor:pointer;font-family:inherit;transition:background .15s;width:100%}
+    .login-btn:hover{background:#444}
+    .login-ok{color:#4ade80;font-size:.85rem;margin-top:.5rem;display:none}
+    /* stats */
+    .stat{display:flex;justify-content:space-between;padding:.6rem 0;border-bottom:1px solid #2a2a2a;font-size:.875rem}
+    .stat:last-of-type{border:none;font-weight:600}
+    .stat span:last-child{color:#c9a84c;font-weight:600}
+    /* progress */
+    .progress-wrap{margin:1.5rem 0;background:#2a2a2a;border-radius:4px;overflow:hidden;height:10px}
+    .progress-bar{height:100%;background:#b91c1c;transition:width .3s;width:0%}
+    .log{background:#111;border-radius:6px;padding:1rem;height:180px;overflow-y:auto;font-family:monospace;font-size:.75rem;color:#888;margin-bottom:1.5rem}
+    .log .ok{color:#4ade80}.log .err{color:#f87171}.log .info{color:#60a5fa}
+    .btn{background:#b91c1c;color:#fff;border:none;padding:.9rem 2rem;border-radius:6px;font-size:1rem;font-weight:600;cursor:pointer;width:100%;transition:background .2s;font-family:inherit}
+    .btn:hover{background:#7f1d1d}
+    .btn:disabled{background:#333;color:#666;cursor:not-allowed}
+    .btn.done{background:#14532d!important;color:#4ade80!important;cursor:default}
+    #status{text-align:center;font-size:.85rem;color:#888;margin-top:.75rem;min-height:1.2em}
+  </style>
+</head>
+<body>
+<div class="card">
+  <h1>🗂 TeamUp Import Tool</h1>
+  <p class="sub">Sign in with your A&M Flooring account, then click Import. Make sure <code>teamup_data.json</code> is in the same folder as this file.</p>
+
+  <div id="login-section">
+    <div class="field"><label>Email</label><input type="email" id="imp-email" placeholder="cutcojohngilmore@gmail.com"/></div>
+    <div class="field"><label>Password</label><input type="password" id="imp-pw" placeholder="••••••••"/></div>
+    <button class="login-btn" onclick="doLogin()">Sign In</button>
+    <div class="login-ok" id="login-ok">✓ Signed in — ready to import</div>
+  </div>
+
+  <div class="stat"><span>Installs</span><span>2,647</span></div>
+  <div class="stat"><span>Sales</span><span>3,454</span></div>
+  <div class="stat"><span>Warehouse</span><span>1,431</span></div>
+  <div class="stat"><span>Total events</span><span>7,529</span></div>
+
+  <div class="progress-wrap"><div class="progress-bar" id="bar"></div></div>
+  <div class="log" id="log"><div class="info">Sign in above, then click Import.</div></div>
+  <button class="btn" id="btn" onclick="runImport()" disabled>Import All TeamUp Data →</button>
+  <div id="status"></div>
+</div>
+
+<script>
+const SURL='https://gijtwufwkrhyfrdzsvkv.supabase.co';
+const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdpanR3dWZ3a3JoeWZyZHpzdmt2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMTk0MDMsImV4cCI6MjA4OTg5NTQwM30.tPt-oLIDg5UdkIJO3Tbuz-jqBUHgIl8fxyDhSultPpY';
+const sb=supabase.createClient(SURL,SKEY);
+let session=null;
+
+function log(msg,type=''){
+  const el=document.getElementById('log');
+  const d=document.createElement('div');d.className=type;d.textContent=msg;
+  el.appendChild(d);el.scrollTop=el.scrollHeight;
+}
+function setBar(pct){
+  document.getElementById('bar').style.width=Math.min(pct,100)+'%';
+  document.getElementById('status').textContent=Math.round(pct)+'% complete';
+}
+
+async function doLogin(){
+  const email=document.getElementById('imp-email').value.trim();
+  const pw=document.getElementById('imp-pw').value;
+  if(!email||!pw){alert('Please enter email and password.');return}
+  const {data,error}=await sb.auth.signInWithPassword({email,password:pw});
+  if(error){alert('Sign in failed: '+error.message);return}
+  session=data.session;
+  document.getElementById('login-ok').style.display='block';
+  document.getElementById('btn').disabled=false;
+  document.getElementById('btn').textContent='Import All TeamUp Data →';
+  log('✓ Signed in as '+email,'ok');
+}
+
+// Also check if already signed in
+sb.auth.getSession().then(({data:{session:s}})=>{
+  if(s){
+    session=s;
+    document.getElementById('login-ok').textContent='✓ Already signed in as '+s.user.email;
+    document.getElementById('login-ok').style.display='block';
+    document.getElementById('btn').disabled=false;
+    log('✓ Already signed in as '+s.user.email,'ok');
+  }
+});
+
+document.getElementById('imp-pw').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+
+async function runImport(){
+  if(!session){alert('Please sign in first.');return}
+  const btn=document.getElementById('btn');
+  btn.disabled=true;btn.textContent='Importing...';
+  log('Loading teamup_data.json...','info');
+  let rows;
+  try{
+    const r=await fetch('./teamup_data.json');
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    rows=await r.json();
+    log('✓ Loaded '+rows.length+' events','ok');
+  }catch(e){
+    log('Could not load teamup_data.json — make sure it is in the same folder as this file.','err');
+    btn.disabled=false;btn.textContent='Import All TeamUp Data →';return;
+  }
+  const BATCH=100;let inserted=0,errors=0;
+  for(let i=0;i<rows.length;i+=BATCH){
+    const batch=rows.slice(i,i+BATCH).map(r=>({
+      customer_name:(r.customer_name||'Unknown').substring(0,255),
+      address:r.address?r.address.substring(0,500):null,
+      flooring_type:r.flooring_type||null,
+      measurement_value:r.measurement_value||null,
+      measurement_unit:r.measurement_unit||'SF',
+      start_date:r.start_date,
+      end_date:r.end_date||null,
+      status:r.status||'complete',
+      notes:r.notes?r.notes.substring(0,1000):null,
+      calendar_type:r.calendar_type||'install',
+      created_by:session.user.id,
+    }));
+    const {error}=await sb.from('projects').insert(batch);
+    if(error){errors++;log('Batch '+(Math.floor(i/BATCH)+1)+' error: '+error.message,'err')}
+    else inserted+=batch.length;
+    setBar((i+BATCH)/rows.length*100);
+    if(i%1000===0&&i>0)log(inserted+' events imported so far...','info');
+    await new Promise(r=>setTimeout(r,40));
+  }
+  setBar(100);
+  log('✅ Done! '+inserted+' events imported. '+errors+' batch errors.','ok');
+  btn.textContent='✅ Import Complete!';btn.className='btn done';
+  document.getElementById('status').textContent=inserted+' of '+rows.length+' events imported successfully';
+}
+</script>
+</body>
+</html>
