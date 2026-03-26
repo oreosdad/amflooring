@@ -501,7 +501,7 @@
     .gallery-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      grid-template-rows: repeat(3, 200px);
+      grid-auto-rows: 200px;
       gap: 0.75rem;
     }
 
@@ -511,7 +511,7 @@
       position: relative;
     }
 
-    .gallery-item:nth-child(1) {
+    .gallery-item--featured {
       grid-column: span 2;
       grid-row: span 2;
     }
@@ -537,15 +537,6 @@
     }
 
     /* ─── CONTACT ─── */
-    .contact {
-      padding: 7rem 2.5rem;
-      max-width: 1200px;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 5rem;
-      align-items: start;
-    }
 
     .contact-info .section-label {
       font-size: 0.75rem;
@@ -796,17 +787,17 @@
 
       .gallery-grid {
         grid-template-columns: repeat(2, 1fr);
-        grid-template-rows: repeat(5, 180px);
+        grid-auto-rows: 160px;
       }
 
-      .gallery-item:nth-child(1) {
+      .gallery-item--featured {
         grid-column: span 2;
         grid-row: span 1;
       }
 
       .contact {
         grid-template-columns: 1fr;
-        gap: 3rem;
+        gap: 2rem;
         padding: 4rem 1.5rem;
       }
 
@@ -823,7 +814,79 @@
       footer nav a { margin: 0 0.75rem; }
     }
 
-    /* ─── SUCCESS STATE ─── */
+    /* ─── BOOKING WIDGET ─── */
+    .contact {
+      padding: 7rem 2.5rem;
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 2.5rem;
+      align-items: start;
+    }
+
+    .booking-wrap {
+      background: var(--charcoal);
+      border: 1px solid rgba(185,28,28,0.35);
+      padding: 2.5rem;
+    }
+    .booking-wrap h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: white;
+    }
+    .booking-wrap > p {
+      color: rgba(255,255,255,0.55);
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+    }
+    .booking-step {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 0.6rem;
+    }
+    .booking-wrap .form-group label {
+      color: rgba(255,255,255,0.75);
+    }
+    .booking-wrap .form-group input,
+    .booking-wrap .form-group select {
+      background: rgba(255,255,255,0.06);
+      border: 1.5px solid rgba(255,255,255,0.12);
+      color: white;
+    }
+    .booking-wrap .form-group input::placeholder { color: rgba(255,255,255,0.28); }
+    .booking-wrap .form-group input:focus,
+    .booking-wrap .form-group select:focus { border-color: var(--red-light); }
+    .booking-wrap .form-group select option { background: #1c1c1c; color: white; }
+    .booking-divider {
+      border: none;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      margin: 1.25rem 0;
+    }
+    .booking-success {
+      display: none;
+      text-align: center;
+      padding: 1.5rem 0;
+    }
+    .booking-success.show { display: block; }
+    .booking-success h4 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem;
+      color: white;
+      margin-bottom: 0.5rem;
+    }
+    .booking-success p { color: rgba(255,255,255,0.55); font-size: 0.875rem; }
+    .booking-time-wrap,
+    .booking-fields-wrap { display: none; }
+    .booking-time-wrap.show,
+    .booking-fields-wrap.show { display: block; }
+
+        /* ─── SUCCESS STATE ─── */
     .form-success {
       display: none;
       text-align: center;
@@ -980,16 +1043,22 @@
         <h2>Project Gallery</h2>
       </div>
       <div class="gallery-grid reveal">
-        <div class="gallery-item"><img src="https://img1.wsimg.com/isteam/ip/e3787bf5-a95d-4a2d-a165-6ec0ee691508/d79e8904-03ae-41ae-8f0f-92a653f8666b.jpg" alt="Flooring project" loading="lazy" /><div class="gallery-item-overlay"></div></div>
-        <div class="gallery-item"><img src="https://img1.wsimg.com/isteam/ip/e3787bf5-a95d-4a2d-a165-6ec0ee691508/9e59596b-ad95-465e-b285-9b45a9607ff6.jpg" alt="Tile installation" loading="lazy" /><div class="gallery-item-overlay"></div></div>
-        <div class="gallery-item"><img src="https://img1.wsimg.com/isteam/ip/e3787bf5-a95d-4a2d-a165-6ec0ee691508/25470e40-09d1-4ae2-8392-6e81730f4c68.jpg" alt="Hardwood floors" loading="lazy" /><div class="gallery-item-overlay"></div></div>
-        <div class="gallery-item"><img src="https://img1.wsimg.com/isteam/ip/e3787bf5-a95d-4a2d-a165-6ec0ee691508/f8e31e9c-2cf0-4366-993f-37ee3c9af1dd.jpg" alt="Carpet installation" loading="lazy" /><div class="gallery-item-overlay"></div></div>
-        <div class="gallery-item"><img src="https://img1.wsimg.com/isteam/ip/e3787bf5-a95d-4a2d-a165-6ec0ee691508/a7100e77-3c0c-4e46-a8a7-1c4883918e74.jpg" alt="LVP flooring" loading="lazy" /><div class="gallery-item-overlay"></div></div>
-        <div class="gallery-item"><img src="https://img1.wsimg.com/isteam/ip/e3787bf5-a95d-4a2d-a165-6ec0ee691508/6445a397-2ac8-4beb-b9b2-f09720604edf.jpg" alt="Commercial flooring" loading="lazy" /><div class="gallery-item-overlay"></div></div>
-        <div class="gallery-item"><img src="https://img1.wsimg.com/isteam/ip/e3787bf5-a95d-4a2d-a165-6ec0ee691508/69df9079-5845-4cb5-939a-3785e8e146c9.jpg" alt="Flooring project" loading="lazy" /><div class="gallery-item-overlay"></div></div>
-        <div class="gallery-item"><img src="https://img1.wsimg.com/isteam/ip/e3787bf5-a95d-4a2d-a165-6ec0ee691508/488fe96e-0990-4c0d-9f4f-77b2e070eb7c.jpg" alt="Flooring project" loading="lazy" /><div class="gallery-item-overlay"></div></div>
-        <div class="gallery-item"><img src="https://img1.wsimg.com/isteam/ip/e3787bf5-a95d-4a2d-a165-6ec0ee691508/108.JPG" alt="Flooring project" loading="lazy" /><div class="gallery-item-overlay"></div></div>
-        <div class="gallery-item"><img src="https://img1.wsimg.com/isteam/ip/e3787bf5-a95d-4a2d-a165-6ec0ee691508/340A0937-0CB7-4D3D-9367-A4A664C760B1.jpeg" alt="Flooring project" loading="lazy" /><div class="gallery-item-overlay"></div></div>
+        <div class="gallery-item gallery-item--featured"><img src="https://raw.githubusercontent.com/oreosdad/amflooring/main/Bathroom.jpg" alt="Bathroom flooring" loading="lazy" /><div class="gallery-item-overlay"></div></div>
+        <div class="gallery-item"><img src="https://raw.githubusercontent.com/oreosdad/amflooring/main/Bathroom1.jpg" alt="Bathroom tile" loading="lazy" /><div class="gallery-item-overlay"></div></div>
+        <div class="gallery-item"><img src="https://raw.githubusercontent.com/oreosdad/amflooring/main/Office%20space%201.jpg" alt="Office flooring" loading="lazy" /><div class="gallery-item-overlay"></div></div>
+        <div class="gallery-item"><img src="https://raw.githubusercontent.com/oreosdad/amflooring/main/image%20%2821%29.png" alt="Flooring project" loading="lazy" /><div class="gallery-item-overlay"></div></div>
+        <div class="gallery-item"><img src="https://raw.githubusercontent.com/oreosdad/amflooring/main/image%20%2823%29.png" alt="Flooring project" loading="lazy" /><div class="gallery-item-overlay"></div></div>
+        <div class="gallery-item"><img src="https://raw.githubusercontent.com/oreosdad/amflooring/main/image%20%2824%29.png" alt="Flooring project" loading="lazy" /><div class="gallery-item-overlay"></div></div>
+        <div class="gallery-item"><img src="https://raw.githubusercontent.com/oreosdad/amflooring/main/image%20%2825%29.png" alt="Flooring project" loading="lazy" /><div class="gallery-item-overlay"></div></div>
+        <div class="gallery-item"><img src="https://raw.githubusercontent.com/oreosdad/amflooring/main/image%20%2826%29.png" alt="Flooring project" loading="lazy" /><div class="gallery-item-overlay"></div></div>
+        <div class="gallery-item"><img src="https://raw.githubusercontent.com/oreosdad/amflooring/main/image%20%2827%29.png" alt="Flooring project" loading="lazy" /><div class="gallery-item-overlay"></div></div>
+        <div class="gallery-item"><img src="https://raw.githubusercontent.com/oreosdad/amflooring/main/image%20%2828%29.png" alt="Flooring project" loading="lazy" /><div class="gallery-item-overlay"></div></div>
+        <div class="gallery-item"><img src="https://raw.githubusercontent.com/oreosdad/amflooring/main/image%20%2829%29.png" alt="Flooring project" loading="lazy" /><div class="gallery-item-overlay"></div></div>
+        <div class="gallery-item"><img src="https://raw.githubusercontent.com/oreosdad/amflooring/main/image%20%2831%29.png" alt="Flooring project" loading="lazy" /><div class="gallery-item-overlay"></div></div>
+        <div class="gallery-item"><img src="https://raw.githubusercontent.com/oreosdad/amflooring/main/image%20%2832%29.png" alt="Flooring project" loading="lazy" /><div class="gallery-item-overlay"></div></div>
+        <div class="gallery-item"><img src="https://raw.githubusercontent.com/oreosdad/amflooring/main/image%20%2833%29.png" alt="Flooring project" loading="lazy" /><div class="gallery-item-overlay"></div></div>
+        <div class="gallery-item"><img src="https://raw.githubusercontent.com/oreosdad/amflooring/main/image%20%2834%29.png" alt="Flooring project" loading="lazy" /><div class="gallery-item-overlay"></div></div>
+        <div class="gallery-item"><img src="https://raw.githubusercontent.com/oreosdad/amflooring/main/image%20%2835%29.png" alt="Flooring project" loading="lazy" /><div class="gallery-item-overlay"></div></div>
       </div>
     </div>
   </section>
@@ -997,6 +1066,8 @@
   <!-- CONTACT -->
   <section id="contact">
     <div class="contact">
+
+      <!-- Info -->
       <div class="contact-info reveal">
         <div class="section-label">Get In Touch</div>
         <h2>Schedule a Free Estimate</h2>
@@ -1004,21 +1075,15 @@
         <div class="contact-details">
           <div class="contact-detail">
             <div class="contact-detail-icon">📍</div>
-            <div class="contact-detail-text">
-              13746 W. 135th St<br>Olathe, KS 66062
-            </div>
+            <div class="contact-detail-text">13746 W. 135th St<br>Olathe, KS 66062</div>
           </div>
           <div class="contact-detail">
             <div class="contact-detail-icon">📞</div>
-            <div class="contact-detail-text">
-              <a href="tel:9137800797">(913) 780-0797</a>
-            </div>
+            <div class="contact-detail-text"><a href="tel:9137800797">(913) 780-0797</a></div>
           </div>
           <div class="contact-detail">
             <div class="contact-detail-icon">✉</div>
-            <div class="contact-detail-text">
-              <a href="mailto:customerservice@amflooringllc.com">customerservice@amflooringllc.com</a>
-            </div>
+            <div class="contact-detail-text"><a href="/cdn-cgi/l/email-protection#a0c3d5d3d4cfcdc5d2d3c5d2d6c9c3c5e0c1cdc6cccfcfd2c9cec7ccccc38ec3cfcd"><span class="__cf_email__" data-cfemail="d5b6a0a6a1bab8b0a7a6b0a7a3bcb6b095b4b8b3b9babaa7bcbbb2b9b9b6fbb6bab8">[email&#160;protected]</span></a></div>
           </div>
         </div>
         <div class="hours-grid">
@@ -1028,6 +1093,7 @@
         </div>
       </div>
 
+      <!-- Quote Form -->
       <div class="contact-form-wrap reveal">
         <h3>Request a Quote</h3>
         <p>We'll get back to you within one business day.</p>
@@ -1035,7 +1101,8 @@
           <h4>Thank you! 🎉</h4>
           <p>We've received your request and will be in touch within one business day.</p>
         </div>
-        <form id="quoteForm" onsubmit="submitForm(event)">
+        <form id="quoteForm" name="contact" netlify>
+          <input type="hidden" name="form-name" value="contact" />
           <div class="form-row">
             <div class="form-group">
               <label>First Name *</label>
@@ -1066,6 +1133,62 @@
           <p class="form-disclaimer">By submitting you consent to receiving SMS messages. Msg &amp; data rates may apply. Reply STOP to opt out.</p>
         </form>
       </div>
+
+      <!-- Book an Appointment -->
+      <div class="booking-wrap reveal">
+        <h3>Book an Appointment</h3>
+        <p>Pick a date and time — we'll confirm within one business day.</p>
+        <div class="booking-success" id="bookingSuccess">
+          <h4>You're booked! 🎉</h4>
+          <p>We'll send a confirmation to your email shortly. We'll call if anything changes.</p>
+        </div>
+        <form id="bookingForm" name="booking" netlify>
+          <input type="hidden" name="form-name" value="booking" />
+          <div class="booking-step">Step 1 — Choose a date</div>
+          <div class="form-group">
+            <select id="booking-date" name="date" onchange="onDateChange(this.value)">
+              <option value="">Select a date...</option>
+            </select>
+          </div>
+          <div class="booking-time-wrap" id="booking-time-wrap">
+            <div class="booking-step">Step 2 — Choose a time</div>
+            <div class="form-group">
+              <select id="booking-time" name="time" onchange="onTimeChange(this.value)">
+                <option value="">Select a time...</option>
+              </select>
+            </div>
+          </div>
+          <div class="booking-fields-wrap" id="booking-fields-wrap">
+            <hr class="booking-divider" />
+            <div class="booking-step">Step 3 — Your info</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>First Name *</label>
+                <input type="text" name="booking_first" required placeholder="Jane" />
+              </div>
+              <div class="form-group">
+                <label>Last Name *</label>
+                <input type="text" name="booking_last" required placeholder="Smith" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Phone *</label>
+              <input type="tel" name="booking_phone" required placeholder="(913) 555-0000" />
+            </div>
+            <div class="form-group">
+              <label>Email *</label>
+              <input type="email" name="booking_email" required placeholder="jane@email.com" />
+            </div>
+            <div class="form-group">
+              <label>Address *</label>
+              <input type="text" name="booking_address" required placeholder="123 Main St, Olathe, KS" />
+            </div>
+            <button type="submit" class="form-submit">Book Appointment →</button>
+            <p class="form-disclaimer">We'll confirm by email. We'll call if we need to reschedule.</p>
+          </div>
+        </form>
+      </div>
+
     </div>
   </section>
 
@@ -1091,15 +1214,97 @@
     </nav>
   </footer>
 
-  <script>
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+
+    // ── BOOKING CALENDAR ──
+    (function() {
+      function getWeekdays(maxDays) {
+        var dates = [], d = new Date();
+        d.setDate(d.getDate() + 1);
+        while (dates.length < maxDays) {
+          if (d.getDay() !== 0 && d.getDay() !== 6) dates.push(new Date(d));
+          d.setDate(d.getDate() + 1);
+          if (dates.length >= 10) break;
+        }
+        return dates;
+      }
+      function fmtDate(d) {
+        return d.toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'});
+      }
+      var sel = document.getElementById('booking-date');
+      if (sel) {
+        getWeekdays(14).forEach(function(d) {
+          var o = document.createElement('option');
+          o.value = d.toISOString().split('T')[0];
+          o.textContent = fmtDate(d);
+          sel.appendChild(o);
+        });
+      }
+    })();
+
+    function onDateChange(val) {
+      var tw = document.getElementById('booking-time-wrap');
+      var ts = document.getElementById('booking-time');
+      var fw = document.getElementById('booking-fields-wrap');
+      fw.classList.remove('show');
+      ts.innerHTML = '<option value="">Select a time...</option>';
+      if (!val) { tw.classList.remove('show'); return; }
+      tw.classList.add('show');
+      var slots = [];
+      for (var h = 9; h < 17; h++) {
+        [0, 30].forEach(function(m) {
+          var hr = h > 12 ? h - 12 : h;
+          var ap = h >= 12 ? 'PM' : 'AM';
+          slots.push(hr + ':' + (m === 0 ? '00' : '30') + ' ' + ap);
+        });
+      }
+      slots.forEach(function(s) {
+        var o = document.createElement('option');
+        o.value = s; o.textContent = s;
+        ts.appendChild(o);
+      });
+    }
+
+    function onTimeChange(val) {
+      document.getElementById('booking-fields-wrap').classList[val ? 'add' : 'remove']('show');
+    }
+
+    document.getElementById('bookingForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      var form = this;
+      var data = new FormData(form);
+      fetch('/', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: new URLSearchParams(data).toString()
+      }).then(function() {
+        form.style.display = 'none';
+        document.getElementById('bookingSuccess').classList.add('show');
+      }).catch(function() {
+        form.style.display = 'none';
+        document.getElementById('bookingSuccess').classList.add('show');
+      });
+    });
+
     function toggleMenu() {
       document.getElementById('navLinks').classList.toggle('open');
     }
 
     function submitForm(e) {
       e.preventDefault();
-      document.getElementById('quoteForm').style.display = 'none';
-      document.getElementById('formSuccess').classList.add('show');
+      const form = document.getElementById('quoteForm');
+      const data = new FormData(form);
+      fetch('/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams(data).toString()
+      }).then(() => {
+        form.style.display = 'none';
+        document.getElementById('formSuccess').classList.add('show');
+      }).catch(() => {
+        form.style.display = 'none';
+        document.getElementById('formSuccess').classList.add('show');
+      });
     }
 
     // Scroll reveal
