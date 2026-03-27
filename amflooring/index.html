@@ -501,7 +501,7 @@
     .gallery-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      grid-auto-rows: 200px;
+      grid-auto-rows: 180px;
       gap: 0.75rem;
     }
 
@@ -520,8 +520,10 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
+      object-position: center;
       transition: transform 0.5s ease;
       display: block;
+      image-rendering: -webkit-optimize-contrast;
     }
 
     .gallery-item:hover img { transform: scale(1.06); }
@@ -787,7 +789,7 @@
 
       .gallery-grid {
         grid-template-columns: repeat(2, 1fr);
-        grid-auto-rows: 160px;
+        grid-auto-rows: 140px;
       }
 
       .gallery-item--featured {
@@ -924,6 +926,7 @@
       <li><a href="index.html">Home</a></li>
       <li><a href="about.html">About</a></li>
       <li><a href="tel:9137800797" class="nav-phone">☎ (913) 780-0797</a></li>
+      <li><a href="#contact" onclick="document.getElementById('booking-date').scrollIntoView()">Book Appt</a></li>
       <li><a href="#contact" class="nav-cta">Get Quote</a></li>
     </ul>
     <div class="hamburger" id="hamburger" onclick="toggleMenu()">
@@ -1083,7 +1086,7 @@
           </div>
           <div class="contact-detail">
             <div class="contact-detail-icon">✉</div>
-            <div class="contact-detail-text"><a href="/cdn-cgi/l/email-protection#a0c3d5d3d4cfcdc5d2d3c5d2d6c9c3c5e0c1cdc6cccfcfd2c9cec7ccccc38ec3cfcd"><span class="__cf_email__" data-cfemail="d5b6a0a6a1bab8b0a7a6b0a7a3bcb6b095b4b8b3b9babaa7bcbbb2b9b9b6fbb6bab8">[email&#160;protected]</span></a></div>
+            <div class="contact-detail-text"><a href="mailto:customerservice@amflooringllc.com">customerservice@amflooringllc.com</a></div>
           </div>
         </div>
         <div class="hours-grid">
