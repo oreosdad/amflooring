@@ -735,7 +735,7 @@ async function fetchProfiles(){
 }
 
 async function fetchTimeOff(){
-  const{data}=await sb.from('time_off').select('*,profiles(full_name,default_calendar,role)').order('start_date',{ascending:false});
+  const{data}=await sb.from('time_off').select('*,profiles!time_off_profile_id_fkey(full_name,default_calendar,role)').order('start_date',{ascending:false});
   timeoffs=(data||[]);
 }
 
