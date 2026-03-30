@@ -761,6 +761,7 @@
     @media (max-width: 900px) {
       .nav-links { display: none; }
       .hamburger { display: flex; }
+      .nav-staff-login-mobile { display: inline-flex !important; }
 
       .nav-links.open {
         display: flex;
@@ -932,6 +933,7 @@
     <div class="hamburger" id="hamburger" onclick="toggleMenu()">
       <span></span><span></span><span></span>
     </div>
+    <a href="https://schedule.amflooringllc.com" rel="noopener" style="display:none;color:rgba(255,255,255,0.85);text-decoration:none;font-size:0.78rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-left:0.75rem;white-space:nowrap;" class="nav-staff-login-mobile">Staff Login</a>
   </nav>
 
   <!-- HERO -->
@@ -1086,7 +1088,7 @@
           </div>
           <div class="contact-detail">
             <div class="contact-detail-icon">✉</div>
-            <div class="contact-detail-text"><a href="mailto:customerservice@amflooringllc.com">customerservice@amflooringllc.com</a></div>
+            <div class="contact-detail-text"><a href="/cdn-cgi/l/email-protection#0d6e787e796260687f7e687f7b646e684d6c606b6162627f64636a61616e236e6260"><span class="__cf_email__" data-cfemail="6a091f191e05070f18190f181c03090f2a0b070c0605051803040d06060944090507">[email&#160;protected]</span></a></div>
           </div>
         </div>
         <div class="hours-grid">
@@ -1217,7 +1219,7 @@
     </nav>
   </footer>
 
-  <script>
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 
     // ── BOOKING CALENDAR ──
     (function() {
@@ -1321,14 +1323,3 @@
       });
     }, { threshold: 0.1 });
     reveals.forEach(el => observer.observe(el));
-
-    // Smooth nav highlight
-    window.addEventListener('scroll', () => {
-      const nav = document.querySelector('nav');
-      nav.style.background = window.scrollY > 50
-        ? 'rgba(15,15,15,0.97)'
-        : 'rgba(15,15,15,0.92)';
-    });
-  </script>
-</body>
-</html>
