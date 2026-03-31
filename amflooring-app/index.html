@@ -110,7 +110,7 @@
     .stat-card-label{font-size:.75rem;font-weight:500;color:var(--g500);margin-bottom:.4rem}
     .stat-card-value{font-size:1.8rem;font-weight:700;line-height:1}
     .stat-card-sub{font-size:.75rem;color:var(--g400);margin-top:.25rem}
-    /* CALENDAR EVENTS — bold, no fade */
+    /* CALENDAR EVENTS */
     .cal-event{border-left:3px solid;border-radius:4px;padding:3px 5px;font-size:.72rem;font-weight:600;margin-bottom:2px;cursor:pointer;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;line-height:1.3}
     .cal-event:hover{filter:brightness(.92)}
     .cal-event.cal-sales{background:var(--sales-bg);border-color:var(--sales-border);color:var(--sales-text)}
@@ -136,7 +136,7 @@
     .month-day-cell.weekend{background:#fafaf9}
     .month-day-num{font-size:.75rem;font-weight:600;color:var(--g400);margin-bottom:3px}
     .month-day-cell.today .month-day-num .dn{background:var(--red);color:#fff;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;font-size:.7rem}
-    /* MOBILE CALENDAR — vertical day list */
+    /* MOBILE CALENDAR */
     .mobile-day-block{margin-bottom:1rem}
     .mobile-day-label{font-size:.75rem;font-weight:700;color:var(--g500);text-transform:uppercase;letter-spacing:.1em;padding:.4rem .75rem;background:var(--g100);border-radius:6px;margin-bottom:.4rem;display:flex;justify-content:space-between;align-items:center}
     .mobile-day-label.today-label{background:var(--red-faint);color:var(--red)}
@@ -256,7 +256,6 @@
     #toast.success{background:var(--green)}
     #toast.error{background:var(--red)}
     @media(min-width:769px){#toast{bottom:2rem}}
-    /* MOBILE ONLY */
     .desktop-only{display:block}
     .mobile-only{display:none}
     @media(max-width:768px){.desktop-only{display:none}.mobile-only{display:block}}
@@ -300,6 +299,9 @@
         <div class="sidebar-section">Manage</div>
         <button class="sidebar-link owner-only hidden" id="sb-timeoff" onclick="showPage('timeoff')"><span class="icon">🏖</span>Time Off</button>
         <button class="sidebar-link" id="sb-crew" onclick="showPage('crew')"><span class="icon">👷</span>Crew & Users</button>
+        <div class="sidebar-section owner-only hidden">Pay</div>
+        <button class="sidebar-link owner-only hidden" id="sb-pay" onclick="showPage('pay')"><span class="icon">💵</span>Installer Pay</button>
+        <button class="sidebar-link owner-only hidden" id="sb-rates" onclick="showPage('rates')"><span class="icon">📊</span>Rate Table</button>
       </nav>
     </aside>
     <main class="content" id="content">
@@ -347,7 +349,6 @@
           </div>
           <div class="card-body" style="padding:.75rem"><div id="cal-container"></div></div>
         </div>
-        <!-- MOBILE: vertical day list -->
         <div class="mobile-only" id="mobile-cal">
           <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:1rem">
             <button class="btn btn-secondary btn-sm" onclick="mobileNavBack()" style="font-size:1.2rem;padding:.35rem .8rem">‹</button>
@@ -431,6 +432,50 @@
         <div id="staff-list" style="margin-bottom:1.5rem"></div>
         <div class="section-divider">Installers & Subs</div>
         <div id="installer-list"></div>
+      </div>
+
+      <!-- INSTALLER PAY -->
+      <div class="page" id="page-pay">
+        <div class="page-header">
+          <div><div class="page-title">Installer Pay</div><div class="page-subtitle">Build, approve, and track installer payouts</div></div>
+          <button class="btn btn-primary" onclick="openNewPayout()">+ New Payout</button>
+        </div>
+        <div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap;align-items:center">
+          <select id="pay-installer-filter" onchange="renderPayHistory()" style="padding:.4rem .75rem;border:1.5px solid var(--g300);border-radius:6px;font-family:'Inter',sans-serif;font-size:.875rem;background:#fff;outline:none">
+            <option value="all">All Installers</option>
+          </select>
+          <select id="pay-status-filter" onchange="renderPayHistory()" style="padding:.4rem .75rem;border:1.5px solid var(--g300);border-radius:6px;font-family:'Inter',sans-serif;font-size:.875rem;background:#fff;outline:none">
+            <option value="all">All Status</option>
+            <option value="draft">Draft</option>
+            <option value="approved">Approved</option>
+          </select>
+        </div>
+        <div id="pay-history-list"></div>
+      </div>
+
+      <!-- RATE TABLE -->
+      <div class="page" id="page-rates">
+        <div class="page-header">
+          <div><div class="page-title">Rate Table</div><div class="page-subtitle">Default installer pay rates — all editable</div></div>
+          <button class="btn btn-primary" id="rates-save-btn" onclick="saveRates()" style="display:none">Save Changes</button>
+        </div>
+        <div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap">
+          <input type="text" id="rates-search" placeholder="Search rates..." oninput="renderRates()" style="padding:.45rem .9rem;border:1.5px solid var(--g300);border-radius:6px;font-family:'Inter',sans-serif;font-size:.875rem;outline:none;width:200px"/>
+          <select id="rates-cat-filter" onchange="renderRates()" style="padding:.45rem .9rem;border:1.5px solid var(--g300);border-radius:6px;font-family:'Inter',sans-serif;font-size:.875rem;background:#fff;outline:none">
+            <option value="">All Categories</option>
+          </select>
+        </div>
+        <div class="card">
+          <div class="card-body" style="padding:.75rem">
+            <div style="display:grid;grid-template-columns:1fr 100px 60px 90px;gap:8px;padding:.25rem .5rem;margin-bottom:.25rem">
+              <div style="font-size:.7rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.08em">Line item</div>
+              <div style="font-size:.7rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.08em;text-align:right">Rate</div>
+              <div style="font-size:.7rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.08em;text-align:center">Unit</div>
+              <div style="font-size:.7rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.08em;text-align:center">Type</div>
+            </div>
+            <div id="rates-table-body"></div>
+          </div>
+        </div>
       </div>
 
       <!-- INSTALLER SCHEDULE -->
@@ -636,7 +681,126 @@
   </div>
 </div>
 
+<!-- PAYOUT MODAL -->
+<div class="modal-overlay" id="payout-modal">
+  <div class="modal" style="max-width:700px">
+    <div class="modal-header">
+      <div class="modal-title" id="payout-modal-title">New Payout</div>
+      <button class="modal-close" onclick="closeModal('payout-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="pm-payout-id"/>
+      <div class="form-row" style="margin-bottom:1rem">
+        <div class="form-group">
+          <label>Installer *</label>
+          <select id="pm-installer" onchange="loadPayoutJobs()"></select>
+        </div>
+        <div class="form-group">
+          <label>Week</label>
+          <div style="display:flex;gap:.5rem">
+            <input type="date" id="pm-week-start" onchange="loadPayoutJobs()" style="flex:1"/>
+            <input type="date" id="pm-week-end" style="flex:1"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Jobs this week -->
+      <div id="pm-jobs-section" style="margin-bottom:1rem">
+        <div style="font-size:.75rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem">Jobs this week</div>
+        <div id="pm-jobs-list" style="display:flex;flex-wrap:wrap;gap:.4rem">
+          <div style="color:var(--g400);font-size:.85rem">Select an installer and week to load jobs</div>
+        </div>
+      </div>
+
+      <!-- Line items -->
+      <div style="font-size:.75rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;display:flex;align-items:center;justify-content:space-between">
+        <span>Pay Line Items</span>
+        <button class="btn btn-ghost btn-sm" onclick="addFreehandLine()" style="color:var(--blue);font-size:.75rem">+ Add line</button>
+      </div>
+
+      <!-- Line item column headers -->
+      <div style="display:grid;grid-template-columns:1fr 130px 70px 80px 80px 32px;gap:6px;padding:0 .25rem;margin-bottom:.25rem">
+        <div style="font-size:.7rem;color:var(--g400);font-weight:600;text-transform:uppercase;letter-spacing:.05em">Description</div>
+        <div style="font-size:.7rem;color:var(--g400);font-weight:600;text-transform:uppercase;letter-spacing:.05em">Job</div>
+        <div style="font-size:.7rem;color:var(--g400);font-weight:600;text-transform:uppercase;letter-spacing:.05em;text-align:right">Qty</div>
+        <div style="font-size:.7rem;color:var(--g400);font-weight:600;text-transform:uppercase;letter-spacing:.05em;text-align:right">Rate</div>
+        <div style="font-size:.7rem;color:var(--g400);font-weight:600;text-transform:uppercase;letter-spacing:.05em;text-align:right">Total</div>
+        <div></div>
+      </div>
+      <div id="pm-line-items"></div>
+
+      <!-- Add from rate table -->
+      <div style="margin-top:.75rem;padding:.75rem;background:var(--g50);border:1.5px dashed var(--g300);border-radius:8px">
+        <div style="font-size:.75rem;font-weight:600;color:var(--g600);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">Add from rate table</div>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+          <select id="pm-rate-select" style="flex:1;padding:.4rem .75rem;border:1.5px solid var(--g300);border-radius:6px;font-family:'Inter',sans-serif;font-size:.875rem;background:#fff;outline:none">
+            <option value="">Select a rate...</option>
+          </select>
+          <input type="number" id="pm-rate-qty" placeholder="Qty" min="0" step="0.01" style="width:80px;padding:.4rem .75rem;border:1.5px solid var(--g300);border-radius:6px;font-family:'Inter',sans-serif;font-size:.875rem;outline:none"/>
+          <button class="btn btn-primary btn-sm" onclick="addRateLine()">Add</button>
+        </div>
+      </div>
+
+      <!-- Total -->
+      <div style="margin-top:1rem;padding:1rem;background:var(--g900);border-radius:8px;display:flex;align-items:center;justify-content:space-between">
+        <span style="color:rgba(255,255,255,.7);font-size:.875rem;font-weight:500">Total Payout</span>
+        <span style="color:#fff;font-size:1.5rem;font-weight:700" id="pm-total">$0.00</span>
+      </div>
+
+      <div class="form-group" style="margin-top:.75rem"><label>Notes</label><textarea id="pm-notes" placeholder="Any notes about this payout..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" id="pm-delete-btn" style="display:none;margin-right:auto" onclick="deletePayout()">Delete</button>
+      <button class="btn btn-secondary" onclick="closeModal('payout-modal')">Cancel</button>
+      <button class="btn btn-secondary" onclick="savePayout('draft')">Save Draft</button>
+      <button class="btn btn-primary" onclick="savePayout('approved')">Approve & Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRINT MODAL -->
+<div class="modal-overlay" id="print-modal">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-header">
+      <div class="modal-title">Payout Record</div>
+      <button class="modal-close" onclick="closeModal('print-modal')">×</button>
+    </div>
+    <div class="modal-body" id="print-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('print-modal')">Close</button>
+      <button class="btn btn-primary" onclick="window.print()">🖨 Print</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
+
+<style>
+  @media print {
+    body > *:not(#print-modal) { display: none !important; }
+    #print-modal { display: block !important; position: static !important; background: none !important; padding: 0 !important; }
+    #print-modal .modal { box-shadow: none !important; max-width: 100% !important; border: none !important; }
+    #print-modal .modal-header, #print-modal .modal-footer { display: none !important; }
+    #print-modal .modal-body { padding: 0 !important; }
+    .print-hide { display: none !important; }
+  }
+  .payout-card { background:#fff;border:1px solid var(--g200);border-radius:10px;padding:1rem 1.25rem;margin-bottom:.75rem;border-left:4px solid var(--g300) }
+  .payout-card.status-approved { border-left-color:var(--green) }
+  .payout-card.status-draft { border-left-color:var(--amber) }
+  .payout-card-top { display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem;margin-bottom:.5rem }
+  .payout-installer { font-size:1rem;font-weight:600 }
+  .payout-meta { font-size:.8rem;color:var(--g500);margin-top:2px }
+  .payout-amount { font-size:1.3rem;font-weight:700;color:var(--g900) }
+  .li-row { display:grid;grid-template-columns:1fr 130px 70px 80px 80px 32px;gap:6px;align-items:center;margin-bottom:4px }
+  .li-input { padding:4px 6px;border:1.5px solid var(--g300);border-radius:4px;font-family:'Inter',sans-serif;font-size:.8rem;background:#fff;color:var(--g900);width:100%;outline:none;text-align:right }
+  .li-input:focus { border-color:var(--red) }
+  .li-desc { padding:4px 6px;border:1.5px solid var(--g300);border-radius:4px;font-family:'Inter',sans-serif;font-size:.8rem;background:#fff;color:var(--g900);width:100%;outline:none }
+  .li-desc:focus { border-color:var(--red) }
+  .li-total { font-size:.875rem;font-weight:600;color:var(--g900);text-align:right;padding-right:4px }
+  .job-chip { display:inline-flex;align-items:center;gap:4px;background:var(--install-bg);color:var(--install-text);border:1px solid var(--install-border);padding:3px 10px;border-radius:20px;font-size:.75rem;font-weight:500;cursor:pointer;transition:all .15s }
+  .job-chip:hover { filter:brightness(.95) }
+  .rate-cat-label { font-size:.7rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.08em;padding:.4rem 0 .2rem;border-bottom:1px solid var(--g100);margin-bottom:.2rem }
+</style>
 
 <script>
 const SURL='https://gijtwufwkrhyfrdzsvkv.supabase.co';
@@ -645,18 +809,18 @@ const sb=supabase.createClient(SURL,SKEY);
 const OWNER_EMAIL='cutcojohngilmore@gmail.com';
 
 let me=null,myProfile=null,isOwner=false;
-let projects=[],profiles=[],timeoffs=[],installerDocs=[];
+let projects=[],profiles=[],timeoffs=[],installerDocs=[],installerRates=[],payouts=[];
 let weekStart=weekOf(new Date()),currentMonth=new Date();
 let mobileWeekStart=weekOf(new Date());
 let calView='week',calTab='all',whoFilter='all';
 let projCalTab='all',statusFilter='all',crewFilter='active';
-let assignedCrew=[]; // array of profile ids assigned to current project
+let assignedCrew=[];
 
 // ── UTILS ─────────────────────────────────────────────────────────────────────
 function today(){return new Date().toISOString().split('T')[0]}
 function fd(s){if(!s)return'—';const d=new Date(s+'T00:00:00');return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}
 function fdr(s,e){if(!s)return'—';if(!e||e===s)return fd(s);return`${fd(s)} – ${fd(e)}`}
-function fmtTime(t){if(!t)return'';const[h,m]=t.split(':').map(Number);const ap=h<12?'AM':'PM';const h12=h===0?12:h>12?h-12:h;return`${h12}:${m.toString().padStart(2,'0')} ${ap}`}
+function fmtTime(t){if(!t)return'';const[h,m]=t.split(':').map(Number);const ap=h<12?'a':'p';const h12=h===0?12:h>12?h-12:h;return m===0?`${h12}${ap}`:`${h12}:${m.toString().padStart(2,'0')}${ap}`}
 function addHour(t){if(!t)return'';const[h,m]=t.split(':').map(Number);return`${((h+1)%24).toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`}
 function slbl(s){return{scheduled:'Scheduled',in_progress:'In Progress',complete:'Complete',invoiced:'Invoiced'}[s]||s}
 function weekOf(d){const c=new Date(d);const day=c.getDay();c.setDate(c.getDate()-day+(day===0?-6:1));c.setHours(0,0,0,0);return c}
@@ -688,7 +852,6 @@ async function boot(user){
   document.getElementById('app').style.display='flex';
   document.getElementById('nav-user-name').textContent=p.full_name;
   document.getElementById('nav-role-badge').textContent=p.role;
-  // Show time off sidebar link only for owner
   if(isOwner)document.querySelectorAll('.owner-only').forEach(el=>el.classList.remove('hidden'));
   initDateFilters();
   buildNav(p.role);
@@ -707,13 +870,14 @@ function buildNav(role){
       <button class="mobile-nav-btn active" id="mnb-calendar" onclick="showPage('calendar')"><span class="nav-icon">📅</span>Calendar</button>
       <button class="mobile-nav-btn" id="mnb-projects" onclick="showPage('projects')"><span class="nav-icon">📋</span>Projects</button>
       ${isOwner?`<button class="mobile-nav-btn" id="mnb-timeoff" onclick="showPage('timeoff')"><span class="nav-icon">🏖</span>Time Off</button>`:''}
+      ${isOwner?`<button class="mobile-nav-btn" id="mnb-pay" onclick="showPage('pay')"><span class="nav-icon">💵</span>Pay</button>`:''}
       <button class="mobile-nav-btn" id="mnb-crew" onclick="showPage('crew')"><span class="nav-icon">👷</span>Crew</button>`;
     showPage('calendar');
   }
 }
 
 // ── DATA ─────────────────────────────────────────────────────────────────────
-async function loadAll(){await Promise.all([fetchProjects(),fetchProfiles(),fetchTimeOff()]);renderActive()}
+async function loadAll(){await Promise.all([fetchProjects(),fetchProfiles(),fetchTimeOff(),fetchRates(),fetchPayouts()]);renderActive()}
 
 async function fetchProjects(){
   const from=document.getElementById('filter-from')?.value||defaultFrom();
@@ -736,7 +900,6 @@ async function fetchProfiles(){
 
 async function fetchTimeOff(){
   const{data}=await sb.from('time_off').select('*,profiles(full_name,default_calendar,role)').order('start_date');
-  // Only load staff time off
   timeoffs=(data||[]).filter(t=>t.profiles?.role==='staff'||t.profiles?.role==='owner');
 }
 
@@ -749,7 +912,6 @@ function initDateFilters(){
 function buildWhoFilter(){
   const sel=document.getElementById('who-filter');
   const cur=sel.value;
-  // Filter people relevant to current cal tab
   let relevant=profiles.filter(p=>p.is_active!==false);
   if(calTab==='sales')relevant=relevant.filter(p=>p.default_calendar==='sales'||p.role==='staff');
   else if(calTab==='install')relevant=relevant.filter(p=>p.role==='installer'||(p.role==='staff'&&p.default_calendar==='install'));
@@ -774,6 +936,8 @@ function render(name){
   else if(name==='timeoff'){renderTimeOff();renderPTO()}
   else if(name==='crew')renderCrew();
   else if(name==='installer')renderInstaller();
+  else if(name==='pay')renderPayHistory();
+  else if(name==='rates')renderRates();
 }
 
 // ── CALENDAR ──────────────────────────────────────────────────────────────────
@@ -788,7 +952,6 @@ function setCalTab(v,b){
 function navBack(){if(calView==='week'){weekStart=new Date(weekStart);weekStart.setDate(weekStart.getDate()-7)}else{currentMonth=new Date(currentMonth.getFullYear(),currentMonth.getMonth()-1,1)}renderCal()}
 function navForward(){if(calView==='week'){weekStart=new Date(weekStart);weekStart.setDate(weekStart.getDate()+7)}else{currentMonth=new Date(currentMonth.getFullYear(),currentMonth.getMonth()+1,1)}renderCal()}
 function goToday(){weekStart=weekOf(new Date());currentMonth=new Date();renderCal()}
-// Mobile nav
 function mobileNavBack(){mobileWeekStart=new Date(mobileWeekStart);mobileWeekStart.setDate(mobileWeekStart.getDate()-7);renderMobileCal()}
 function mobileNavForward(){mobileWeekStart=new Date(mobileWeekStart);mobileWeekStart.setDate(mobileWeekStart.getDate()+7);renderMobileCal()}
 function mobileGoToday(){mobileWeekStart=weekOf(new Date());renderMobileCal()}
@@ -804,12 +967,6 @@ function filterForCal(allP,allT){
     ft=ft.filter(t=>t.profile_id===whoFilter);
   }
   return{fp,ft};
-}
-
-// Sort events: sales first, then installs, then warehouse
-function sortEvents(events){
-  const order={sales:0,install:1,warehouse:2};
-  return events.sort((a,b)=>(order[a.calType]||0)-(order[b.calType]||0));
 }
 
 function renderCal(){
@@ -850,7 +1007,6 @@ function getEventsForDay(ds,fp,ft){
   const events=[];
   const sorted=[...fp].sort((a,b)=>{const o={sales:0,install:1,warehouse:2};return(o[a.calendar_type]||0)-(o[b.calendar_type]||0)});
   sorted.forEach(p=>{const s=p.start_date,e=p.end_date||s;if(ds>=s&&ds<=e)events.push({type:'project',p,calType:p.calendar_type})});
-  // Time off only for owner
   if(isOwner)ft.forEach(t=>{if(ds>=t.start_date&&ds<=t.end_date)events.push({type:'to',t,calType:'timeoff'})});
   return events;
 }
@@ -859,8 +1015,9 @@ function renderEventChip(item,forMonth=false){
   const sz=forMonth?'style="font-size:.62rem;padding:1px 3px;margin-bottom:1px"':'';
   if(item.type==='project'){
     const p=item.p;
-    const addr=p.address?` · ${p.address.split(',')[0]}`:'';
-    return`<div class="cal-event cal-${p.calendar_type}" onclick="openDetail('${p.id}')" title="${p.customer_name}${addr}" ${sz}>${p.customer_name}</div>`;
+    const timeStr=p.start_time?` ${fmtTime(p.start_time)}`:'';
+    const label=timeStr?`${timeStr} ${p.customer_name}`:p.customer_name;
+    return`<div class="cal-event cal-${p.calendar_type}" onclick="openDetail('${p.id}')" title="${p.customer_name}" ${sz}>${label}</div>`;
   }
   const t=item.t;
   return`<div class="cal-event time-off" ${sz}>🏖 ${(t.profiles?.full_name||'').split(' ')[0]}${t.note?` (${t.note})`:''}</div>`;
@@ -914,8 +1071,6 @@ function renderMonth(fp,ft){
 function renderMobileCal(){
   const{fp,ft}=filterForCal(projects,timeoffs);
   const todayD=new Date();todayD.setHours(0,0,0,0);
-  const todayStr=today();
-  // Show 14 days starting from mobileWeekStart
   const we=new Date(mobileWeekStart);we.setDate(we.getDate()+6);
   document.getElementById('mobile-cal-label').textContent=(()=>{const fmt=d=>d.toLocaleDateString('en-US',{month:'short',day:'numeric'});return`${fmt(mobileWeekStart)} – ${fmt(we)}`;})();
   let html='';
@@ -924,7 +1079,7 @@ function renderMobileCal(){
     const ds=cd.toISOString().split('T')[0];
     const isToday=cd.getTime()===todayD.getTime();
     const events=getEventsForDay(ds,fp,ft);
-    if(!events.length&&!isToday)continue; // skip empty days on mobile
+    if(!events.length&&!isToday)continue;
     const dayLabel=isToday?'Today':cd.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
     const evts=events.map(item=>{
       if(item.type==='project'){
@@ -932,7 +1087,7 @@ function renderMobileCal(){
         const timeStr=p.start_time?fmtTime(p.start_time):'';
         return`<div class="mobile-cal-event cal-${p.calendar_type}" onclick="openDetail('${p.id}')">
           <div><div class="mobile-event-name">${p.customer_name}</div>
-          <div class="mobile-event-sub">${p.address?'📍 '+p.address.split(',')[0]:''}${timeStr?' · 🕐 '+timeStr:''}</div></div>
+          <div class="mobile-event-sub">${p.address?'📍 '+p.address.split(',')[0]:''}${timeStr?' · '+timeStr:''}</div></div>
         </div>`;
       }
       const t=item.t;
@@ -955,8 +1110,9 @@ function openDayModal(ds){
   events.forEach(item=>{
     if(item.type==='project'){
       const p=item.p;
+      const timeStr=p.start_time?`${fmtTime(p.start_time)}${p.end_time?' – '+fmtTime(p.end_time):''}  ·  `:'';
       html+=`<div class="day-detail-event cal-${p.calendar_type}" onclick="closeModal('day-modal');openDetail('${p.id}')">
-        ${p.customer_name}${p.address?`<div style="font-size:.75rem;margin-top:2px;font-weight:400">📍 ${p.address}</div>`:''}</div>`;
+        ${timeStr}${p.customer_name}${p.address?`<div style="font-size:.75rem;margin-top:2px;font-weight:400">📍 ${p.address}</div>`:''}</div>`;
     } else {
       const t=item.t;
       html+=`<div class="day-detail-event time-off">🏖 ${t.profiles?.full_name||''} – Time Off${t.note?' ('+t.note+')':''}</div>`;
@@ -1082,7 +1238,6 @@ function openTimeOffModal(){
   ['to-start','to-end','to-note'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('to-start-time').value='08:00';document.getElementById('to-end-time').value='';
   document.getElementById('to-del-btn').style.display='none';
-  // Only staff in time off dropdown
   const staffOnly=profiles.filter(p=>p.role==='staff'&&p.is_active!==false);
   document.getElementById('to-person').innerHTML=staffOnly.map(p=>`<option value="${p.id}">${p.full_name}</option>`).join('');
   autoSetToCal();openModal('timeoff-modal');
@@ -1148,7 +1303,6 @@ async function toggleActive(id,val){await sb.from('profiles').update({is_active:
 
 function updateNewCalDefault(){
   const role=document.getElementById('new-role').value;
-  // Staff get all 3 calendars conceptually — we just default to their primary
   if(role==='staff'){document.getElementById('new-calendar').value='sales'}
   else{document.getElementById('new-calendar').value='install'}
 }
@@ -1179,7 +1333,6 @@ async function openProfileModal(id){
   document.getElementById('pm-name').value=p.full_name||'';
   document.getElementById('pm-phone').value=p.phone||'';
   document.getElementById('pm-email').value=p.email||'';
-  // Load docs
   const{data:docs}=await sb.from('installer_docs').select('*').eq('profile_id',id).order('created_at',{ascending:false});
   installerDocs=docs||[];
   renderDocList();
@@ -1247,9 +1400,7 @@ async function saveProfile(){
 function onCalendarChange(){
   const cal=document.getElementById('f-calendar').value;
   document.getElementById('install-only-fields').style.display=cal==='install'?'block':'none';
-  // Rebuild crew dropdown for this calendar type
   buildCrewDropdown(cal,assignedCrew);
-  // Auto end time for sales
   if(cal==='sales'){
     const st=document.getElementById('f-start-time').value;
     if(st)document.getElementById('f-end-time').value=addHour(st);
@@ -1270,10 +1421,6 @@ function onStartTimeChange(){
 
 function buildCrewDropdown(calType,selected){
   assignedCrew=[...selected];
-  // Who is eligible:
-  // install/warehouse → installers only
-  // sales → staff only (Steve, Mariah etc.)
-  // all → everyone active
   const eligible=profiles.filter(p=>{
     if(p.is_active===false)return false;
     if(calType==='sales')return p.role==='staff';
@@ -1307,10 +1454,8 @@ function openNewProject(){
   document.getElementById('modal-title').textContent='New Project';
   ['project-id','f-customer','f-address','f-measurement','f-notes','f-materials'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('f-flooring').value='';document.getElementById('f-status').value='scheduled';document.getElementById('f-calendar').value='install';
-  // Default dates to today
   const t=today();
   document.getElementById('f-start-date').value=t;document.getElementById('f-end-date').value=t;
-  // Default times: 8:30 for install
   document.getElementById('f-start-time').value='08:30';document.getElementById('f-end-time').value='';
   document.getElementById('btn-delete').style.display='none';
   document.getElementById('quick-add-form').classList.add('hidden');document.getElementById('quick-add-icon').textContent='＋';
@@ -1384,7 +1529,6 @@ async function quickAddPerson(){
   await sb.from('profiles').insert({id:uid,full_name:name,role,is_active:true,default_calendar});
   await fetchProfiles();
   buildCrewDropdown(cal,assignedCrew);
-  // Auto-assign new person
   if(!assignedCrew.includes(uid)){assignedCrew.push(uid);renderCrewChips()}
   showToast(`${name} added and assigned!`,'success');
   toggleQuickAdd();document.getElementById('qa-name').value='';document.getElementById('qa-email').value='';
@@ -1430,6 +1574,427 @@ function openDetail(id){
 function openModal(id){document.getElementById(id).classList.add('open')}
 function closeModal(id){document.getElementById(id).classList.remove('open')}
 document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open')}));
+
+// ── RATES ─────────────────────────────────────────────────────────────────────
+async function fetchRates(){
+  const{data}=await sb.from('installer_rates').select('*').order('category').order('sort_order');
+  installerRates=data||[];
+  buildRateCatFilter();
+}
+
+function buildRateCatFilter(){
+  const sel=document.getElementById('rates-cat-filter');
+  if(!sel)return;
+  const cats=[...new Set(installerRates.map(r=>r.category))];
+  sel.innerHTML=`<option value="">All Categories</option>`+cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+}
+
+let ratesDirty=false;
+
+function renderRates(){
+  const q=(document.getElementById('rates-search')?.value||'').toLowerCase();
+  const cat=document.getElementById('rates-cat-filter')?.value||'';
+  const filtered=installerRates.filter(r=>
+    (!cat||r.category===cat)&&
+    (!q||r.name.toLowerCase().includes(q)||r.category.toLowerCase().includes(q))
+  );
+  const byCat={};
+  filtered.forEach(r=>{if(!byCat[r.category])byCat[r.category]=[];byCat[r.category].push(r)});
+  const c=document.getElementById('rates-table-body');
+  if(!c)return;
+  if(!filtered.length){c.innerHTML=`<div style="color:var(--g400);font-size:.875rem;padding:1rem">No rates match.</div>`;return}
+  c.innerHTML=Object.entries(byCat).map(([cat,items])=>`
+    <div style="margin-bottom:1rem">
+      <div class="rate-cat-label">${cat}</div>
+      ${items.map(r=>{
+        const isV=r.rate_type==='varies',isP=r.rate_type==='percent';
+        const val=isV?'varies':isP?`${r.percent_of}% of cust.`:(r.default_rate!=null?r.default_rate.toFixed(2):'');
+        const badgeBg=isV?'var(--afaint)':isP?'var(--bfaint)':'var(--gfaint)';
+        const badgeCol=isV?'var(--amber)':isP?'var(--blue)':'var(--green)';
+        const badgeTxt=isV?'varies':isP?'% based':'fixed';
+        return`<div style="display:grid;grid-template-columns:1fr 100px 60px 90px;gap:8px;align-items:center;padding:.35rem .5rem;border-radius:6px;transition:background .1s" onmouseover="this.style.background='var(--g50)'" onmouseout="this.style.background=''">
+          <div>
+            <div style="font-size:.875rem">${r.name}</div>
+            ${r.notes?`<div style="font-size:.75rem;color:var(--g400);margin-top:1px">${r.notes}</div>`:''}
+          </div>
+          <input type="${isV||isP?'text':'number'}" value="${val}" step="0.01"
+            style="padding:4px 8px;border:1.5px solid var(--g300);border-radius:4px;font-family:'Inter',sans-serif;font-size:.8rem;background:#fff;color:var(--g900);width:100%;text-align:right;outline:none"
+            onfocus="if(this.value==='varies'||this.value.includes('%'))this.value=''"
+            onchange="onRateEdit('${r.id}',this.value)"
+          />
+          <div style="font-size:.8rem;color:var(--g500);text-align:center">${r.unit}</div>
+          <div style="text-align:center"><span style="font-size:.7rem;font-weight:600;padding:2px 8px;border-radius:20px;background:${badgeBg};color:${badgeCol}">${badgeTxt}</span></div>
+        </div>`;
+      }).join('')}
+    </div>`).join('');
+}
+
+function onRateEdit(id,val){
+  const r=installerRates.find(x=>x.id===id);if(!r)return;
+  const num=parseFloat(val);
+  if(!isNaN(num)){r.default_rate=num;ratesDirty=true;document.getElementById('rates-save-btn').style.display='inline-flex'}
+}
+
+async function saveRates(){
+  const dirty=installerRates.filter(r=>r.default_rate!=null);
+  for(const r of dirty){
+    await sb.from('installer_rates').update({default_rate:r.default_rate,updated_at:new Date().toISOString()}).eq('id',r.id);
+  }
+  ratesDirty=false;
+  document.getElementById('rates-save-btn').style.display='none';
+  showToast('Rates saved!','success');
+}
+
+// ── PAYOUTS ──────────────────────────────────────────────────────────────────
+async function fetchPayouts(){
+  const{data}=await sb.from('payouts')
+    .select('*,profiles!payouts_installer_id_fkey(full_name),payout_line_items(*)')
+    .order('created_at',{ascending:false});
+  payouts=data||[];
+}
+
+function renderPayHistory(){
+  const instFilter=document.getElementById('pay-installer-filter')?.value||'all';
+  const stFilter=document.getElementById('pay-status-filter')?.value||'all';
+  // Build installer filter options
+  const instSel=document.getElementById('pay-installer-filter');
+  const installers=profiles.filter(p=>p.role==='installer'&&p.is_active!==false);
+  const curInst=instSel.value;
+  instSel.innerHTML=`<option value="all">All Installers</option>`+installers.map(p=>`<option value="${p.id}" ${p.id===curInst?'selected':''}>${p.full_name}</option>`).join('');
+
+  let fp=payouts;
+  if(instFilter!=='all')fp=fp.filter(p=>p.installer_id===instFilter);
+  if(stFilter!=='all')fp=fp.filter(p=>p.status===stFilter);
+
+  const c=document.getElementById('pay-history-list');
+  if(!fp.length){c.innerHTML=`<div class="empty-state"><div class="empty-icon">💵</div><p>No payouts yet. Create one to get started.</p></div>`;return}
+
+  c.innerHTML=fp.map(p=>{
+    const name=p.profiles?.full_name||'Unknown';
+    const lines=p.payout_line_items||[];
+    const lineCount=lines.length;
+    const statusColor=p.status==='approved'?'var(--green)':'var(--amber)';
+    const statusLabel=p.status==='approved'?'Approved':'Draft';
+    return`<div class="payout-card status-${p.status}">
+      <div class="payout-card-top">
+        <div>
+          <div class="payout-installer">${name}</div>
+          <div class="payout-meta">Week of ${fd(p.week_start)} – ${fd(p.week_end)} · ${lineCount} line item${lineCount!==1?'s':''}</div>
+          ${p.notes?`<div class="payout-meta" style="margin-top:2px;font-style:italic">${p.notes}</div>`:''}
+        </div>
+        <div style="text-align:right">
+          <div class="payout-amount">$${Number(p.total_amount).toFixed(2)}</div>
+          <span style="font-size:.75rem;font-weight:600;color:${statusColor};background:${p.status==='approved'?'var(--gfaint)':'var(--afaint)'};padding:2px 8px;border-radius:20px;display:inline-block;margin-top:4px">${statusLabel}</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:.5rem;margin-top:.75rem;flex-wrap:wrap">
+        <button class="btn btn-secondary btn-sm" onclick="openEditPayout('${p.id}')">Edit</button>
+        <button class="btn btn-ghost btn-sm" onclick="openPrintModal('${p.id}')">🖨 Print</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// line items in memory for current payout being edited
+let currentLines=[];
+let currentPayoutInstallerJobs=[];
+
+function openNewPayout(){
+  document.getElementById('pm-payout-id').value='';
+  document.getElementById('payout-modal-title').textContent='New Payout';
+  document.getElementById('pm-notes').value='';
+  document.getElementById('pm-delete-btn').style.display='none';
+  currentLines=[];
+
+  // Default week: Mon–Sun of current week
+  const ws=weekOf(new Date());
+  const we=new Date(ws);we.setDate(we.getDate()+6);
+  document.getElementById('pm-week-start').value=ws.toISOString().split('T')[0];
+  document.getElementById('pm-week-end').value=we.toISOString().split('T')[0];
+
+  // Populate installer dropdown
+  const installers=profiles.filter(p=>p.role==='installer'&&p.is_active!==false);
+  document.getElementById('pm-installer').innerHTML=`<option value="">Select installer...</option>`+installers.map(p=>`<option value="${p.id}">${p.full_name}</option>`).join('');
+
+  // Populate rate select
+  buildPayoutRateSelect();
+  renderPayoutLines();
+  loadPayoutJobs();
+  openModal('payout-modal');
+}
+
+async function openEditPayout(id){
+  const p=payouts.find(x=>x.id===id);if(!p)return;
+  document.getElementById('pm-payout-id').value=id;
+  document.getElementById('payout-modal-title').textContent='Edit Payout';
+  document.getElementById('pm-notes').value=p.notes||'';
+  document.getElementById('pm-week-start').value=p.week_start;
+  document.getElementById('pm-week-end').value=p.week_end;
+  document.getElementById('pm-delete-btn').style.display='inline-flex';
+
+  const installers=profiles.filter(p=>p.role==='installer'&&p.is_active!==false);
+  document.getElementById('pm-installer').innerHTML=`<option value="">Select installer...</option>`+installers.map(pr=>`<option value="${pr.id}" ${pr.id===p.installer_id?'selected':''}>${pr.full_name}</option>`).join('');
+
+  // Load line items from saved payout
+  currentLines=(p.payout_line_items||[]).map(li=>({
+    id:li.id,
+    desc:li.description,
+    job:li.project_id,
+    jobName:projects.find(j=>j.id===li.project_id)?.customer_name||'',
+    qty:li.quantity,
+    rate:li.rate_amount,
+    total:li.total_amount,
+    rateId:li.rate_id,
+    unit:li.unit,
+    notes:li.notes,
+    _key:li.id
+  }));
+
+  buildPayoutRateSelect();
+  renderPayoutLines();
+  await loadPayoutJobs();
+  openModal('payout-modal');
+}
+
+function buildPayoutRateSelect(){
+  const sel=document.getElementById('pm-rate-select');
+  const byCat={};
+  installerRates.forEach(r=>{if(!byCat[r.category])byCat[r.category]=[];byCat[r.category].push(r)});
+  sel.innerHTML=`<option value="">Select a rate...</option>`+
+    Object.entries(byCat).map(([cat,items])=>
+      `<optgroup label="${cat}">${items.map(r=>{
+        const rateStr=r.rate_type==='varies'?'varies':r.rate_type==='percent'?`${r.percent_of}% of cust.`:`$${Number(r.default_rate||0).toFixed(2)}/${r.unit}`;
+        return`<option value="${r.id}">${r.name} (${rateStr})</option>`;
+      }).join('')}</optgroup>`
+    ).join('');
+}
+
+async function loadPayoutJobs(){
+  const instId=document.getElementById('pm-installer')?.value;
+  const ws=document.getElementById('pm-week-start')?.value;
+  const we=document.getElementById('pm-week-end')?.value;
+  const jobDiv=document.getElementById('pm-jobs-list');
+  if(!instId||!ws){jobDiv.innerHTML=`<div style="color:var(--g400);font-size:.85rem">Select installer and week to see jobs</div>`;return}
+
+  // Find projects for this installer in this date range
+  const myJobs=projects.filter(p=>{
+    const assigned=(p.project_installers||[]).map(pi=>pi.installer_id);
+    const inRange=p.start_date>=ws&&p.start_date<=we;
+    return assigned.includes(instId)&&inRange&&p.calendar_type==='install';
+  });
+  currentPayoutInstallerJobs=myJobs;
+
+  if(!myJobs.length){jobDiv.innerHTML=`<div style="color:var(--g400);font-size:.85rem">No install jobs found for this installer this week</div>`;return}
+  jobDiv.innerHTML=myJobs.map(j=>`
+    <div class="job-chip" onclick="addJobRef('${j.id}','${esc2(j.customer_name)}')">
+      + ${j.customer_name}
+    </div>`).join('');
+}
+
+function esc2(s){return(s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;')}
+
+function addJobRef(jobId,jobName){
+  // Add a freehand line pre-tagged to this job
+  currentLines.push({_key:Date.now()+'',desc:'',job:jobId,jobName,qty:null,rate:null,total:0,unit:'',rateId:null});
+  renderPayoutLines();
+}
+
+function addFreehandLine(){
+  currentLines.push({_key:Date.now()+'',desc:'',job:'',jobName:'',qty:null,rate:null,total:0,unit:'',rateId:null});
+  renderPayoutLines();
+}
+
+function addRateLine(){
+  const rateId=document.getElementById('pm-rate-select').value;
+  const qtyVal=document.getElementById('pm-rate-qty').value;
+  if(!rateId)return;
+  const r=installerRates.find(x=>x.id===rateId);if(!r)return;
+  const qty=parseFloat(qtyVal)||null;
+  const rate=r.rate_type==='varies'?null:(r.rate_type==='percent'?null:Number(r.default_rate||0));
+  const total=qty&&rate?parseFloat((qty*rate).toFixed(2)):0;
+  currentLines.push({_key:Date.now()+'',desc:r.name,job:'',jobName:'',qty,rate,total,unit:r.unit,rateId:r.id});
+  document.getElementById('pm-rate-select').value='';
+  document.getElementById('pm-rate-qty').value='';
+  renderPayoutLines();
+}
+
+function renderPayoutLines(){
+  const c=document.getElementById('pm-line-items');
+  if(!currentLines.length){
+    c.innerHTML=`<div style="color:var(--g400);font-size:.85rem;padding:.5rem 0">No line items yet. Add from the rate table or add a freehand line.</div>`;
+    updatePayoutTotal();return;
+  }
+  const jobOptions=currentPayoutInstallerJobs.map(j=>`<option value="${j.id}">${j.customer_name}</option>`).join('');
+  c.innerHTML=currentLines.map((li,i)=>`
+    <div class="li-row" data-key="${li._key}">
+      <input class="li-desc" value="${(li.desc||'').replace(/"/g,'&quot;')}" placeholder="Description" onchange="updateLine('${li._key}','desc',this.value)"/>
+      <select style="padding:4px 6px;border:1.5px solid var(--g300);border-radius:4px;font-family:'Inter',sans-serif;font-size:.75rem;background:#fff;color:var(--g900);width:100%;outline:none" onchange="updateLine('${li._key}','job',this.value)">
+        <option value="">No job</option>
+        ${currentPayoutInstallerJobs.map(j=>`<option value="${j.id}" ${j.id===li.job?'selected':''}>${j.customer_name}</option>`).join('')}
+      </select>
+      <input class="li-input" type="number" step="0.01" value="${li.qty!=null?li.qty:''}" placeholder="Qty" onchange="updateLine('${li._key}','qty',this.value)"/>
+      <input class="li-input" type="number" step="0.01" value="${li.rate!=null?li.rate:''}" placeholder="Rate" onchange="updateLine('${li._key}','rate',this.value)"/>
+      <div class="li-total">$${Number(li.total||0).toFixed(2)}</div>
+      <button onclick="removeLine('${li._key}')" style="background:none;border:none;cursor:pointer;color:var(--g400);font-size:1.1rem;line-height:1;padding:0">×</button>
+    </div>`).join('');
+  updatePayoutTotal();
+}
+
+function updateLine(key,field,val){
+  const li=currentLines.find(x=>x._key===key);if(!li)return;
+  if(field==='qty')li.qty=parseFloat(val)||null;
+  else if(field==='rate')li.rate=parseFloat(val)||null;
+  else if(field==='desc')li.desc=val;
+  else if(field==='job'){
+    li.job=val;
+    li.jobName=currentPayoutInstallerJobs.find(j=>j.id===val)?.customer_name||'';
+  }
+  if(li.qty!=null&&li.rate!=null)li.total=parseFloat((li.qty*li.rate).toFixed(2));
+  else if(li.rate!=null&&!li.qty)li.total=li.rate; // flat rate with no qty
+  // Re-render just totals
+  const row=document.querySelector(`[data-key="${key}"]`);
+  if(row){const tot=row.querySelector('.li-total');if(tot)tot.textContent=`$${Number(li.total||0).toFixed(2)}`}
+  updatePayoutTotal();
+}
+
+function removeLine(key){
+  currentLines=currentLines.filter(x=>x._key!==key);
+  renderPayoutLines();
+}
+
+function updatePayoutTotal(){
+  const total=currentLines.reduce((sum,li)=>sum+Number(li.total||0),0);
+  document.getElementById('pm-total').textContent=`$${total.toFixed(2)}`;
+}
+
+async function savePayout(status){
+  const id=document.getElementById('pm-payout-id').value;
+  const installer_id=document.getElementById('pm-installer').value;
+  const week_start=document.getElementById('pm-week-start').value;
+  const week_end=document.getElementById('pm-week-end').value;
+  if(!installer_id||!week_start){showToast('Select an installer and week.','error');return}
+  const total=currentLines.reduce((sum,li)=>sum+Number(li.total||0),0);
+  const payload={installer_id,week_start,week_end,total_amount:total,status,notes:document.getElementById('pm-notes').value||null,created_by:me.id};
+  if(status==='approved'){payload.approved_by=me.id;payload.approved_at=new Date().toISOString()}
+
+  let payoutId=id;
+  if(id){
+    await sb.from('payouts').update(payload).eq('id',id);
+  } else {
+    const{data}=await sb.from('payouts').insert(payload).select().single();
+    payoutId=data?.id;
+  }
+
+  if(payoutId){
+    // Replace all line items
+    await sb.from('payout_line_items').delete().eq('payout_id',payoutId);
+    if(currentLines.length){
+      await sb.from('payout_line_items').insert(currentLines.map((li,i)=>({
+        payout_id:payoutId,
+        project_id:li.job||null,
+        rate_id:li.rateId||null,
+        description:li.desc||'',
+        quantity:li.qty,
+        unit:li.unit||null,
+        rate_amount:li.rate,
+        total_amount:Number(li.total||0),
+        notes:li.notes||null,
+        sort_order:i
+      })));
+    }
+  }
+  closeModal('payout-modal');
+  showToast(status==='approved'?'Payout approved!':'Draft saved.','success');
+  await fetchPayouts();
+  renderPayHistory();
+}
+
+async function deletePayout(){
+  const id=document.getElementById('pm-payout-id').value;
+  if(!id||!confirm('Delete this payout?'))return;
+  await sb.from('payout_line_items').delete().eq('payout_id',id);
+  await sb.from('payouts').delete().eq('id',id);
+  closeModal('payout-modal');
+  showToast('Deleted.','');
+  await fetchPayouts();
+  renderPayHistory();
+}
+
+function openPrintModal(id){
+  const p=payouts.find(x=>x.id===id);if(!p)return;
+  const name=p.profiles?.full_name||'Unknown';
+  const lines=p.payout_line_items||[];
+  const total=Number(p.total_amount||0).toFixed(2);
+  const statusLabel=p.status==='approved'?'Approved':'Draft';
+  const now=new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+
+  document.getElementById('print-body').innerHTML=`
+    <div style="font-family:'Inter',sans-serif;color:#111">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:2px solid #111">
+        <div>
+          <div style="font-size:1.3rem;font-weight:700">A&M Flooring LLC</div>
+          <div style="font-size:.875rem;color:#555;margin-top:2px">Installer Pay Record</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:.8rem;color:#555">Printed ${now}</div>
+          <div style="font-size:.8rem;color:#555;margin-top:2px">Status: <strong>${statusLabel}</strong></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem">
+        <div>
+          <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#888;margin-bottom:.3rem">Installer</div>
+          <div style="font-size:1.1rem;font-weight:600">${name}</div>
+        </div>
+        <div>
+          <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#888;margin-bottom:.3rem">Pay Period</div>
+          <div style="font-size:1rem">${fd(p.week_start)} – ${fd(p.week_end)}</div>
+        </div>
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:.875rem;margin-bottom:1.5rem">
+        <thead>
+          <tr style="border-bottom:2px solid #111">
+            <th style="text-align:left;padding:.4rem .25rem;font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:#555;font-weight:600">Description</th>
+            <th style="text-align:left;padding:.4rem .25rem;font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:#555;font-weight:600">Job</th>
+            <th style="text-align:right;padding:.4rem .25rem;font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:#555;font-weight:600">Qty</th>
+            <th style="text-align:right;padding:.4rem .25rem;font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:#555;font-weight:600">Rate</th>
+            <th style="text-align:right;padding:.4rem .25rem;font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:#555;font-weight:600">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${lines.map(li=>{
+            const job=projects.find(j=>j.id===li.project_id);
+            return`<tr style="border-bottom:1px solid #eee">
+              <td style="padding:.5rem .25rem">${li.description||'—'}</td>
+              <td style="padding:.5rem .25rem;color:#555;font-size:.8rem">${job?job.customer_name:''}</td>
+              <td style="padding:.5rem .25rem;text-align:right">${li.quantity!=null?li.quantity:''}</td>
+              <td style="padding:.5rem .25rem;text-align:right">${li.rate_amount!=null?'$'+Number(li.rate_amount).toFixed(2):''}</td>
+              <td style="padding:.5rem .25rem;text-align:right;font-weight:600">$${Number(li.total_amount||0).toFixed(2)}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+      <div style="display:flex;justify-content:flex-end">
+        <div style="background:#111;color:#fff;padding:.75rem 1.5rem;border-radius:8px;display:flex;gap:2rem;align-items:center">
+          <span style="font-size:.875rem;opacity:.75">Total Payout</span>
+          <span style="font-size:1.4rem;font-weight:700">$${total}</span>
+        </div>
+      </div>
+      ${p.notes?`<div style="margin-top:1rem;padding:.75rem;background:#f9f9f9;border-radius:6px;font-size:.875rem;color:#555"><strong>Notes:</strong> ${p.notes}</div>`:''}
+      <div style="margin-top:2rem;padding-top:1rem;border-top:1px solid #eee;display:grid;grid-template-columns:1fr 1fr;gap:2rem">
+        <div>
+          <div style="font-size:.75rem;color:#888;margin-bottom:.5rem">Installer signature</div>
+          <div style="border-bottom:1px solid #333;height:36px"></div>
+          <div style="font-size:.7rem;color:#aaa;margin-top:.25rem">${name}</div>
+        </div>
+        <div>
+          <div style="font-size:.75rem;color:#888;margin-bottom:.5rem">Approved by</div>
+          <div style="border-bottom:1px solid #333;height:36px"></div>
+          <div style="font-size:.7rem;color:#aaa;margin-top:.25rem">Date: _______________</div>
+        </div>
+      </div>
+    </div>`;
+  openModal('print-modal');
+}
 
 // ── AUTO-LOGIN ────────────────────────────────────────────────────────────────
 sb.auth.getSession().then(({data:{session}})=>{if(session)boot(session.user)});
