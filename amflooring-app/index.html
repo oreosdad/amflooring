@@ -296,12 +296,13 @@
         <div class="sidebar-section">Schedule</div>
         <button class="sidebar-link active" id="sb-calendar" onclick="showPage('calendar')"><span class="icon">📅</span>Calendar</button>
         <button class="sidebar-link" id="sb-projects" onclick="showPage('projects')"><span class="icon">📋</span>All Projects</button>
-        <div class="sidebar-section">Manage</div>
-        <button class="sidebar-link owner-only hidden" id="sb-timeoff" onclick="showPage('timeoff')"><span class="icon">🏖</span>Time Off</button>
-        <button class="sidebar-link" id="sb-crew" onclick="showPage('crew')"><span class="icon">👷</span>Crew & Users</button>
         <div class="sidebar-section owner-only hidden">Pay</div>
         <button class="sidebar-link owner-only hidden" id="sb-pay" onclick="showPage('pay')"><span class="icon">💵</span>Installer Pay</button>
         <button class="sidebar-link owner-only hidden" id="sb-rates" onclick="showPage('rates')"><span class="icon">📊</span>Rate Table</button>
+        <button class="sidebar-link owner-only hidden" id="sb-compliance" onclick="showPage('compliance')"><span class="icon">📋</span>Installer Docs <span id="compliance-bell" class="hidden" style="background:var(--red);color:#fff;border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;margin-left:2px">!</span></button>
+        <div class="sidebar-section">Manage</div>
+        <button class="sidebar-link owner-only hidden" id="sb-timeoff" onclick="showPage('timeoff')"><span class="icon">🏖</span>Time Off</button>
+        <button class="sidebar-link" id="sb-crew" onclick="showPage('crew')"><span class="icon">👷</span>Crew & Users</button>
       </nav>
     </aside>
     <main class="content" id="content">
@@ -457,7 +458,6 @@
       <div class="page" id="page-rates">
         <div class="page-header">
           <div><div class="page-title">Rate Table</div><div class="page-subtitle">Default installer pay rates — all editable</div></div>
-          <button class="btn btn-primary" id="rates-save-btn" onclick="saveRates()" style="display:none">Save Changes</button>
         </div>
         <div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap">
           <input type="text" id="rates-search" placeholder="Search rates..." oninput="renderRates()" style="padding:.45rem .9rem;border:1.5px solid var(--g300);border-radius:6px;font-family:'Inter',sans-serif;font-size:.875rem;outline:none;width:200px"/>
@@ -467,14 +467,40 @@
         </div>
         <div class="card">
           <div class="card-body" style="padding:.75rem">
-            <div style="display:grid;grid-template-columns:1fr 100px 60px 90px;gap:8px;padding:.25rem .5rem;margin-bottom:.25rem">
+            <div style="display:grid;grid-template-columns:1fr 100px 60px 90px 80px;gap:8px;padding:.25rem .5rem;margin-bottom:.25rem">
               <div style="font-size:.7rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.08em">Line item</div>
               <div style="font-size:.7rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.08em;text-align:right">Rate</div>
               <div style="font-size:.7rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.08em;text-align:center">Unit</div>
               <div style="font-size:.7rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.08em;text-align:center">Type</div>
+              <div></div>
             </div>
             <div id="rates-table-body"></div>
           </div>
+        </div>
+      </div>
+
+      <!-- INSTALLER COMPLIANCE -->
+      <div class="page" id="page-compliance">
+        <div class="page-header">
+          <div><div class="page-title">Installer Documents</div><div class="page-subtitle">Insurance, W9, and contractor agreements</div></div>
+          <button class="btn btn-primary" onclick="openAddInstallerModal()">+ Add Installer</button>
+        </div>
+        <div id="compliance-alerts" style="margin-bottom:1rem"></div>
+        <div class="card" style="overflow-x:auto">
+          <table id="compliance-table" style="width:100%;border-collapse:collapse;font-size:.82rem;min-width:900px">
+            <thead>
+              <tr style="border-bottom:2px solid var(--g200)">
+                <th style="text-align:left;padding:.6rem .75rem;font-size:.7rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap">Installer</th>
+                <th style="text-align:center;padding:.6rem .75rem;font-size:.7rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap">GL Exp.</th>
+                <th style="text-align:center;padding:.6rem .75rem;font-size:.7rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap">WC Exp.</th>
+                <th style="text-align:center;padding:.6rem .75rem;font-size:.7rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.08em">W9</th>
+                <th style="text-align:center;padding:.6rem .75rem;font-size:.7rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap">IC Agreement</th>
+                <th style="text-align:center;padding:.6rem .75rem;font-size:.7rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.08em">Status</th>
+                <th style="padding:.6rem .75rem"></th>
+              </tr>
+            </thead>
+            <tbody id="compliance-tbody"></tbody>
+          </table>
         </div>
       </div>
 
@@ -758,6 +784,53 @@
   </div>
 </div>
 
+<!-- COMPLIANCE / ADD INSTALLER MODAL -->
+<div class="modal-overlay" id="compliance-modal">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header"><div class="modal-title" id="comp-modal-title">Add Installer</div><button class="modal-close" onclick="closeModal('compliance-modal')">×</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="comp-id"/>
+      <div class="form-row">
+        <div class="form-group"><label>Full Name / Company *</label><input type="text" id="comp-name" placeholder="EDM Hardwood – Felicia Monroy"/></div>
+        <div class="form-group"><label>Status</label>
+          <select id="comp-status">
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+      </div>
+      <div class="section-divider">General Liability (4%)</div>
+      <div class="form-row">
+        <div class="form-group"><label>GL Expiration</label><input type="date" id="comp-gl-exp"/></div>
+        <div class="form-group"><label>GL On File</label>
+          <select id="comp-gl-onfile"><option value="yes">Yes</option><option value="no">No</option><option value="">—</option></select>
+        </div>
+      </div>
+      <div class="section-divider">Worker's Comp (8%)</div>
+      <div class="form-row">
+        <div class="form-group"><label>WC Expiration</label><input type="date" id="comp-wc-exp"/></div>
+        <div class="form-group"><label>WC On File</label>
+          <select id="comp-wc-onfile"><option value="yes">Yes</option><option value="no">No</option><option value="">—</option></select>
+        </div>
+      </div>
+      <div class="section-divider">Documents</div>
+      <div class="form-row">
+        <div class="form-group"><label>W9 On File</label>
+          <select id="comp-w9"><option value="yes">Yes</option><option value="no">No</option><option value="">—</option></select>
+        </div>
+        <div class="form-group"><label>IC Agreement Signed</label>
+          <select id="comp-ic"><option value="yes">Yes</option><option value="no">No</option><option value="">—</option></select>
+        </div>
+      </div>
+      <div class="form-group"><label>Notes</label><textarea id="comp-notes" placeholder="Any additional notes..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('compliance-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveInstallerCompliance()">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- PRINT MODAL -->
 <div class="modal-overlay" id="print-modal">
   <div class="modal" style="max-width:640px">
@@ -784,7 +857,19 @@
     #print-modal .modal-body { padding: 0 !important; }
     .print-hide { display: none !important; }
   }
-  .payout-card { background:#fff;border:1px solid var(--g200);border-radius:10px;padding:1rem 1.25rem;margin-bottom:.75rem;border-left:4px solid var(--g300) }
+  .compliance-ok{color:var(--green);font-weight:600}
+  .compliance-warn{color:var(--amber);font-weight:600}
+  .compliance-bad{color:var(--red);font-weight:600}
+  .compliance-na{color:var(--g400)}
+  .comp-row td{padding:.55rem .75rem;border-bottom:1px solid var(--g100);vertical-align:middle}
+  .comp-row:hover td{background:var(--g50)}
+  .comp-row.inactive-row td{opacity:.5}
+  .ins-name{font-weight:600;font-size:.875rem}
+  .ins-company{font-size:.75rem;color:var(--g500);margin-top:1px}
+  .yes-badge{display:inline-flex;align-items:center;justify-content:center;background:var(--gfaint);color:var(--green);border-radius:20px;font-size:.7rem;font-weight:700;padding:2px 8px}
+  .no-badge{display:inline-flex;align-items:center;justify-content:center;background:var(--red-faint);color:var(--red);border-radius:20px;font-size:.7rem;font-weight:700;padding:2px 8px}
+  .alert-bar{background:var(--red-faint);border:1px solid #fecaca;border-radius:8px;padding:.75rem 1rem;margin-bottom:.5rem;font-size:.875rem;color:var(--red)}
+  .alert-bar.warn{background:var(--afaint);border-color:#fde68a;color:var(--amber)}
   .payout-card.status-approved { border-left-color:var(--green) }
   .payout-card.status-draft { border-left-color:var(--amber) }
   .payout-card-top { display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem;margin-bottom:.5rem }
@@ -809,7 +894,7 @@ const sb=supabase.createClient(SURL,SKEY);
 const OWNER_EMAIL='cutcojohngilmore@gmail.com';
 
 let me=null,myProfile=null,isOwner=false;
-let projects=[],profiles=[],timeoffs=[],installerDocs=[],installerRates=[],payouts=[];
+let projects=[],profiles=[],timeoffs=[],installerDocs=[],installerRates=[],payouts=[],installerCompliance=[];
 let weekStart=weekOf(new Date()),currentMonth=new Date();
 let mobileWeekStart=weekOf(new Date());
 let calView='week',calTab='all',whoFilter='all';
@@ -877,7 +962,7 @@ function buildNav(role){
 }
 
 // ── DATA ─────────────────────────────────────────────────────────────────────
-async function loadAll(){await Promise.all([fetchProjects(),fetchProfiles(),fetchTimeOff(),fetchRates(),fetchPayouts()]);renderActive()}
+async function loadAll(){await Promise.all([fetchProjects(),fetchProfiles(),fetchTimeOff(),fetchRates(),fetchPayouts(),fetchCompliance()]);renderActive()}
 
 async function fetchProjects(){
   const from=document.getElementById('filter-from')?.value||defaultFrom();
@@ -938,6 +1023,7 @@ function render(name){
   else if(name==='installer')renderInstaller();
   else if(name==='pay')renderPayHistory();
   else if(name==='rates')renderRates();
+  else if(name==='compliance')renderCompliance();
 }
 
 // ── CALENDAR ──────────────────────────────────────────────────────────────────
@@ -1565,7 +1651,7 @@ function openDetail(id){
     </div>
     ${p.address?`<a href="${murl}" target="_blank" class="map-btn">🗺 Open in Maps</a>`:''}`;
   const ft=document.getElementById('detail-footer');
-  if(myProfile?.role==='staff')ft.innerHTML=`<button class="btn btn-secondary" onclick="closeModal('detail-modal')">Close</button><button class="btn btn-primary" onclick="closeModal('detail-modal');openEditProject(${JSON.stringify(p).replace(/"/g,'&quot;')})">Edit</button>`;
+  if(myProfile?.role==='staff')ft.innerHTML=`<button class="btn btn-secondary" onclick="closeModal('detail-modal')">Close</button>${p.calendar_type==='install'?`<button class="btn btn-ghost btn-sm" style="color:var(--green)" onclick="closeModal('detail-modal');payThisJob('${p.id}')">💵 Pay This Job</button>`:''}<button class="btn btn-primary" onclick="closeModal('detail-modal');openEditProject(${JSON.stringify(p).replace(/"/g,'&quot;')})">Edit</button>`;
   else ft.innerHTML=`<button class="btn btn-secondary btn-full" onclick="closeModal('detail-modal')">Close</button>`;
   openModal('detail-modal');
 }
@@ -1612,18 +1698,19 @@ function renderRates(){
         const badgeBg=isV?'var(--afaint)':isP?'var(--bfaint)':'var(--gfaint)';
         const badgeCol=isV?'var(--amber)':isP?'var(--blue)':'var(--green)';
         const badgeTxt=isV?'varies':isP?'% based':'fixed';
-        return`<div style="display:grid;grid-template-columns:1fr 100px 60px 90px;gap:8px;align-items:center;padding:.35rem .5rem;border-radius:6px;transition:background .1s" onmouseover="this.style.background='var(--g50)'" onmouseout="this.style.background=''">
+        return`<div style="display:grid;grid-template-columns:1fr 100px 60px 90px 80px;gap:8px;align-items:center;padding:.35rem .5rem;border-radius:6px;transition:background .1s" onmouseover="this.style.background='var(--g50)'" onmouseout="this.style.background=''">
           <div>
             <div style="font-size:.875rem">${r.name}</div>
             ${r.notes?`<div style="font-size:.75rem;color:var(--g400);margin-top:1px">${r.notes}</div>`:''}
           </div>
-          <input type="${isV||isP?'text':'number'}" value="${val}" step="0.01"
+          <input type="${isV||isP?'text':'number'}" id="rate-input-${r.id}" value="${val}" step="0.01"
             style="padding:4px 8px;border:1.5px solid var(--g300);border-radius:4px;font-family:'Inter',sans-serif;font-size:.8rem;background:#fff;color:var(--g900);width:100%;text-align:right;outline:none"
             onfocus="if(this.value==='varies'||this.value.includes('%'))this.value=''"
             onchange="onRateEdit('${r.id}',this.value)"
           />
           <div style="font-size:.8rem;color:var(--g500);text-align:center">${r.unit}</div>
           <div style="text-align:center"><span style="font-size:.7rem;font-weight:600;padding:2px 8px;border-radius:20px;background:${badgeBg};color:${badgeCol}">${badgeTxt}</span></div>
+          <button id="rate-save-${r.id}" class="btn btn-ghost btn-sm" style="display:none;color:var(--green);font-size:.75rem" onclick="saveSingleRate('${r.id}')">Save</button>
         </div>`;
       }).join('')}
     </div>`).join('');
@@ -1632,17 +1719,20 @@ function renderRates(){
 function onRateEdit(id,val){
   const r=installerRates.find(x=>x.id===id);if(!r)return;
   const num=parseFloat(val);
-  if(!isNaN(num)){r.default_rate=num;ratesDirty=true;document.getElementById('rates-save-btn').style.display='inline-flex'}
+  if(!isNaN(num)){
+    r.default_rate=num;
+    ratesDirty=true;
+    const btn=document.getElementById('rate-save-'+id);
+    if(btn)btn.style.display='inline-flex';
+  }
 }
 
-async function saveRates(){
-  const dirty=installerRates.filter(r=>r.default_rate!=null);
-  for(const r of dirty){
-    await sb.from('installer_rates').update({default_rate:r.default_rate,updated_at:new Date().toISOString()}).eq('id',r.id);
-  }
-  ratesDirty=false;
-  document.getElementById('rates-save-btn').style.display='none';
-  showToast('Rates saved!','success');
+async function saveSingleRate(id){
+  const r=installerRates.find(x=>x.id===id);if(!r)return;
+  await sb.from('installer_rates').update({default_rate:r.default_rate,updated_at:new Date().toISOString()}).eq('id',id);
+  const btn=document.getElementById('rate-save-'+id);
+  if(btn){btn.textContent='Saved';btn.style.color='var(--g400)';setTimeout(()=>{btn.style.display='none';btn.textContent='Save';btn.style.color='var(--green)'},1500)}
+  showToast('Rate saved!','success');
 }
 
 // ── PAYOUTS ──────────────────────────────────────────────────────────────────
@@ -1994,6 +2084,211 @@ function openPrintModal(id){
       </div>
     </div>`;
   openModal('print-modal');
+}
+
+// ── FRIDAY PAYOUT DATE CALC ───────────────────────────────────────────────────
+function nextPayFriday(jobDateStr){
+  // Find the Monday of the job's week, then add 11 days to get following Friday
+  const d=new Date(jobDateStr+'T00:00:00');
+  const day=d.getDay(); // 0=Sun,1=Mon,...,6=Sat
+  // Find Monday of this week
+  const monday=new Date(d);
+  const daysToMon=day===0?-6:1-day;
+  monday.setDate(monday.getDate()+daysToMon);
+  // Following Friday = Monday + 11 days
+  const friday=new Date(monday);
+  friday.setDate(friday.getDate()+11);
+  return friday.toISOString().split('T')[0];
+}
+
+function nextPayFridayEnd(weekStart){
+  // week end = weekStart + 6
+  const d=new Date(weekStart+'T00:00:00');
+  d.setDate(d.getDate()+6);
+  return d.toISOString().split('T')[0];
+}
+
+// ── PAY THIS JOB FROM CALENDAR ────────────────────────────────────────────────
+async function payThisJob(projectId){
+  const p=projects.find(x=>x.id===projectId);
+  if(!p)return;
+
+  // Get assigned installers
+  const assigned=p.project_installers?.map(pi=>pi.installer_id)||[];
+  if(!assigned.length){showToast('No installer assigned to this job.','error');return}
+
+  // Calculate payout week: the Friday-following week
+  const payFriday=nextPayFriday(p.start_date);
+  // week_start = that Friday's Monday (5 days before)
+  const fri=new Date(payFriday+'T00:00:00');
+  const mon=new Date(fri);mon.setDate(mon.getDate()-4);
+  const weekStartStr=mon.toISOString().split('T')[0];
+  const weekEndStr=payFriday;
+
+  // For each assigned installer, find or create a draft payout for that week
+  for(const instId of assigned){
+    const existing=payouts.find(po=>
+      po.installer_id===instId&&
+      po.week_start===weekStartStr&&
+      po.status==='draft'
+    );
+    if(existing){
+      // Open existing draft with this job pre-loaded
+      await openEditPayout(existing.id);
+      return;
+    }
+  }
+
+  // No existing draft — open new payout pre-filled
+  openNewPayout();
+  // Wait a tick for modal to render
+  await new Promise(r=>setTimeout(r,50));
+
+  // Set installer if only one
+  if(assigned.length===1){
+    document.getElementById('pm-installer').value=assigned[0];
+  }
+  document.getElementById('pm-week-start').value=weekStartStr;
+  document.getElementById('pm-week-end').value=weekEndStr;
+  await loadPayoutJobs();
+  // Auto-add a freehand line referencing this job
+  currentLines.push({_key:Date.now()+'',desc:'',job:p.id,jobName:p.customer_name,qty:null,rate:null,total:0,unit:'',rateId:null});
+  renderPayoutLines();
+}
+
+// ── COMPLIANCE ────────────────────────────────────────────────────────────────
+async function fetchCompliance(){
+  const{data}=await sb.from('installer_compliance').select('*').order('name');
+  installerCompliance=data||[];
+  checkComplianceBell();
+}
+
+function checkComplianceBell(){
+  const todayStr=today();
+  const warn30=new Date();warn30.setDate(warn30.getDate()+30);
+  const warn30Str=warn30.toISOString().split('T')[0];
+  const hasIssue=installerCompliance.some(r=>{
+    if(r.status!=='active')return false;
+    const glBad=r.gl_exp&&r.gl_exp<todayStr;
+    const wcBad=r.wc_exp&&r.wc_exp<todayStr;
+    return glBad||wcBad;
+  });
+  const bell=document.getElementById('compliance-bell');
+  if(bell)bell.classList.toggle('hidden',!hasIssue);
+}
+
+function renderCompliance(){
+  const todayStr=today();
+  const warn30=new Date();warn30.setDate(warn30.getDate()+30);
+  const warn30Str=warn30.toISOString().split('T')[0];
+
+  // Build alerts
+  const alertsEl=document.getElementById('compliance-alerts');
+  const expired=installerCompliance.filter(r=>r.status==='active'&&((r.gl_exp&&r.gl_exp<todayStr)||(r.wc_exp&&r.wc_exp<todayStr)));
+  const expiring=installerCompliance.filter(r=>r.status==='active'&&!expired.includes(r)&&((r.gl_exp&&r.gl_exp<=warn30Str)||(r.wc_exp&&r.wc_exp<=warn30Str)));
+  let alertHtml='';
+  expired.forEach(r=>{
+    const issues=[];
+    if(r.gl_exp&&r.gl_exp<todayStr)issues.push(`GL expired ${fd(r.gl_exp)}`);
+    if(r.wc_exp&&r.wc_exp<todayStr)issues.push(`WC expired ${fd(r.wc_exp)}`);
+    alertHtml+=`<div class="alert-bar">⚠️ <strong>${r.name}</strong> — ${issues.join(', ')}</div>`;
+  });
+  expiring.forEach(r=>{
+    const issues=[];
+    if(r.gl_exp&&r.gl_exp<=warn30Str&&r.gl_exp>=todayStr)issues.push(`GL expires ${fd(r.gl_exp)}`);
+    if(r.wc_exp&&r.wc_exp<=warn30Str&&r.wc_exp>=todayStr)issues.push(`WC expires ${fd(r.wc_exp)}`);
+    alertHtml+=`<div class="alert-bar warn">⏰ <strong>${r.name}</strong> — ${issues.join(', ')}</div>`;
+  });
+  alertsEl.innerHTML=alertHtml;
+
+  // Build table
+  const tbody=document.getElementById('compliance-tbody');
+  if(!installerCompliance.length){
+    tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--g400)">No installers added yet.</td></tr>`;
+    return;
+  }
+
+  function expCell(dateStr){
+    if(!dateStr)return`<span class="compliance-na">—</span>`;
+    if(dateStr<todayStr)return`<span class="compliance-bad">⚠ ${fd(dateStr)}</span>`;
+    if(dateStr<=warn30Str)return`<span class="compliance-warn">⏰ ${fd(dateStr)}</span>`;
+    return`<span class="compliance-ok">${fd(dateStr)}</span>`;
+  }
+  function yesNo(val){
+    if(val==='yes')return`<span class="yes-badge">Yes</span>`;
+    if(val==='no')return`<span class="no-badge">No</span>`;
+    return`<span class="compliance-na">—</span>`;
+  }
+
+  tbody.innerHTML=installerCompliance.map(r=>`
+    <tr class="comp-row ${r.status==='inactive'?'inactive-row':''}">
+      <td>
+        <div class="ins-name">${r.name}</div>
+        ${r.status==='inactive'?`<span style="font-size:.7rem;color:var(--g400);font-weight:600">INACTIVE</span>`:''}
+      </td>
+      <td style="text-align:center">${expCell(r.gl_exp)}</td>
+      <td style="text-align:center">${expCell(r.wc_exp)}</td>
+      <td style="text-align:center">${yesNo(r.w9)}</td>
+      <td style="text-align:center">${yesNo(r.ic_agreement)}</td>
+      <td style="text-align:center">
+        <span style="font-size:.75rem;font-weight:600;color:${r.status==='active'?'var(--green)':'var(--g400)'}">${r.status==='active'?'Active':'Inactive'}</span>
+      </td>
+      <td style="text-align:right">
+        <button class="btn btn-ghost btn-sm" onclick="openEditInstallerModal('${r.id}')">Edit</button>
+      </td>
+    </tr>`).join('');
+}
+
+function openAddInstallerModal(){
+  document.getElementById('comp-id').value='';
+  document.getElementById('comp-modal-title').textContent='Add Installer';
+  ['comp-name','comp-gl-exp','comp-wc-exp','comp-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('comp-status').value='active';
+  document.getElementById('comp-gl-onfile').value='yes';
+  document.getElementById('comp-wc-onfile').value='yes';
+  document.getElementById('comp-w9').value='yes';
+  document.getElementById('comp-ic').value='yes';
+  openModal('compliance-modal');
+}
+
+function openEditInstallerModal(id){
+  const r=installerCompliance.find(x=>x.id===id);if(!r)return;
+  document.getElementById('comp-id').value=id;
+  document.getElementById('comp-modal-title').textContent='Edit Installer';
+  document.getElementById('comp-name').value=r.name||'';
+  document.getElementById('comp-status').value=r.status||'active';
+  document.getElementById('comp-gl-exp').value=r.gl_exp||'';
+  document.getElementById('comp-gl-onfile').value=r.gl_onfile||'';
+  document.getElementById('comp-wc-exp').value=r.wc_exp||'';
+  document.getElementById('comp-wc-onfile').value=r.wc_onfile||'';
+  document.getElementById('comp-w9').value=r.w9||'';
+  document.getElementById('comp-ic').value=r.ic_agreement||'';
+  document.getElementById('comp-notes').value=r.notes||'';
+  openModal('compliance-modal');
+}
+
+async function saveInstallerCompliance(){
+  const id=document.getElementById('comp-id').value;
+  const name=document.getElementById('comp-name').value.trim();
+  if(!name){showToast('Name is required.','error');return}
+  const payload={
+    name,
+    status:document.getElementById('comp-status').value,
+    gl_exp:document.getElementById('comp-gl-exp').value||null,
+    gl_onfile:document.getElementById('comp-gl-onfile').value||null,
+    wc_exp:document.getElementById('comp-wc-exp').value||null,
+    wc_onfile:document.getElementById('comp-wc-onfile').value||null,
+    w9:document.getElementById('comp-w9').value||null,
+    ic_agreement:document.getElementById('comp-ic').value||null,
+    notes:document.getElementById('comp-notes').value.trim()||null,
+    updated_at:new Date().toISOString()
+  };
+  if(id)await sb.from('installer_compliance').update(payload).eq('id',id);
+  else await sb.from('installer_compliance').insert(payload);
+  closeModal('compliance-modal');
+  showToast('Saved!','success');
+  await fetchCompliance();
+  renderCompliance();
 }
 
 // ── AUTO-LOGIN ────────────────────────────────────────────────────────────────
