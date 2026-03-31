@@ -422,14 +422,11 @@
           <div><div class="page-title">Crew & Users</div></div>
           <button class="btn btn-primary" onclick="openAddUserModal()">+ Add User</button>
         </div>
-        <div class="crew-section-header">
-          <div class="section-divider" style="margin:0;flex:1">Staff</div>
-          <div class="crew-toggle" id="crew-toggle">
-            <button class="crew-toggle-btn active" onclick="setCrewFilter('active',this)">Active</button>
-            <button class="crew-toggle-btn" onclick="setCrewFilter('inactive',this)">Inactive</button>
-            <button class="crew-toggle-btn" onclick="setCrewFilter('all',this)">All</button>
-          </div>
+        <div style="display:flex;gap:4px;background:var(--g100);padding:4px;border-radius:8px;width:fit-content;margin-bottom:1rem">
+          <button class="crew-toggle-btn active" id="crew-tab-active" onclick="setCrewFilter('active',this)">Active</button>
+          <button class="crew-toggle-btn" id="crew-tab-inactive" onclick="setCrewFilter('inactive',this)">Inactive</button>
         </div>
+        <div class="section-divider">Staff</div>
         <div id="staff-list" style="margin-bottom:1.5rem"></div>
         <div class="section-divider">Installers & Subs</div>
         <div id="installer-list"></div>
@@ -486,6 +483,10 @@
           <button class="btn btn-primary" onclick="openAddInstallerModal()">+ Add Installer</button>
         </div>
         <div id="compliance-alerts" style="margin-bottom:1rem"></div>
+        <div style="display:flex;gap:4px;background:var(--g100);padding:4px;border-radius:8px;width:fit-content;margin-bottom:1rem">
+          <button class="crew-toggle-btn active" id="comp-tab-active" onclick="setCompTab('active',this)">Active</button>
+          <button class="crew-toggle-btn" id="comp-tab-inactive" onclick="setCompTab('inactive',this)">Inactive</button>
+        </div>
         <div class="card" style="overflow-x:auto">
           <table id="compliance-table" style="width:100%;border-collapse:collapse;font-size:.82rem;min-width:900px">
             <thead>
@@ -1361,12 +1362,23 @@ async function deleteTimeOff(){
 }
 
 // ── CREW ──────────────────────────────────────────────────────────────────────
-function setCrewFilter(v,b){crewFilter=v;document.querySelectorAll('.crew-toggle-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderCrew()}
+function setCrewFilter(v,b){
+  crewFilter=v;
+  document.querySelectorAll('#page-crew .crew-toggle-btn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  renderCrew();
+}
+let compTab='active';
+function setCompTab(v,b){
+  compTab=v;
+  document.querySelectorAll('#page-compliance .crew-toggle-btn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  renderCompliance();
+}
 function renderCrew(){
-  let staff=profiles.filter(p=>p.role==='staff');
-  let inst=profiles.filter(p=>p.role==='installer');
-  if(crewFilter==='active'){staff=staff.filter(p=>p.is_active!==false);inst=inst.filter(p=>p.is_active!==false)}
-  else if(crewFilter==='inactive'){staff=staff.filter(p=>p.is_active===false);inst=inst.filter(p=>p.is_active===false)}
+  const isActive=crewFilter!=='inactive';
+  let staff=profiles.filter(p=>p.role==='staff'&&(isActive?p.is_active!==false:p.is_active===false));
+  let inst=profiles.filter(p=>p.role==='installer'&&(isActive?p.is_active!==false:p.is_active===false));
   const mk=(arr,isS)=>arr.length?`<div class="crew-list">${arr.map(p=>crewRow(p,isS)).join('')}</div>`:`<div style="color:var(--g400);font-size:.875rem;padding:.5rem 0">None.</div>`;
   document.getElementById('staff-list').innerHTML=mk(staff,true);
   document.getElementById('installer-list').innerHTML=mk(inst,false);
@@ -2203,8 +2215,9 @@ function renderCompliance(){
 
   // Build table
   const tbody=document.getElementById('compliance-tbody');
-  if(!installerCompliance.length){
-    tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--g400)">No installers added yet.</td></tr>`;
+  const filtered=installerCompliance.filter(r=>r.status===(compTab==='inactive'?'inactive':'active'));
+  if(!filtered.length){
+    tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--g400)">${compTab==='inactive'?'No inactive installers.':'No active installers added yet.'}</td></tr>`;
     return;
   }
 
@@ -2220,7 +2233,7 @@ function renderCompliance(){
     return`<span class="compliance-na">—</span>`;
   }
 
-  tbody.innerHTML=installerCompliance.map(r=>`
+  tbody.innerHTML=filtered.map(r=>`
     <tr class="comp-row ${r.status==='inactive'?'inactive-row':''}">
       <td>
         <div class="ins-name">${r.name}</div>
