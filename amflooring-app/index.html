@@ -122,7 +122,7 @@
     /* WEEK GRID */
     .week-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;width:100%}
     .week-day-header{text-align:center;font-size:.7rem;font-weight:700;color:var(--g400);text-transform:uppercase;padding:.5rem 0;min-width:0}
-    .week-day-cell{background:#fff;border:1px solid var(--g200);border-radius:8px;min-height:100px;padding:.5rem;min-width:0;overflow:hidden}
+    .week-day-cell{background:#fff;border:1px solid var(--g200);border-radius:8px;min-height:80px;padding:.5rem;min-width:0;overflow:hidden}
     .week-day-cell.today{border-color:var(--red);background:var(--red-faint)}
     .week-day-cell.weekend{background:#fafaf9}
     .day-num{font-size:.75rem;font-weight:600;color:var(--g400);margin-bottom:4px}
@@ -1152,9 +1152,9 @@ function renderWeek(fp,ft){
     const ds=cd.toISOString().split('T')[0];
     const isWknd=i>=5;
     const events=getEventsForDay(ds,fp,ft);
-    const MAX=3;const shown=events.slice(0,MAX);const extra=events.length-MAX;
+    const shown=events;const extra=0;
     const evts=shown.map(item=>renderEventChip(item)).join('');
-    const morePill=extra>0?`<div class="more-pill" onclick="openDayModal('${ds}')">+${extra} more</div>`:'';
+    const morePill='';
     html+=`<div class="week-day-cell ${isToday?'today':''} ${isWknd?'weekend':''}"><div class="day-num">${cd.getDate()}</div>${evts}${morePill}</div>`;
   }
   document.getElementById('cal-container').innerHTML=`<div class="week-grid">${html}</div>`;
@@ -1176,7 +1176,7 @@ function renderMonth(fp,ft){
     const otherMonth=cur.getMonth()!==month;
     const isWknd=cur.getDay()===0||cur.getDay()===6;
     const events=getEventsForDay(ds,fp,ft);
-    const MAX=3;const shown=events.slice(0,MAX);const extra=events.length-MAX;
+    const MAX=5;const shown=events.slice(0,MAX);const extra=events.length-MAX;
     const numHtml=isToday?`<span class="dn">${cur.getDate()}</span>`:`${cur.getDate()}`;
     const evts=shown.map(item=>renderEventChip(item,true)).join('');
     const morePill=extra>0?`<div class="more-pill" onclick="openDayModal('${ds}')">+${extra} more</div>`:'';
@@ -2171,47 +2171,50 @@ async function payThisJob(projectId){
   const p=projects.find(x=>x.id===projectId);
   if(!p)return;
 
-  // Get assigned installers
   const assigned=p.project_installers?.map(pi=>pi.installer_id)||[];
-  if(!assigned.length){showToast('No installer assigned to this job.','error');return}
 
-  // Calculate payout week: the Friday-following week
+  // Calculate payout week
   const payFriday=nextPayFriday(p.start_date);
-  // week_start = that Friday's Monday (5 days before)
   const fri=new Date(payFriday+'T00:00:00');
   const mon=new Date(fri);mon.setDate(mon.getDate()-4);
   const weekStartStr=mon.toISOString().split('T')[0];
   const weekEndStr=payFriday;
 
-  // For each assigned installer, find or create a draft payout for that week
-  for(const instId of assigned){
-    const existing=payouts.find(po=>
-      po.installer_id===instId&&
-      po.week_start===weekStartStr&&
-      po.status==='draft'
-    );
-    if(existing){
-      // Open existing draft with this job pre-loaded
-      await openEditPayout(existing.id);
-      return;
+  // If installer assigned, check for existing draft first
+  if(assigned.length){
+    for(const instId of assigned){
+      const existing=payouts.find(po=>
+        po.installer_id===instId&&
+        po.week_start===weekStartStr&&
+        po.status==='draft'
+      );
+      if(existing){
+        await openEditPayout(existing.id);
+        return;
+      }
     }
   }
 
-  // No existing draft — open new payout pre-filled
+  // Open new payout — with or without assigned installer
   openNewPayout();
-  // Wait a tick for modal to render
   await new Promise(r=>setTimeout(r,50));
 
-  // Set installer if only one
+  // Pre-fill what we know
   if(assigned.length===1){
     document.getElementById('pm-installer').value=assigned[0];
   }
   document.getElementById('pm-week-start').value=weekStartStr;
   document.getElementById('pm-week-end').value=weekEndStr;
   await loadPayoutJobs();
-  // Auto-add a freehand line referencing this job
+
+  // Add job as a line item reference
   currentLines.push({_key:Date.now()+'',desc:'',job:p.id,jobName:p.customer_name,qty:null,rate:null,total:0,unit:'',rateId:null});
   renderPayoutLines();
+
+  // If no installer was assigned, show a hint
+  if(!assigned.length){
+    showToast('No installer assigned — select one from the dropdown above.','');
+  }
 }
 
 // ── COMPLIANCE ────────────────────────────────────────────────────────────────
