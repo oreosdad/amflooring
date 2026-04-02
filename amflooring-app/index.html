@@ -2488,9 +2488,10 @@ async function importFromJobTread(){
     organization:{
       $:{id:jtSettings.org_id},
       jobs:{
-        $:{size:30,sortBy:[{field:'createdAt',order:'desc'}]},
+        $:{size:100,sortBy:[{field:'createdAt',order:'desc'}]},
         nodes:{
           id:{},name:{},number:{},status:{},
+          location:{street:{},city:{},state:{}},
           documents:{
             $:{size:8,where:['-type','-=','-customerOrder']},
             nodes:{
@@ -2515,7 +2516,7 @@ async function importFromJobTread(){
 function showJTJobStep(){
   const{jtJobs,myLocalJobs}=window._jtPickerState;
   const body=document.getElementById('jt-picker-body');
-  body.innerHTML='<div style="margin-bottom:.75rem"><input type="text" id="jt-job-search" placeholder="Search by job name or number..." oninput="filterJTJobs(this.value)" style="width:100%;padding:.5rem .75rem;border:1.5px solid var(--g300);border-radius:6px;font-family:Inter,sans-serif;font-size:.875rem;outline:none"/></div><div id="jt-job-list"></div>';
+  body.innerHTML='<div style="margin-bottom:.75rem"><input type="text" id="jt-job-search" placeholder="Search by name, number, or address..." oninput="filterJTJobs(this.value)" style="width:100%;padding:.5rem .75rem;border:1.5px solid var(--g300);border-radius:6px;font-family:Inter,sans-serif;font-size:.875rem;outline:none"/></div><div id="jt-job-list"></div>';
   renderJTJobList(jtJobs,myLocalJobs);
   document.getElementById('jt-picker-modal').querySelector('.modal-title').textContent='Step 1 — Select JobTread Job';
   openModal('jt-picker-modal');
@@ -2523,7 +2524,11 @@ function showJTJobStep(){
 
 function filterJTJobs(q){
   const{jtJobs,myLocalJobs}=window._jtPickerState;
-  const filtered=q?jtJobs.filter(j=>j.name.toLowerCase().includes(q.toLowerCase())||j.number.toString().includes(q)):jtJobs;
+  const ql=q.toLowerCase();
+  const filtered=q?jtJobs.filter(j=>{
+    const addr=j.location?[j.location.street,j.location.city,j.location.state].filter(Boolean).join(' ').toLowerCase():'';
+    return j.name.toLowerCase().includes(ql)||j.number.toString().includes(ql)||addr.includes(ql);
+  }):jtJobs;
   renderJTJobList(filtered,myLocalJobs);
 }
 
@@ -2535,7 +2540,7 @@ function renderJTJobList(jtJobs,myLocalJobs){
     const hasLabor=j.documents?.nodes?.some(d=>d.costItems?.nodes?.some(ci=>Number(ci.unitCost||0)>0));
     const localMatch=myLocalJobs.find(lj=>j.name.toLowerCase().includes(lj.customer_name.toLowerCase().split(' ')[0])||lj.customer_name.toLowerCase().includes(j.name.toLowerCase().split(' ')[0]));
     const border=localMatch?'var(--green)':'var(--g200)';
-    return`<div style="padding:.75rem;border:1.5px solid ${border};border-radius:8px;margin-bottom:.4rem;cursor:pointer" onclick="selectJTJob(${i})"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:600;font-size:.875rem">${j.name}</div><div style="font-size:.75rem;color:var(--g500)">JT #${j.number} · ${j.status} · ${docCount} estimate${docCount!==1?'s':''}</div>${localMatch?`<div style="font-size:.72rem;color:var(--green);margin-top:2px">✓ Likely match: ${localMatch.customer_name}</div>`:''}</div><span style="font-size:.75rem;font-weight:600;color:${hasLabor?'var(--g900)':'var(--g400)'}">${hasLabor?'Has labor':'No labor'}</span></div></div>`;
+    return`<div style="padding:.75rem;border:1.5px solid ${border};border-radius:8px;margin-bottom:.4rem;cursor:pointer" onclick="selectJTJob(${i})"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:600;font-size:.875rem">${j.name}</div><div style="font-size:.75rem;color:var(--g500)">JT #${j.number} · ${j.status} · ${docCount} estimate${docCount!==1?'s':''}</div>${j.location?.street?`<div style="font-size:.72rem;color:var(--g400);margin-top:1px">📍 ${[j.location.street,j.location.city,j.location.state].filter(Boolean).join(', ')}</div>`:''}${localMatch?`<div style="font-size:.72rem;color:var(--green);margin-top:2px">✓ Likely match: ${localMatch.customer_name}</div>`:''}</div><span style="font-size:.75rem;font-weight:600;color:${hasLabor?'var(--g900)':'var(--g400)'}">${hasLabor?'Has labor':'No labor'}</span></div></div>`;
   }).join('');
 }
 
