@@ -1838,18 +1838,26 @@ function renderPayHistory(){
 let currentLines=[];
 let currentPayoutInstallerJobs=[];
 
-function openNewPayout(){
+function openNewPayout(overrideWeekStart, overrideWeekEnd){
   document.getElementById('pm-payout-id').value='';
   document.getElementById('payout-modal-title').textContent='New Payout';
   document.getElementById('pm-notes').value='';
   document.getElementById('pm-delete-btn').style.display='none';
   currentLines=[];
 
-  // Default to the week currently displayed on the calendar
-  const ws=weekStart||weekOf(new Date());
-  const we=new Date(ws);we.setDate(we.getDate()+6);
-  document.getElementById('pm-week-start').value=ws.toISOString().split('T')[0];
-  document.getElementById('pm-week-end').value=we.toISOString().split('T')[0];
+  // Use override dates if provided (from payThisJob), otherwise use calendar view week
+  let wsStr, weStr;
+  if(overrideWeekStart){
+    wsStr=overrideWeekStart;
+    weStr=overrideWeekEnd||overrideWeekStart;
+  } else {
+    const ws=weekStart||weekOf(new Date());
+    const we=new Date(ws);we.setDate(we.getDate()+6);
+    wsStr=ws.toISOString().split('T')[0];
+    weStr=we.toISOString().split('T')[0];
+  }
+  document.getElementById('pm-week-start').value=wsStr;
+  document.getElementById('pm-week-end').value=weStr;
 
   // Populate installer dropdown
   const installers=profiles.filter(p=>p.role==='installer'&&p.is_active!==false);
@@ -2196,16 +2204,14 @@ async function payThisJob(projectId){
   }
 
   // Open new payout — with or without assigned installer
-  openNewPayout();
+  openNewPayout(weekStartStr, weekEndStr);
   await new Promise(r=>setTimeout(r,50));
 
-  // Pre-fill what we know
+  // Pre-fill installer if only one assigned
   if(assigned.length===1){
     document.getElementById('pm-installer').value=assigned[0];
+    await loadPayoutJobs();
   }
-  document.getElementById('pm-week-start').value=weekStartStr;
-  document.getElementById('pm-week-end').value=weekEndStr;
-  await loadPayoutJobs();
 
   // Add job as a line item reference
   currentLines.push({_key:Date.now()+'',desc:'',job:p.id,jobName:p.customer_name,qty:null,rate:null,total:0,unit:'',rateId:null});
@@ -2516,19 +2522,24 @@ async function importFromJobTread(){
 function showJTJobStep(){
   const{jtJobs,myLocalJobs}=window._jtPickerState;
   const body=document.getElementById('jt-picker-body');
-  body.innerHTML='<div style="margin-bottom:.75rem"><input type="text" id="jt-job-search" placeholder="Search by name, number, or address..." oninput="filterJTJobs(this.value)" style="width:100%;padding:.5rem .75rem;border:1.5px solid var(--g300);border-radius:6px;font-family:Inter,sans-serif;font-size:.875rem;outline:none"/></div><div id="jt-job-list"></div>';
-  renderJTJobList(jtJobs,myLocalJobs);
+  body.innerHTML='<div style="margin-bottom:.75rem"><input type="text" id="jt-job-search" placeholder="Search by name, number, or address..." oninput="filterJTJobs(this.value)" style="width:100%;padding:.5rem .75rem;border:1.5px solid var(--g300);border-radius:6px;font-family:Inter,sans-serif;font-size:.875rem;outline:none" autofocus/></div><div id="jt-job-list"><div style="color:var(--g400);font-size:.875rem;padding:1.5rem;text-align:center">Type to search '+jtJobs.length+' jobs from JobTread</div></div>';
   document.getElementById('jt-picker-modal').querySelector('.modal-title').textContent='Step 1 — Select JobTread Job';
   openModal('jt-picker-modal');
+  setTimeout(()=>document.getElementById('jt-job-search')?.focus(),150);
 }
 
 function filterJTJobs(q){
   const{jtJobs,myLocalJobs}=window._jtPickerState;
+  const list=document.getElementById('jt-job-list');
+  if(!q||q.length<2){
+    list.innerHTML='<div style="color:var(--g400);font-size:.875rem;padding:1.5rem;text-align:center">Type to search '+jtJobs.length+' jobs from JobTread</div>';
+    return;
+  }
   const ql=q.toLowerCase();
-  const filtered=q?jtJobs.filter(j=>{
+  const filtered=jtJobs.filter(j=>{
     const addr=j.location?[j.location.street,j.location.city,j.location.state].filter(Boolean).join(' ').toLowerCase():'';
     return j.name.toLowerCase().includes(ql)||j.number.toString().includes(ql)||addr.includes(ql);
-  }):jtJobs;
+  });
   renderJTJobList(filtered,myLocalJobs);
 }
 
