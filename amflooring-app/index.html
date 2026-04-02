@@ -2520,9 +2520,11 @@ async function importFromJobTread(){
   const instId=document.getElementById('pm-installer').value;
   const ws=document.getElementById('pm-week-start').value;
   const we=document.getElementById('pm-week-end').value;
-  if(!instId||!ws){showToast('Select an installer and week first.','error');return}
+  if(!instId||!ws){showToast('Select an installer and payout date first.','error');return}
+  // Re-fetch settings if not loaded yet
+  if(!jtSettings.grant_key) await fetchJTSettings();
   if(!jtSettings.grant_key||jtSettings.grant_key.includes('YOUR_GRANT')){
-    showToast('JobTread not configured. Add grant key in Supabase app_config.','error');return
+    showToast('JobTread not configured. Check app_config in Supabase.','error');return
   }
   btn.textContent='⏳ Searching...';btn.disabled=true;
   const data=await jtQuery({
