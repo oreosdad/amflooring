@@ -497,6 +497,7 @@
                 <th style="text-align:center;padding:.6rem .75rem;font-size:.7rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.08em">W9</th>
                 <th style="text-align:center;padding:.6rem .75rem;font-size:.7rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap">IC Agreement</th>
                 <th style="text-align:center;padding:.6rem .75rem;font-size:.7rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.08em">Status</th>
+                <th style="text-align:center;padding:.6rem .75rem;font-size:.7rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.08em">Files</th>
                 <th style="padding:.6rem .75rem"></th>
               </tr>
             </thead>
@@ -682,23 +683,25 @@
         <div class="form-group"><label>Phone</label><input type="tel" id="pm-phone" placeholder="(913) 555-0000"/></div>
       </div>
       <div class="form-group"><label>Email</label><input type="email" id="pm-email" placeholder="mike@example.com"/></div>
-      <div class="section-divider">Documents</div>
-      <div id="pm-docs-list"></div>
-      <div style="margin-top:1rem;padding:1rem;background:var(--g50);border:1.5px dashed var(--g300);border-radius:8px">
-        <div style="font-size:.8rem;font-weight:600;color:var(--g600);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem">Upload Document</div>
-        <div class="form-row">
-          <div class="form-group"><label>Type</label>
-            <select id="pm-doc-type">
-              <option value="coi">COI</option>
-              <option value="w9">W9</option>
-              <option value="contract">Contract</option>
-              <option value="other">Other</option>
-            </select>
+      <div id="pm-docs-section">
+        <div class="section-divider">Documents</div>
+        <div id="pm-docs-list"></div>
+        <div style="margin-top:1rem;padding:1rem;background:var(--g50);border:1.5px dashed var(--g300);border-radius:8px">
+          <div style="font-size:.8rem;font-weight:600;color:var(--g600);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem">Upload Document</div>
+          <div class="form-row">
+            <div class="form-group"><label>Type</label>
+              <select id="pm-doc-type">
+                <option value="coi">COI</option>
+                <option value="w9">W9</option>
+                <option value="contract">Contract</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Expiration (COI)</label><input type="date" id="pm-doc-exp"/></div>
           </div>
-          <div class="form-group"><label>Expiration (COI)</label><input type="date" id="pm-doc-exp"/></div>
+          <div class="form-group"><label>File</label><input type="file" id="pm-doc-file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="padding:.5rem"/></div>
+          <button class="btn btn-primary btn-sm" onclick="uploadDoc()" id="pm-upload-btn">Upload</button>
         </div>
-        <div class="form-group"><label>File</label><input type="file" id="pm-doc-file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="padding:.5rem"/></div>
-        <button class="btn btn-primary btn-sm" onclick="uploadDoc()" id="pm-upload-btn">Upload</button>
       </div>
     </div>
     <div class="modal-footer">
@@ -733,7 +736,10 @@
 
       <!-- Jobs this week -->
       <div id="pm-jobs-section" style="margin-bottom:1rem">
-        <div style="font-size:.75rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem">Jobs this week</div>
+        <div style="font-size:.75rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;display:flex;align-items:center;justify-content:space-between">
+          <span>Jobs this week</span>
+          <button class="btn btn-ghost btn-sm" id="jt-import-btn" onclick="importFromJobTread()" style="color:var(--blue);font-size:.75rem;display:none">⬇ Import from JobTread</button>
+        </div>
         <div id="pm-jobs-list" style="display:flex;flex-wrap:wrap;gap:.4rem">
           <div style="color:var(--g400);font-size:.85rem">Select an installer and week to load jobs</div>
         </div>
@@ -832,6 +838,23 @@
   </div>
 </div>
 
+<!-- JT DOC PICKER MODAL -->
+<div class="modal-overlay" id="jt-picker-modal">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <div class="modal-title">Select JobTread Estimate</div>
+      <button class="modal-close" onclick="closeModal('jt-picker-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:.875rem;color:var(--g600);margin-bottom:1rem">Pick the estimate you want to pull labor line items from. Items with $0 unit cost (materials) are automatically skipped.</p>
+      <div id="jt-picker-body"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('jt-picker-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- PRINT MODAL -->
 <div class="modal-overlay" id="print-modal">
   <div class="modal" style="max-width:640px">
@@ -865,6 +888,8 @@
   .comp-row td{padding:.55rem .75rem;border-bottom:1px solid var(--g100);vertical-align:middle}
   .comp-row:hover td{background:var(--g50)}
   .comp-row.inactive-row td{opacity:.5}
+  .coi-drawer{background:var(--g50);border-bottom:1px solid var(--g200);padding:.75rem 1rem}
+  .coi-file-row{display:flex;align-items:center;justify-content:space-between;padding:.4rem .5rem;background:#fff;border:1px solid var(--g200);border-radius:6px;margin-bottom:.35rem;font-size:.8rem}
   .ins-name{font-weight:600;font-size:.875rem}
   .ins-company{font-size:.75rem;color:var(--g500);margin-top:1px}
   .yes-badge{display:inline-flex;align-items:center;justify-content:center;background:var(--gfaint);color:var(--green);border-radius:20px;font-size:.7rem;font-weight:700;padding:2px 8px}
@@ -963,7 +988,7 @@ function buildNav(role){
 }
 
 // ── DATA ─────────────────────────────────────────────────────────────────────
-async function loadAll(){await Promise.all([fetchProjects(),fetchProfiles(),fetchTimeOff(),fetchRates(),fetchPayouts(),fetchCompliance()]);renderActive()}
+async function loadAll(){await Promise.all([fetchProjects(),fetchProfiles(),fetchTimeOff(),fetchRates(),fetchPayouts(),fetchCompliance(),fetchJTSettings()]);renderActive()}
 
 async function fetchProjects(){
   const from=document.getElementById('filter-from')?.value||defaultFrom();
@@ -1431,9 +1456,14 @@ async function openProfileModal(id){
   document.getElementById('pm-name').value=p.full_name||'';
   document.getElementById('pm-phone').value=p.phone||'';
   document.getElementById('pm-email').value=p.email||'';
-  const{data:docs}=await sb.from('installer_docs').select('*').eq('profile_id',id).order('created_at',{ascending:false});
-  installerDocs=docs||[];
-  renderDocList();
+  // Only show doc upload for installers, not staff
+  const docsSection=document.getElementById('pm-docs-section');
+  if(docsSection) docsSection.style.display=p.role==='installer'?'block':'none';
+  if(p.role==='installer'){
+    const{data:docs}=await sb.from('installer_docs').select('*').eq('profile_id',id).order('created_at',{ascending:false});
+    installerDocs=docs||[];
+    renderDocList();
+  }
   openModal('profile-modal');
 }
 function renderDocList(){
@@ -1750,9 +1780,10 @@ async function saveSingleRate(id){
 // ── PAYOUTS ──────────────────────────────────────────────────────────────────
 async function fetchPayouts(){
   const{data}=await sb.from('payouts')
-    .select('*,profiles!payouts_installer_id_fkey(full_name),payout_line_items(*)')
+    .select('*,installer:profiles(full_name),payout_line_items(*)')
     .order('created_at',{ascending:false});
   payouts=data||[];
+}
 }
 
 function renderPayHistory(){
@@ -1772,7 +1803,7 @@ function renderPayHistory(){
   if(!fp.length){c.innerHTML=`<div class="empty-state"><div class="empty-icon">💵</div><p>No payouts yet. Create one to get started.</p></div>`;return}
 
   c.innerHTML=fp.map(p=>{
-    const name=p.profiles?.full_name||'Unknown';
+    const name=p.installer?.full_name||'Unknown';
     const lines=p.payout_line_items||[];
     const lineCount=lines.length;
     const statusColor=p.status==='approved'?'var(--green)':'var(--amber)';
@@ -1876,6 +1907,15 @@ async function loadPayoutJobs(){
   const ws=document.getElementById('pm-week-start')?.value;
   const we=document.getElementById('pm-week-end')?.value;
   const jobDiv=document.getElementById('pm-jobs-list');
+
+  // Show/hide JT button based on credentials and selection
+  const jtBtn=document.getElementById('jt-import-btn');
+  if(jtBtn && jtSettings.grant_key && !jtSettings.grant_key.includes('PASTE') && instId && ws) {
+    jtBtn.style.display='inline-flex';
+  } else if(jtBtn) {
+    jtBtn.style.display='none';
+  }
+
   if(!instId||!ws){jobDiv.innerHTML=`<div style="color:var(--g400);font-size:.85rem">Select installer and week to see jobs</div>`;return}
 
   // Find projects for this installer in this date range
@@ -2024,7 +2064,7 @@ async function deletePayout(){
 
 function openPrintModal(id){
   const p=payouts.find(x=>x.id===id);if(!p)return;
-  const name=p.profiles?.full_name||'Unknown';
+  const name=p.installer?.full_name||'Unknown';
   const lines=p.payout_line_items||[];
   const total=Number(p.total_amount||0).toFixed(2);
   const statusLabel=p.status==='approved'?'Approved':'Draft';
@@ -2234,7 +2274,7 @@ function renderCompliance(){
   }
 
   tbody.innerHTML=filtered.map(r=>`
-    <tr class="comp-row ${r.status==='inactive'?'inactive-row':''}">
+    <tr class="comp-row ${r.status==='inactive'?'inactive-row':''}" id="comp-row-${r.id}">
       <td>
         <div class="ins-name">${r.name}</div>
         ${r.status==='inactive'?`<span style="font-size:.7rem;color:var(--g400);font-weight:600">INACTIVE</span>`:''}
@@ -2246,8 +2286,41 @@ function renderCompliance(){
       <td style="text-align:center">
         <span style="font-size:.75rem;font-weight:600;color:${r.status==='active'?'var(--green)':'var(--g400)'}">${r.status==='active'?'Active':'Inactive'}</span>
       </td>
-      <td style="text-align:right">
+      <td style="text-align:center">
+        <button class="btn btn-ghost btn-sm" style="font-size:.75rem" onclick="toggleCoiDrawer('${r.id}')">📎 Files</button>
+      </td>
+      <td style="text-align:right;white-space:nowrap">
         <button class="btn btn-ghost btn-sm" onclick="openEditInstallerModal('${r.id}')">Edit</button>
+      </td>
+    </tr>
+    <tr id="coi-drawer-${r.id}" style="display:none">
+      <td colspan="8" style="padding:0">
+        <div class="coi-drawer">
+          <div style="font-size:.75rem;font-weight:700;color:var(--g600);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">Documents — ${r.name}</div>
+          <div id="coi-files-${r.id}"><div style="color:var(--g400);font-size:.8rem">Loading...</div></div>
+          <div style="margin-top:.75rem;padding:.75rem;background:#fff;border:1.5px dashed var(--g300);border-radius:8px">
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:flex-end">
+              <div class="form-group" style="margin:0;flex:1;min-width:120px">
+                <label style="font-size:.7rem;font-weight:600;color:var(--g600);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:.3rem">Type</label>
+                <select id="coi-type-${r.id}" style="padding:.35rem .5rem;border:1.5px solid var(--g300);border-radius:6px;font-family:'Inter',sans-serif;font-size:.8rem;background:#fff;width:100%">
+                  <option value="coi">COI</option>
+                  <option value="w9">W9</option>
+                  <option value="contract">IC Agreement</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin:0;flex:1;min-width:120px">
+                <label style="font-size:.7rem;font-weight:600;color:var(--g600);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:.3rem">Expiration</label>
+                <input type="date" id="coi-exp-${r.id}" style="padding:.35rem .5rem;border:1.5px solid var(--g300);border-radius:6px;font-family:'Inter',sans-serif;font-size:.8rem;width:100%"/>
+              </div>
+              <div class="form-group" style="margin:0;flex:2;min-width:160px">
+                <label style="font-size:.7rem;font-weight:600;color:var(--g600);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:.3rem">File</label>
+                <input type="file" id="coi-file-${r.id}" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="font-size:.8rem;width:100%"/>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="uploadCoiFile('${r.id}')">Upload</button>
+            </div>
+          </div>
+        </div>
       </td>
     </tr>`).join('');
 }
@@ -2302,6 +2375,359 @@ async function saveInstallerCompliance(){
   showToast('Saved!','success');
   await fetchCompliance();
   renderCompliance();
+}
+
+// ── JOBTREAD INTEGRATION ─────────────────────────────────────────────────────
+let jtSettings = { org_id: null, grant_key: null };
+
+async function fetchJTSettings(){
+  const{data}=await sb.from('app_config').select('key,value').in('key',['jt_org_id','jt_grant_key']);
+  if(data) data.forEach(r=>{
+    if(r.key==='jt_org_id') jtSettings.org_id=r.value;
+    if(r.key==='jt_grant_key') jtSettings.grant_key=r.value;
+  });
+  const btn=document.getElementById('jt-import-btn');
+  if(btn&&jtSettings.grant_key&&!jtSettings.grant_key.includes('YOUR_GRANT')) btn.style.display='inline-flex';
+}
+
+async function jtQuery(queryBody){
+  if(!jtSettings.grant_key){showToast('JobTread not configured.','error');return null}
+  try{
+    const r=await fetch('https://api.jobtread.com/pave',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({query:{$:{grantKey:jtSettings.grant_key},...queryBody}})
+    });
+    return await r.json();
+  }catch(e){
+    showToast('JobTread API error: '+e.message,'error');
+    return null;
+  }
+}
+
+// Fuzzy match a JT cost item name to a rate table entry
+function matchJTItemToRate(itemName){
+  if(!itemName) return null;
+  const name=itemName.toLowerCase();
+  // Direct name match first
+  let match=installerRates.find(r=>r.name.toLowerCase()===name);
+  if(match) return match;
+  // Keyword matching — map common JT names to rate table entries
+  const keywordMap=[
+    {keys:['carpet install','basic carpet','carpet basic'],rateName:'Basic Install'},
+    {keys:['pattern carpet','carpet pattern','premium carpet'],rateName:'Premium Carpet Install'},
+    {keys:['lvp install','lvp basic','lvp click','luxury vinyl'],rateName:'LVP Basic Install (click)'},
+    {keys:['lvp glue'],rateName:'LVP Glue Down'},
+    {keys:['laminate install'],rateName:'Laminate Install'},
+    {keys:['raw wood install'],rateName:'Raw Wood Install'},
+    {keys:['prefinish install','pre-finish','standard prefinish'],rateName:'Standard PreFinish Install'},
+    {keys:['multi width'],rateName:'Multi Width Pre Install'},
+    {keys:['glue down pre','glue down wood'],rateName:'Glue Down Pre Install'},
+    {keys:['water based'],rateName:'Water Based'},
+    {keys:['oil based'],rateName:'Oil Based'},
+    {keys:['stair tread'],rateName:'Stair Tread Finish'},
+    {keys:['sheet vinyl install','vinyl install'],rateName:'Basic Install'},
+    {keys:['underlay'],rateName:'Underlay Install'},
+    {keys:['vct install'],rateName:'VCT Install'},
+    {keys:['cove base'],rateName:'Cove Base'},
+    {keys:['lvp steps','vinyl steps'],rateName:'LVP Steps'},
+    {keys:['tile install','floor tile','basic tile'],rateName:'Basic Install'},
+    {keys:['mosaic'],rateName:'Install Mosaics'},
+    {keys:['cement board'],rateName:'Cement Board'},
+    {keys:['tear out carpet','tu carpet','tearout carpet','carpet pad tack','carpet+pad+tack'],rateName:'Carpet/Pad/Tack'},
+    {keys:['haul carpet','tear out & haul carpet','haul & tear'],rateName:'Carpet/Pad'},
+    {keys:['tear out hardwood','tu hardwood'],rateName:'TU Hardwood'},
+    {keys:['tear out laminate','tu laminate','tear out lvp','tu lvp'],rateName:'TU Laminate/LVP etc'},
+    {keys:['tear out tile','tu tile','demo tile'],rateName:'TU Tile'},
+    {keys:['tear out vct','tu vct'],rateName:'TU VCT / Glue Down LVP'},
+    {keys:['base shoe'],rateName:'R&R Base Shoe'},
+    {keys:['furniture','reset furniture','remove furniture'],rateName:'R&R Furniture'},
+    {keys:['appliance','remove appliance'],rateName:'R&R Appliances'},
+    {keys:['fridge','refrigerator'],rateName:'R&R Fridges'},
+    {keys:['toilet'],rateName:'R&R Toilets'},
+    {keys:['sink'],rateName:'Pedestal Sink'},
+    {keys:['restretch','re-stretch'],rateName:'Restretch'},
+    {keys:['weld cove'],rateName:'Weld Cove'},
+    {keys:['weld vinyl'],rateName:'Weld Vinyl Install'},
+    {keys:['weld seam'],rateName:'Weld Seam'},
+  ];
+  for(const{keys,rateName}of keywordMap){
+    if(keys.some(k=>name.includes(k))){
+      const r=installerRates.find(x=>x.name.toLowerCase()===rateName.toLowerCase());
+      if(r) return r;
+    }
+  }
+  // Partial match fallback
+  return installerRates.find(r=>
+    name.includes(r.name.toLowerCase().substring(0,6))||
+    r.name.toLowerCase().includes(name.substring(0,6))
+  )||null;
+}
+
+// Show document picker modal then import selected doc's line items
+async function importFromJobTread(){
+  const btn=document.getElementById('jt-import-btn');
+  const instId=document.getElementById('pm-installer').value;
+  const ws=document.getElementById('pm-week-start').value;
+  const we=document.getElementById('pm-week-end').value;
+  if(!instId||!ws){showToast('Select an installer and week first.','error');return}
+
+  btn.textContent='⏳ Loading...';btn.disabled=true;
+
+  // Find local projects for this installer this week
+  const myJobs=projects.filter(p=>{
+    const assigned=(p.project_installers||[]).map(pi=>pi.installer_id);
+    return assigned.includes(instId)&&p.start_date>=ws&&p.start_date<=we&&p.calendar_type==='install';
+  });
+
+  if(!myJobs.length){
+    btn.textContent='⬇ Import from JobTread';btn.disabled=false;
+    showToast('No install jobs found for this installer this week.','');
+    return;
+  }
+
+  // For each local job, search JT for matching jobs and their documents
+  let allJtMatches=[];
+  for(const localJob of myJobs){
+    const data=await jtQuery({
+      organization:{
+        $:{id:jtSettings.org_id},
+        jobs:{
+          $:{size:10,where:['-name','-like','-'+localJob.customer_name.substring(0,20)]},
+          nodes:{
+            id:{},name:{},number:{},status:{},
+            documents:{
+              $:{size:10,where:['-type','-=','-customerOrder']},
+              nodes:{
+                id:{},name:{},type:{},
+                costItems:{
+                  $:{size:30},
+                  nodes:{id:{},name:{},quantity:{},unitCost:{},cost:{}}
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // Also try a broad fetch by job number if name match fails
+    const jtJobs=data?.organization?.jobs?.nodes||[];
+    if(jtJobs.length){
+      jtJobs.forEach(j=>allJtMatches.push({localJob,jtJob:j}));
+    }
+  }
+
+  btn.textContent='⬇ Import from JobTread';btn.disabled=false;
+
+  if(!allJtMatches.length){
+    // Fallback: fetch recent JT jobs and let user pick manually
+    showJTJobPicker(myJobs,ws,we);
+    return;
+  }
+
+  // If only one job with one doc, import directly
+  const allDocs=allJtMatches.flatMap(({localJob,jtJob})=>
+    (jtJob.documents?.nodes||[]).map(doc=>({localJob,jtJob,doc}))
+  );
+
+  if(allDocs.length===1){
+    importDocLines(allDocs[0].localJob,allDocs[0].jtJob,allDocs[0].doc);
+    return;
+  }
+
+  // Show picker
+  showJTDocPicker(allDocs,myJobs,ws,we);
+}
+
+function showJTDocPicker(allDocs,myJobs,ws,we){
+  const body=document.getElementById('jt-picker-body');
+  if(!body){showToast('JobTread doc picker not found.','error');return}
+
+  if(!allDocs.length){
+    body.innerHTML=`<div style="color:var(--g400);font-size:.875rem;padding:1rem">No JobTread estimates found matching this week's jobs. Check that job names in JobTread match your scheduler.</div>`;
+  } else {
+    body.innerHTML=allDocs.map((item,i)=>{
+      const{localJob,jtJob,doc}=item;
+      const total=doc.costItems.nodes.reduce((s,ci)=>s+Number(ci.cost||0),0);
+      const laborItems=doc.costItems.nodes.filter(ci=>ci.unitCost>0);
+      return`<div style="padding:.75rem;border:1.5px solid var(--g200);border-radius:8px;margin-bottom:.5rem;cursor:pointer;transition:border-color .15s" 
+        onmouseover="this.style.borderColor='var(--blue)'" 
+        onmouseout="this.style.borderColor='var(--g200)'"
+        onclick="selectJTDoc(${i})">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.3rem">
+          <div>
+            <div style="font-weight:600;font-size:.875rem">${jtJob.name}</div>
+            <div style="font-size:.75rem;color:var(--g500)">JT #${jtJob.number} · ${doc.name} · ${doc.costItems.nodes.length} line items (${laborItems.length} labor)</div>
+          </div>
+          <div style="font-weight:700;color:var(--g900)">$${total.toFixed(2)}</div>
+        </div>
+        <div style="font-size:.72rem;color:var(--g400)">${laborItems.slice(0,3).map(ci=>ci.name).join(' · ')}${laborItems.length>3?` +${laborItems.length-3} more`:''}</div>
+        <div style="font-size:.72rem;color:var(--green);margin-top:2px">→ Local job: ${localJob.customer_name}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Store for later use
+  window._jtDocPickerData={allDocs,myJobs};
+  openModal('jt-picker-modal');
+}
+
+function selectJTDoc(idx){
+  const{allDocs}=window._jtDocPickerData||{};
+  if(!allDocs||!allDocs[idx])return;
+  const{localJob,jtJob,doc}=allDocs[idx];
+  closeModal('jt-picker-modal');
+  importDocLines(localJob,jtJob,doc);
+}
+
+function importDocLines(localJob,jtJob,doc){
+  const items=doc.costItems.nodes.filter(ci=>Number(ci.unitCost||0)>0);
+  if(!items.length){showToast('No labor items found in this estimate (all $0).','');return}
+
+  let added=0;
+  for(const item of items){
+    const matched=matchJTItemToRate(item.name);
+    currentLines.push({
+      _key:Date.now()+'_'+Math.random(),
+      desc:item.name,
+      job:localJob?.id||'',
+      jobName:localJob?.customer_name||jtJob.name,
+      qty:item.quantity||null,
+      rate:matched?Number(matched.default_rate||0):(item.unitCost||null),
+      total:Number(item.cost||0),
+      unit:matched?.unit||'',
+      rateId:matched?.id||null,
+      jtJobId:jtJob.id,
+      jtItemId:item.id
+    });
+    added++;
+  }
+
+  renderPayoutLines();
+  const unmatched=currentLines.filter(l=>!l.rateId).length;
+  showToast(
+    `Imported ${added} items from "${doc.name}".${unmatched?` ${unmatched} need review.`:''}`,
+    'success'
+  );
+}
+
+async function showJTJobPicker(myJobs,ws,we){
+  // Fetch recent JT jobs broadly so user can pick manually
+  const data=await jtQuery({
+    organization:{
+      $:{id:jtSettings.org_id},
+      jobs:{
+        $:{size:20,sortBy:[{field:'createdAt',order:'desc'}]},
+        nodes:{
+          id:{},name:{},number:{},status:{},
+          documents:{
+            $:{size:5,where:['-type','-=','-customerOrder']},
+            nodes:{
+              id:{},name:{},type:{},
+              costItems:{$:{size:30},nodes:{id:{},name:{},quantity:{},unitCost:{},cost:{}}}
+            }
+          }
+        }
+      }
+    }
+  });
+  const jtJobs=data?.organization?.jobs?.nodes||[];
+  const allDocs=jtJobs.flatMap(jtJob=>
+    (jtJob.documents?.nodes||[])
+      .filter(doc=>doc.costItems.nodes.some(ci=>Number(ci.unitCost||0)>0))
+      .map(doc=>({localJob:myJobs[0],jtJob,doc}))
+  );
+  showJTDocPicker(allDocs,myJobs,ws,we);
+}
+
+
+// ── COI FILE REPOSITORY ───────────────────────────────────────────────────────
+let openDrawerId = null;
+
+async function toggleCoiDrawer(compId){
+  const drawer=document.getElementById('coi-drawer-'+compId);
+  if(!drawer)return;
+  const isOpen=drawer.style.display!=='none';
+  if(openDrawerId&&openDrawerId!==compId){
+    const prev=document.getElementById('coi-drawer-'+openDrawerId);
+    if(prev)prev.style.display='none';
+  }
+  if(isOpen){drawer.style.display='none';openDrawerId=null;return}
+  drawer.style.display='table-row';
+  openDrawerId=compId;
+  await loadCoiFiles(compId);
+}
+
+async function loadCoiFiles(compId){
+  const el=document.getElementById('coi-files-'+compId);
+  if(!el)return;
+  const{data:docs}=await sb.from('installer_docs').select('*').eq('profile_id',compId).order('created_at',{ascending:false});
+  const files=docs||[];
+  if(!files.length){el.innerHTML=`<div style="color:var(--g400);font-size:.8rem;padding:.25rem 0">No files uploaded yet.</div>`;return}
+  const todayStr=today();
+  el.innerHTML=files.map(d=>{
+    const expired=d.expiration_date&&d.expiration_date<todayStr;
+    const warn30=new Date();warn30.setDate(warn30.getDate()+30);
+    const warn30Str=warn30.toISOString().split('T')[0];
+    const expiring=d.expiration_date&&!expired&&d.expiration_date<=warn30Str;
+    const expLabel=d.expiration_date?` · <span style="color:${expired?'var(--red)':expiring?'var(--amber)':'var(--g500)';font-weight:${expired||expiring?'600':'400'}">${expired?'Expired':'Exp'} ${fd(d.expiration_date)}</span>`:'';
+    const badgeColors={coi:'#dbeafe:#1e40af',w9:'#dcfce7:#14532d',contract:'#fef3c7:#78350f',other:'#f3f4f6:#4b5563'};
+    const [bg,col]=(badgeColors[d.doc_type]||badgeColors.other).split(':');
+    return`<div class="coi-file-row">
+      <div style="display:flex;align-items:center;gap:.5rem;flex:1;min-width:0">
+        <span style="font-size:.7rem;font-weight:700;padding:2px 7px;border-radius:20px;background:${bg};color:${col};text-transform:uppercase;flex-shrink:0">${d.doc_type}</span>
+        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.file_name}</span>
+        ${d.expiration_date?`<span style="color:${expired?'var(--red)':expiring?'var(--amber)':'var(--g500)'};font-size:.75rem;font-weight:${expired||expiring?600:400};flex-shrink:0">${expired?'Expired':'Exp'} ${fd(d.expiration_date)}</span>`:''}
+      </div>
+      <div style="display:flex;gap:.35rem;flex-shrink:0">
+        <button class="btn btn-ghost btn-sm" style="font-size:.75rem" onclick="downloadCoiDoc('${d.id}','${d.file_path}')">↓</button>
+        <button class="btn btn-danger btn-sm" style="font-size:.75rem" onclick="deleteCoiDoc('${d.id}','${d.file_path}','${compId}')">×</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function uploadCoiFile(compId){
+  const type=document.getElementById('coi-type-'+compId)?.value;
+  const exp=document.getElementById('coi-exp-'+compId)?.value||null;
+  const fileInput=document.getElementById('coi-file-'+compId);
+  const file=fileInput?.files[0];
+  if(!file){showToast('Select a file first.','error');return}
+  const path=`${compId}/${type}_${Date.now()}_${file.name}`;
+  const{error:upErr}=await sb.storage.from('installer-docs').upload(path,file);
+  if(upErr){showToast('Upload failed: '+upErr.message,'error');return}
+  await sb.from('installer_docs').insert({profile_id:compId,doc_type:type,file_name:file.name,file_path:path,expiration_date:exp,uploaded_by:me.id});
+  // Auto-update GL/WC expiration on compliance record when uploading a COI
+  if(exp&&type==='coi'){
+    await sb.from('installer_compliance').update({gl_exp:exp,wc_exp:exp,updated_at:new Date().toISOString()}).eq('id',compId);
+    await fetchCompliance();
+    // Re-render and re-open drawer
+    renderCompliance();
+    setTimeout(()=>{
+      const drawer=document.getElementById('coi-drawer-'+compId);
+      if(drawer){drawer.style.display='table-row';openDrawerId=compId;loadCoiFiles(compId);}
+    },150);
+    showToast('COI uploaded and expiration dates updated!','success');
+    return;
+  }
+  if(fileInput)fileInput.value='';
+  showToast('Uploaded!','success');
+  await loadCoiFiles(compId);
+}
+
+async function downloadCoiDoc(docId,path){
+  const{data,error}=await sb.storage.from('installer-docs').createSignedUrl(path,60);
+  if(error){showToast('Could not load file.','error');return}
+  window.open(data.signedUrl,'_blank');
+}
+
+async function deleteCoiDoc(docId,path,compId){
+  if(!confirm('Delete this file?'))return;
+  await sb.storage.from('installer-docs').remove([path]);
+  await sb.from('installer_docs').delete().eq('id',docId);
+  showToast('Deleted.','');
+  await loadCoiFiles(compId);
 }
 
 // ── AUTO-LOGIN ────────────────────────────────────────────────────────────────
