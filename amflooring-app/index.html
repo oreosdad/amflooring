@@ -738,7 +738,7 @@
       <div id="pm-jobs-section" style="margin-bottom:1rem">
         <div style="font-size:.75rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;display:flex;align-items:center;justify-content:space-between">
           <span>Jobs this week</span>
-          <button class="btn btn-ghost btn-sm" id="jt-import-btn" onclick="importFromJobTread()" style="color:var(--blue);font-size:.75rem;display:none">⬇ Import from JobTread</button>
+          <button class="btn btn-ghost btn-sm" id="jt-import-btn" onclick="importFromJobTread()" style="color:var(--blue);font-size:.75rem;display:none">🔍 Search JobTread</button>
         </div>
         <div id="pm-jobs-list" style="display:flex;flex-wrap:wrap;gap:.4rem">
           <div style="color:var(--g400);font-size:.85rem">Select an installer and week to load jobs</div>
@@ -1845,8 +1845,8 @@ function openNewPayout(){
   document.getElementById('pm-delete-btn').style.display='none';
   currentLines=[];
 
-  // Default week: Mon–Sun of current week
-  const ws=weekOf(new Date());
+  // Default to the week currently displayed on the calendar
+  const ws=weekStart||weekOf(new Date());
   const we=new Date(ws);we.setDate(we.getDate()+6);
   document.getElementById('pm-week-start').value=ws.toISOString().split('T')[0];
   document.getElementById('pm-week-end').value=we.toISOString().split('T')[0];
@@ -2483,7 +2483,7 @@ async function importFromJobTread(){
   if(!jtSettings.grant_key||jtSettings.grant_key.includes('YOUR_GRANT')){
     showToast('JobTread not configured. Add grant key in Supabase app_config.','error');return
   }
-  btn.textContent='⏳ Loading JT jobs...';btn.disabled=true;
+  btn.textContent='⏳ Searching...';btn.disabled=true;
   const data=await jtQuery({
     organization:{
       $:{id:jtSettings.org_id},
@@ -2502,7 +2502,7 @@ async function importFromJobTread(){
       }
     }
   });
-  btn.textContent='⬇ Import from JobTread';btn.disabled=false;
+  btn.textContent='🔍 Search JobTread';btn.disabled=false;
   if(!data?.organization?.jobs?.nodes?.length){showToast('No jobs returned from JobTread.','error');return}
   const myLocalJobs=projects.filter(p=>{
     const assigned=(p.project_installers||[]).map(pi=>pi.installer_id);
