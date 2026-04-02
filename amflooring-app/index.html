@@ -726,8 +726,8 @@
           <select id="pm-installer" onchange="loadPayoutJobs()"></select>
         </div>
         <div class="form-group" style="margin:0">
-          <label>Install Date(s)</label>
-          <div id="pm-install-dates" style="font-size:.85rem;color:var(--g600);padding:.45rem 0;min-height:1.6rem">—</div>
+          <label>Jobs This Week</label>
+          <div id="pm-install-dates" style="font-size:.82rem;color:var(--g600);padding:.45rem 0;min-height:1.6rem;line-height:1.4">—</div>
         </div>
         <div class="form-group" style="margin:0;text-align:right">
           <label style="display:block;text-align:right">Payout Date</label>
@@ -1957,12 +1957,13 @@ async function loadPayoutJobs(){
 
   // Show install dates
   if(datesEl){
+    // Show dates of jobs available this week as suggestions
     if(myJobs.length){
       const dates=[...new Set(myJobs.map(j=>j.start_date))].sort();
       datesEl.textContent=dates.map(d=>fd(d)).join(', ');
       datesEl.style.color='var(--g900)';
     } else {
-      datesEl.textContent='No installs this week';
+      datesEl.textContent='—';
       datesEl.style.color='var(--g400)';
     }
   }
@@ -1970,7 +1971,7 @@ async function loadPayoutJobs(){
   if(!myJobs.length){jobDiv.innerHTML=`<div style="color:var(--g400);font-size:.85rem">No install jobs found for this installer this week</div>`;return}
   jobDiv.innerHTML=myJobs.map(j=>`
     <div class="job-chip" onclick="addJobRef('${j.id}','${esc2(j.customer_name)}')">
-      + ${j.customer_name}
+      + ${j.customer_name} · ${fd(j.start_date)}
     </div>`).join('');
 }
 
