@@ -996,7 +996,14 @@ async function fetchProjects(){
   let q=sb.from('projects').select('*,project_installers(installer_id,profiles(full_name))').order('start_date',{ascending:false});
   if(myProfile?.role==='installer'){
     const{data:mine}=await sb.from('project_installers').select('project_id').eq('installer_id',me.id);
-    if(mine?.length)q=q.in('id',mine.map(a=>a.project_id));else{projects=[];return}
+    if(mine?.length){
+      // Only show install calendar, only last 30 days + future
+      const cutoff=new Date();cutoff.setDate(cutoff.getDate()-30);
+      const cutoffStr=cutoff.toISOString().split('T')[0];
+      q=q.in('id',mine.map(a=>a.project_id))
+        .eq('calendar_type','install')
+        .gte('start_date',cutoffStr);
+    } else {projects=[];return}
   } else {
     q=q.gte('start_date',from).lte('start_date',to);
   }
@@ -1783,7 +1790,6 @@ async function fetchPayouts(){
     .select('*,installer:profiles(full_name),payout_line_items(*)')
     .order('created_at',{ascending:false});
   payouts=data||[];
-}
 }
 
 function renderPayHistory(){
@@ -2671,7 +2677,7 @@ async function loadCoiFiles(compId){
     const warn30=new Date();warn30.setDate(warn30.getDate()+30);
     const warn30Str=warn30.toISOString().split('T')[0];
     const expiring=d.expiration_date&&!expired&&d.expiration_date<=warn30Str;
-    const expLabel=d.expiration_date?` · <span style="color:${expired?'var(--red)':expiring?'var(--amber)':'var(--g500)';font-weight:${expired||expiring?'600':'400'}">${expired?'Expired':'Exp'} ${fd(d.expiration_date)}</span>`:'';
+    const expLabel=d.expiration_date?` · <span style="color:${expired?'var(--red)':expiring?'var(--amber)':'var(--g500)'};font-weight:${expired||expiring?'600':'400'}">${expired?'Expired':'Exp'} ${fd(d.expiration_date)}</span>`:'';
     const badgeColors={coi:'#dbeafe:#1e40af',w9:'#dcfce7:#14532d',contract:'#fef3c7:#78350f',other:'#f3f4f6:#4b5563'};
     const [bg,col]=(badgeColors[d.doc_type]||badgeColors.other).split(':');
     return`<div class="coi-file-row">
