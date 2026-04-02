@@ -2531,7 +2531,7 @@ async function importFromJobTread(){
     organization:{
       $:{id:jtSettings.org_id},
       jobs:{
-        $:{size:100,sortBy:[{field:'createdAt',order:'desc'}]},
+        $:{size:20,sortBy:[{field:'createdAt',order:'desc'}]},
         nodes:{
           id:{},name:{},number:{},status:{},
           location:{street:{},city:{},state:{}},
