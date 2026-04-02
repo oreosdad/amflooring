@@ -1787,7 +1787,7 @@ async function saveSingleRate(id){
 // ── PAYOUTS ──────────────────────────────────────────────────────────────────
 async function fetchPayouts(){
   const{data}=await sb.from('payouts')
-    .select('*,installer:profiles(full_name),payout_line_items(*)')
+    .select('*,installer:profiles!payouts_installer_id_fkey(full_name),payout_line_items(*)')
     .order('created_at',{ascending:false});
   payouts=data||[];
 }
