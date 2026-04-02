@@ -720,17 +720,19 @@
     </div>
     <div class="modal-body">
       <input type="hidden" id="pm-payout-id"/>
-      <div class="form-row" style="margin-bottom:1rem">
-        <div class="form-group">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;margin-bottom:1rem;align-items:end">
+        <div class="form-group" style="margin:0">
           <label>Installer *</label>
           <select id="pm-installer" onchange="loadPayoutJobs()"></select>
         </div>
-        <div class="form-group">
-          <label>Week</label>
-          <div style="display:flex;gap:.5rem">
-            <input type="date" id="pm-week-start" onchange="loadPayoutJobs()" style="flex:1"/>
-            <input type="date" id="pm-week-end" style="flex:1"/>
-          </div>
+        <div class="form-group" style="margin:0">
+          <label>Install Date(s)</label>
+          <div id="pm-install-dates" style="font-size:.85rem;color:var(--g600);padding:.45rem 0;min-height:1.6rem">—</div>
+        </div>
+        <div class="form-group" style="margin:0;text-align:right">
+          <label style="display:block;text-align:right">Payout Date</label>
+          <input type="date" id="pm-week-end" onchange="loadPayoutJobs()" style="width:100%"/>
+          <input type="hidden" id="pm-week-start"/>
         </div>
       </div>
 
@@ -1856,8 +1858,8 @@ function openNewPayout(overrideWeekStart, overrideWeekEnd){
     wsStr=ws.toISOString().split('T')[0];
     weStr=we.toISOString().split('T')[0];
   }
-  document.getElementById('pm-week-start').value=wsStr;
   document.getElementById('pm-week-end').value=weStr;
+  document.getElementById('pm-week-start').value=wsStr;
 
   // Populate installer dropdown
   const installers=profiles.filter(p=>p.role==='installer'&&p.is_active!==false);
@@ -1918,19 +1920,32 @@ function buildPayoutRateSelect(){
 
 async function loadPayoutJobs(){
   const instId=document.getElementById('pm-installer')?.value;
-  const ws=document.getElementById('pm-week-start')?.value;
   const we=document.getElementById('pm-week-end')?.value;
   const jobDiv=document.getElementById('pm-jobs-list');
+  const datesEl=document.getElementById('pm-install-dates');
 
-  // Show/hide JT button based on credentials and selection
+  // Derive week-start from payout Friday (go back to Monday = 4 days)
+  let ws='';
+  if(we){
+    const fri=new Date(we+'T00:00:00');
+    const mon=new Date(fri);mon.setDate(mon.getDate()-4);
+    ws=mon.toISOString().split('T')[0];
+    document.getElementById('pm-week-start').value=ws;
+  }
+
+  // Show/hide JT button
   const jtBtn=document.getElementById('jt-import-btn');
-  if(jtBtn && jtSettings.grant_key && !jtSettings.grant_key.includes('PASTE') && instId && ws) {
+  if(jtBtn&&jtSettings.grant_key&&!jtSettings.grant_key.includes('PASTE')&&instId&&ws){
     jtBtn.style.display='inline-flex';
-  } else if(jtBtn) {
+  } else if(jtBtn){
     jtBtn.style.display='none';
   }
 
-  if(!instId||!ws){jobDiv.innerHTML=`<div style="color:var(--g400);font-size:.85rem">Select installer and week to see jobs</div>`;return}
+  if(!instId||!ws){
+    jobDiv.innerHTML=`<div style="color:var(--g400);font-size:.85rem">Select installer and payout date to see jobs</div>`;
+    if(datesEl) datesEl.textContent='—';
+    return;
+  }
 
   // Find projects for this installer in this date range
   const myJobs=projects.filter(p=>{
@@ -1939,6 +1954,18 @@ async function loadPayoutJobs(){
     return assigned.includes(instId)&&inRange&&p.calendar_type==='install';
   });
   currentPayoutInstallerJobs=myJobs;
+
+  // Show install dates
+  if(datesEl){
+    if(myJobs.length){
+      const dates=[...new Set(myJobs.map(j=>j.start_date))].sort();
+      datesEl.textContent=dates.map(d=>fd(d)).join(', ');
+      datesEl.style.color='var(--g900)';
+    } else {
+      datesEl.textContent='No installs this week';
+      datesEl.style.color='var(--g400)';
+    }
+  }
 
   if(!myJobs.length){jobDiv.innerHTML=`<div style="color:var(--g400);font-size:.85rem">No install jobs found for this installer this week</div>`;return}
   jobDiv.innerHTML=myJobs.map(j=>`
