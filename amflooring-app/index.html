@@ -1890,6 +1890,7 @@ async function openEditPayout(id){
     desc:li.description,
     job:li.project_id,
     jobName:projects.find(j=>j.id===li.project_id)?.customer_name||'',
+    jobDate:projects.find(j=>j.id===li.project_id)?.start_date||null,
     qty:li.quantity,
     rate:li.rate_amount,
     total:li.total_amount,
@@ -1922,7 +1923,6 @@ async function loadPayoutJobs(){
   const instId=document.getElementById('pm-installer')?.value;
   const we=document.getElementById('pm-week-end')?.value;
   const jobDiv=document.getElementById('pm-jobs-list');
-  const datesEl=document.getElementById('pm-install-dates');
 
   // Derive week-start from payout Friday (go back to Monday = 4 days)
   let ws='';
@@ -1943,7 +1943,6 @@ async function loadPayoutJobs(){
 
   if(!instId||!ws){
     jobDiv.innerHTML=`<div style="color:var(--g400);font-size:.85rem">Select installer and payout date to see jobs</div>`;
-    if(datesEl) datesEl.textContent='—';
     return;
   }
 
@@ -1955,18 +1954,6 @@ async function loadPayoutJobs(){
   });
   currentPayoutInstallerJobs=myJobs;
 
-  // Show install dates
-  if(datesEl){
-    // Show dates of jobs available this week as suggestions
-    if(myJobs.length){
-      const dates=[...new Set(myJobs.map(j=>j.start_date))].sort();
-      datesEl.textContent=dates.map(d=>fd(d)).join(', ');
-      datesEl.style.color='var(--g900)';
-    } else {
-      datesEl.textContent='—';
-      datesEl.style.color='var(--g400)';
-    }
-  }
 
   if(!myJobs.length){jobDiv.innerHTML=`<div style="color:var(--g400);font-size:.85rem">No install jobs found for this installer this week</div>`;return}
   jobDiv.innerHTML=myJobs.map(j=>`
@@ -1978,9 +1965,28 @@ async function loadPayoutJobs(){
 function esc2(s){return(s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;')}
 
 function addJobRef(jobId,jobName){
-  // Add a freehand line pre-tagged to this job
-  currentLines.push({_key:Date.now()+'',desc:'',job:jobId,jobName,qty:null,rate:null,total:0,unit:'',rateId:null});
+  const proj=projects.find(p=>p.id===jobId);
+  const jobDate=proj?.start_date||null;
+  currentLines.push({_key:Date.now()+'',desc:'',job:jobId,jobName,jobDate,qty:null,rate:null,total:0,unit:'',rateId:null});
   renderPayoutLines();
+  updateInstallDates();
+}
+
+function updateInstallDates(){
+  const el=document.getElementById('pm-install-dates');
+  if(!el) return;
+  const dates=[...new Set(
+    currentLines
+      .filter(l=>l.jobDate)
+      .map(l=>l.jobDate)
+  )].sort();
+  if(dates.length){
+    el.textContent=dates.map(d=>fd(d)).join(', ');
+    el.style.color='var(--g900)';
+  } else {
+    el.textContent='—';
+    el.style.color='var(--g400)';
+  }
 }
 
 function addFreehandLine(){
@@ -2022,6 +2028,7 @@ function renderPayoutLines(){
       <button onclick="removeLine('${li._key}')" style="background:none;border:none;cursor:pointer;color:var(--g400);font-size:1.1rem;line-height:1;padding:0">×</button>
     </div>`).join('');
   updatePayoutTotal();
+  updateInstallDates();
 }
 
 function updateLine(key,field,val){
@@ -2527,7 +2534,7 @@ async function importFromJobTread(){
           id:{},name:{},number:{},status:{},
           location:{street:{},city:{},state:{}},
           documents:{
-            $:{size:8,where:['-type','-=','-customerOrder']},
+            $:{size:8},
             nodes:{
               id:{},name:{},type:{},
               costItems:{$:{size:30},nodes:{id:{},name:{},quantity:{},unitCost:{},cost:{}}}
@@ -2667,6 +2674,7 @@ function importDocLines(localJob,jtJob,doc){
       desc:item.name,
       job:localJob?.id||'',
       jobName:localJob?.customer_name||jtJob.name,
+      jobDate:localJob?.start_date||null,
       qty:item.quantity||null,
       rate:matched?Number(matched.default_rate||0):(item.unitCost||null),
       total:Number(item.cost||0),
@@ -2696,7 +2704,7 @@ async function showJTJobPicker(myJobs,ws,we){
         nodes:{
           id:{},name:{},number:{},status:{},
           documents:{
-            $:{size:5,where:['-type','-=','-customerOrder']},
+            $:{size:5},
             nodes:{
               id:{},name:{},type:{},
               costItems:{$:{size:30},nodes:{id:{},name:{},quantity:{},unitCost:{},cost:{}}}
