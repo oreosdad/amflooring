@@ -804,16 +804,24 @@
       </div>
 
       <div class="form-group" style="margin-top:.75rem"><label>Notes</label><textarea id="pm-notes" placeholder="Any notes about this payout..."></textarea></div>
-      <div id="pm-needs-info-row" style="display:none;margin-top:.5rem;padding:.6rem .75rem;background:var(--afaint);border:1.5px solid var(--amber);border-radius:8px">
-        <div style="font-size:.75rem;font-weight:700;color:var(--amber);margin-bottom:.35rem">⚠ On Hold — Needs Info</div>
-        <input type="text" id="pm-needs-info-note" placeholder="What do you need to find out? e.g. Check with PM about furniture charge" style="width:100%;padding:.4rem .6rem;border:1.5px solid var(--amber);border-radius:6px;font-family:'Inter',sans-serif;font-size:.8rem;outline:none;background:#fff"/>
+
+      <!-- Needs Info toggle — always visible, inline -->
+      <div style="margin-top:.75rem;padding:.65rem .75rem;background:var(--g50);border:1.5px solid var(--g200);border-radius:8px">
+        <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;user-select:none">
+          <input type="checkbox" id="pm-needs-info-check" onchange="toggleNeedsInfoNote(this.checked)"
+            style="width:16px;height:16px;accent-color:var(--amber);cursor:pointer"/>
+          <span style="font-size:.825rem;font-weight:600;color:var(--g700)">⚠ Put on hold — needs info before paying</span>
+        </label>
+        <div id="pm-needs-info-row" style="display:none;margin-top:.5rem">
+          <input type="text" id="pm-needs-info-note" value="Asking PM"
+            style="width:100%;padding:.4rem .6rem;border:1.5px solid var(--amber);border-radius:6px;font-family:'Inter',sans-serif;font-size:.8rem;outline:none;background:#fff"/>
+        </div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-danger btn-sm" id="pm-delete-btn" style="display:none;margin-right:auto" onclick="deletePayout()">Delete</button>
       <button class="btn btn-secondary" onclick="closeModal('payout-modal')">Cancel</button>
       <button class="btn btn-secondary" onclick="savePayout('draft')">Save</button>
-      <button class="btn btn-ghost btn-sm" onclick="savePayoutNeedsInfo()" style="color:var(--amber);border:1.5px solid var(--amber)" title="Put on hold — needs more info before paying">⚠ Needs Info</button>
     </div>
   </div>
 </div>
@@ -2024,16 +2032,15 @@ async function markInstallerPaid(idsCsv){
   showToast('Marked as paid.','success');
 }
 
-async function savePayoutNeedsInfo(){
-  const note=document.getElementById('pm-needs-info-note')?.value||'';
-  if(!note.trim()){
-    // Show the note field and focus it
-    const row=document.getElementById('pm-needs-info-row');
-    if(row){row.style.display='block';document.getElementById('pm-needs-info-note').focus();}
-    showToast('Enter a note explaining what needs to be resolved.','');
-    return;
+function toggleNeedsInfoNote(checked){
+  const row=document.getElementById('pm-needs-info-row');
+  if(!row)return;
+  row.style.display=checked?'block':'none';
+  if(checked){
+    const note=document.getElementById('pm-needs-info-note');
+    if(note&&!note.value.trim())note.value='Asking PM';
+    note?.select();
   }
-  await savePayout('needs_info',note);
 }
 
 // line items in memory for current payout being edited
@@ -2050,6 +2057,8 @@ function openNewPayout(overrideWeekStart, overrideWeekEnd){
   const niNote=document.getElementById('pm-needs-info-note');
   if(niRow)niRow.style.display='none';
   if(niNote)niNote.value='';
+  const niCheck=document.getElementById('pm-needs-info-check');
+  if(niCheck)niCheck.checked=false;
   const dupeWarn=document.getElementById('pm-dupe-warning');
   if(dupeWarn)dupeWarn.style.display='none';
 
@@ -2090,8 +2099,11 @@ async function openEditPayout(id){
   // Show needs-info row if applicable
   const niRow=document.getElementById('pm-needs-info-row');
   const niNote=document.getElementById('pm-needs-info-note');
-  if(niRow){niRow.style.display=p.status==='needs_info'?'block':'none';}
-  if(niNote){niNote.value=p.needs_info_note||'';}
+  const niCheck=document.getElementById('pm-needs-info-check');
+  const isNeedsInfo=p.status==='needs_info';
+  if(niCheck)niCheck.checked=isNeedsInfo;
+  if(niRow)niRow.style.display=isNeedsInfo?'block':'none';
+  if(niNote)niNote.value=p.needs_info_note||'Asking PM';
 
   const installers=profiles.filter(p=>p.role==='installer'&&p.is_active!==false);
   document.getElementById('pm-installer').innerHTML=`<option value="">Select installer...</option>`+installers.map(pr=>`<option value="${pr.id}" ${pr.id===p.installer_id?'selected':''}>${pr.full_name}</option>`).join('');
@@ -2274,14 +2286,21 @@ async function savePayout(status, needsInfoNote){
   const week_start=document.getElementById('pm-week-start').value;
   const week_end=document.getElementById('pm-week-end').value;
   if(!installer_id||!week_start){showToast('Select an installer and payout date.','error');return}
+
+  // Check needs-info checkbox — overrides status to needs_info if checked
+  const needsInfoChecked=document.getElementById('pm-needs-info-check')?.checked;
+  const finalStatus=needsInfoChecked?'needs_info':status;
+  const finalNote=needsInfoChecked?(document.getElementById('pm-needs-info-note')?.value||'Asking PM'):null;
+
   const total=currentLines.reduce((sum,li)=>sum+Number(li.total||0),0);
   const payload={
-    installer_id,week_start,week_end,total_amount:total,status,
+    installer_id,week_start,week_end,total_amount:total,
+    status:finalStatus,
     notes:document.getElementById('pm-notes').value||null,
-    needs_info_note:needsInfoNote||null,
+    needs_info_note:finalNote,
     created_by:me.id
   };
-  if(status==='approved'){payload.approved_by=me.id;payload.approved_at=new Date().toISOString()}
+  if(finalStatus==='approved'){payload.approved_by=me.id;payload.approved_at=new Date().toISOString()}
 
   let payoutId=id;
   if(id){
@@ -2310,7 +2329,7 @@ async function savePayout(status, needsInfoNote){
     }
   }
   closeModal('payout-modal');
-  const toastMsg=status==='approved'?'Payout approved!':status==='needs_info'?'Saved — on hold until resolved.':'Draft saved.';
+  const toastMsg=finalStatus==='approved'?'Payout approved!':finalStatus==='needs_info'?'Saved — on hold until resolved.':'Saved.';
   showToast(toastMsg,'success');
   await fetchPayouts();
   renderPayHistory();
