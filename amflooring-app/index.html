@@ -329,6 +329,13 @@
           <select class="who-filter" id="who-filter" onchange="renderCal()">
             <option value="all">👥 All People</option>
           </select>
+          <div style="position:relative;flex:1;min-width:180px;max-width:280px">
+            <input type="text" id="cal-search" placeholder="🔍 Search jobs..." autocomplete="off"
+              oninput="calSearchInput(this.value)"
+              onkeydown="if(event.key==='Escape'){this.value='';calSearchClear()}"
+              style="width:100%;padding:.45rem .75rem;border:1.5px solid var(--g300);border-radius:8px;font-family:'Inter',sans-serif;font-size:.825rem;outline:none;background:#fff"/>
+            <div id="cal-search-results" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1.5px solid var(--g300);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:100;max-height:320px;overflow-y:auto"></div>
+          </div>
           <div class="view-toggle desktop-only">
             <button class="view-btn active" id="vbtn-week" onclick="setView('week',this)">Week</button>
             <button class="view-btn" id="vbtn-month" onclick="setView('month',this)">Month</button>
@@ -754,9 +761,8 @@
       </div>
 
       <!-- Line item column headers -->
-      <div style="display:grid;grid-template-columns:1fr 130px 70px 80px 80px 32px;gap:6px;padding:0 .25rem;margin-bottom:.25rem">
+      <div style="display:grid;grid-template-columns:1fr 70px 80px 80px 32px;gap:6px;padding:0 .25rem;margin-bottom:.25rem">
         <div style="font-size:.7rem;color:var(--g400);font-weight:600;text-transform:uppercase;letter-spacing:.05em">Description</div>
-        <div style="font-size:.7rem;color:var(--g400);font-weight:600;text-transform:uppercase;letter-spacing:.05em">Job</div>
         <div style="font-size:.7rem;color:var(--g400);font-weight:600;text-transform:uppercase;letter-spacing:.05em;text-align:right">Qty</div>
         <div style="font-size:.7rem;color:var(--g400);font-weight:600;text-transform:uppercase;letter-spacing:.05em;text-align:right">Rate</div>
         <div style="font-size:.7rem;color:var(--g400);font-weight:600;text-transform:uppercase;letter-spacing:.05em;text-align:right">Total</div>
@@ -904,7 +910,7 @@
   .payout-installer { font-size:1rem;font-weight:600 }
   .payout-meta { font-size:.8rem;color:var(--g500);margin-top:2px }
   .payout-amount { font-size:1.3rem;font-weight:700;color:var(--g900) }
-  .li-row { display:grid;grid-template-columns:1fr 130px 70px 80px 80px 32px;gap:6px;align-items:center;margin-bottom:4px }
+  .li-row { display:grid;grid-template-columns:1fr 70px 80px 80px 32px;gap:6px;align-items:center;margin-bottom:4px }
   .li-input { padding:4px 6px;border:1.5px solid var(--g300);border-radius:4px;font-family:'Inter',sans-serif;font-size:.8rem;background:#fff;color:var(--g900);width:100%;outline:none;text-align:right }
   .li-input:focus { border-color:var(--red) }
   .li-desc { padding:4px 6px;border:1.5px solid var(--g300);border-radius:4px;font-family:'Inter',sans-serif;font-size:.8rem;background:#fff;color:var(--g900);width:100%;outline:none }
@@ -2018,10 +2024,6 @@ function renderPayoutLines(){
   c.innerHTML=currentLines.map((li,i)=>`
     <div class="li-row" data-key="${li._key}">
       <input class="li-desc" value="${(li.desc||'').replace(/"/g,'&quot;')}" placeholder="Description" onchange="updateLine('${li._key}','desc',this.value)"/>
-      <select style="padding:4px 6px;border:1.5px solid var(--g300);border-radius:4px;font-family:'Inter',sans-serif;font-size:.75rem;background:#fff;color:var(--g900);width:100%;outline:none" onchange="updateLine('${li._key}','job',this.value)">
-        <option value="">No job</option>
-        ${currentPayoutInstallerJobs.map(j=>`<option value="${j.id}" ${j.id===li.job?'selected':''}>${j.customer_name}</option>`).join('')}
-      </select>
       <input class="li-input" type="number" step="0.01" value="${li.qty!=null?li.qty:''}" placeholder="Qty" onchange="updateLine('${li._key}','qty',this.value)"/>
       <input class="li-input" type="number" step="0.01" value="${li.rate!=null?li.rate:''}" placeholder="Rate" onchange="updateLine('${li._key}','rate',this.value)"/>
       <div class="li-total">$${Number(li.total||0).toFixed(2)}</div>
@@ -2796,6 +2798,68 @@ async function deleteCoiDoc(docId,path,compId){
   showToast('Deleted.','');
   await loadCoiFiles(compId);
 }
+
+// ── CALENDAR SEARCH ──────────────────────────────────────────────────────────
+function calSearchInput(q){
+  const res=document.getElementById('cal-search-results');
+  if(!q||q.length<2){res.style.display='none';return}
+  const ql=q.toLowerCase();
+  const matches=projects.filter(p=>
+    (p.customer_name||'').toLowerCase().includes(ql)||
+    (p.address||'').toLowerCase().includes(ql)||
+    (p.notes||'').toLowerCase().includes(ql)||
+    (p.flooring_type||'').toLowerCase().includes(ql)
+  ).slice(0,12);
+  if(!matches.length){
+    res.innerHTML='<div style="padding:.75rem;font-size:.85rem;color:var(--g400)">No jobs found</div>';
+    res.style.display='block';return;
+  }
+  res.innerHTML=matches.map(p=>{
+    const cal={install:'🔨',sales:'💼',warehouse:'📦'}[p.calendar_type]||'📅';
+    const dt=p.start_date?fd(p.start_date):'No date';
+    return`<div onclick="calSearchJump('${p.id}')" style="padding:.6rem .75rem;cursor:pointer;border-bottom:1px solid var(--g100);font-size:.85rem"
+      onmouseover="this.style.background='var(--g50)'" onmouseout="this.style.background=''">
+      <div style="font-weight:600">${cal} ${p.customer_name||'Unnamed'}</div>
+      <div style="font-size:.75rem;color:var(--g500)">${dt}${p.address?' · '+p.address:''}</div>
+    </div>`;
+  }).join('');
+  res.style.display='block';
+}
+
+function calSearchJump(projectId){
+  const p=projects.find(x=>x.id===projectId);
+  if(!p||!p.start_date) return;
+  // Close search
+  document.getElementById('cal-search').value='';
+  document.getElementById('cal-search-results').style.display='none';
+  // Navigate calendar to the week containing this job
+  const d=new Date(p.start_date+'T00:00:00');
+  weekStart=weekOf(d);
+  currentMonth=new Date(d.getFullYear(),d.getMonth(),1);
+  // Switch to correct calendar tab if needed
+  if(p.calendar_type&&calTab!==p.calendar_type&&calTab!=='all'){
+    setCalTab(p.calendar_type,document.querySelector(`.cal-tab[onclick*="${p.calendar_type}"]`));
+  }
+  setView('week',document.getElementById('vbtn-week'));
+  renderCal();
+  // Flash highlight after render
+  setTimeout(()=>{
+    const chips=[...document.querySelectorAll('.ev-chip,.event-chip')];
+    const chip=chips.find(c=>c.textContent.includes(p.customer_name?.substring(0,10)||''));
+    if(chip){chip.style.outline='3px solid var(--red)';setTimeout(()=>chip.style.outline='',2000);}
+  },150);
+}
+
+function calSearchClear(){
+  document.getElementById('cal-search-results').style.display='none';
+}
+
+// Close search results when clicking outside
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#cal-search')&&!e.target.closest('#cal-search-results')){
+    calSearchClear();
+  }
+});
 
 // ── AUTO-LOGIN ────────────────────────────────────────────────────────────────
 sb.auth.getSession().then(({data:{session}})=>{if(session)boot(session.user)});
