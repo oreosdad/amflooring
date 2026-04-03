@@ -2607,13 +2607,13 @@ async function selectJTJob(idx){
       documents:{
         $:{size:10},
         nodes:{id:{},name:{},type:{},number:{},
-          costItems:{$:{size:30},nodes:{id:{},name:{},quantity:{},unitCost:{},cost:{}}}}
+          costItems:{$:{size:30},nodes:{id:{},name:{},quantity:{},unitCost:{},cost:{},unitPrice:{},price:{},isTaxable:{}}}}
       }
     }
   });
   const fullJob=data?.job;
   if(!fullJob){showToast('Could not load estimates for this job.','error');return}
-  const docs=(fullJob.documents?.nodes||[]).filter(d=>d.costItems?.nodes?.some(ci=>Number(ci.unitCost||0)>0));
+  const docs=(fullJob.documents?.nodes||[]).filter(d=>d.costItems?.nodes?.some(ci=>ci.isTaxable===false));
   if(!docs.length){showToast('No estimates with labor items found on this job.','error');return}
   state.selectedDocs=docs;
   showJTDocStep(fullJob,docs,localJob);
@@ -2624,7 +2624,7 @@ function showJTDocStep(jtJob,docs,localJob){
   document.getElementById('jt-picker-modal').querySelector('.modal-title').textContent='Select Estimate';
   let docsHtml='';
   docs.forEach((doc,i)=>{
-    const labor=doc.costItems.nodes.filter(ci=>Number(ci.unitCost||0)>0);
+    const labor=doc.costItems.nodes.filter(ci=>ci.isTaxable===false);
     const total=labor.reduce((s,ci)=>s+Number(ci.cost||0),0);
     const preview=labor.slice(0,3).map(ci=>ci.name).join(' &middot; ')+(labor.length>3?' +'+(labor.length-3)+' more':'');
     docsHtml+='<div style="padding:.75rem;border:1.5px solid var(--g200);border-radius:8px;margin-bottom:.4rem;cursor:pointer" onclick="selectJTDocFinal('+i+')">'
@@ -2650,12 +2650,18 @@ function selectJTDocFinal(idx){
 }
 
 function importDocLines(localJob,jtJob,doc){
-  const items=doc.costItems.nodes.filter(ci=>Number(ci.unitCost||0)>0);
-  if(!items.length){showToast('No labor items found in this estimate (all $0).','');return}
+  const items=doc.costItems.nodes.filter(ci=>ci.isTaxable===false);
+  if(!items.length){showToast('No non-taxable labor items found in this estimate.','');return}
 
   let added=0;
   for(const item of items){
     const matched=matchJTItemToRate(item.name);
+    // If unitCost is 0, leave rate blank so you fill it in manually
+    // Rate priority: 1) matched rate table, 2) JT unitCost if >0, 3) 50% of JT unitPrice if cost=0
+    const jtRate=Number(item.unitCost||0)>0?item.unitCost
+      :Number(item.unitPrice||0)>0?parseFloat((item.unitPrice*0.5).toFixed(2))
+      :null;
+    const rate=matched?Number(matched.default_rate||0):jtRate;
     currentLines.push({
       _key:Date.now()+'_'+Math.random(),
       desc:item.name,
@@ -2663,8 +2669,8 @@ function importDocLines(localJob,jtJob,doc){
       jobName:localJob?.customer_name||jtJob.name,
       jobDate:localJob?.start_date||null,
       qty:item.quantity||null,
-      rate:matched?Number(matched.default_rate||0):(item.unitCost||null),
-      total:Number(item.cost||0),
+      rate,
+      total:rate&&item.quantity?parseFloat((rate*item.quantity).toFixed(2)):Number(item.cost||0),
       unit:matched?.unit||'',
       rateId:matched?.id||null,
       jtJobId:jtJob.id,
@@ -2674,9 +2680,9 @@ function importDocLines(localJob,jtJob,doc){
   }
 
   renderPayoutLines();
-  const unmatched=currentLines.filter(l=>!l.rateId).length;
+  const needsRate=currentLines.filter(l=>!l.rate).length;
   showToast(
-    `Imported ${added} items from "${doc.name}".${unmatched?` ${unmatched} need review.`:''}`,
+    `Imported ${added} items from "${doc.name}".${needsRate?` ${needsRate} need a rate.`:''}`,
     'success'
   );
 }
@@ -2694,7 +2700,7 @@ async function showJTJobPicker(myJobs,ws,we){
             $:{size:5},
             nodes:{
               id:{},name:{},type:{},
-              costItems:{$:{size:30},nodes:{id:{},name:{},quantity:{},unitCost:{},cost:{}}}
+              costItems:{$:{size:30},nodes:{id:{},name:{},quantity:{},unitCost:{},cost:{},unitPrice:{},price:{},isTaxable:{}}}
             }
           }
         }
@@ -2704,7 +2710,7 @@ async function showJTJobPicker(myJobs,ws,we){
   const jtJobs=data?.organization?.jobs?.nodes||[];
   const allDocs=jtJobs.flatMap(jtJob=>
     (jtJob.documents?.nodes||[])
-      .filter(doc=>doc.costItems.nodes.some(ci=>Number(ci.unitCost||0)>0))
+      .filter(doc=>doc.costItems.nodes.some(ci=>ci.isTaxable===false))
       .map(doc=>({localJob:myJobs[0],jtJob,doc}))
   );
   showJTDocPicker(allDocs,myJobs,ws,we);
