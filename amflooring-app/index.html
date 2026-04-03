@@ -447,22 +447,23 @@
         </div>
         <!-- Summary cards -->
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:1.25rem">
-          <div class="stat-card"><div class="stat-card-label">Outstanding</div><div class="stat-card-value" id="pay-stat-outstanding" style="color:var(--amber)">$0</div><div class="stat-card-sub">draft / unpaid</div></div>
-          <div class="stat-card"><div class="stat-card-label">Paid Out</div><div class="stat-card-value" id="pay-stat-paid" style="color:var(--green)">$0</div><div class="stat-card-sub">approved</div></div>
+          <div class="stat-card"><div class="stat-card-label">Outstanding</div><div class="stat-card-value" id="pay-stat-outstanding" style="color:var(--amber)">$0</div><div class="stat-card-sub">unpaid</div></div>
+          <div class="stat-card"><div class="stat-card-label">Paid Out MTD</div><div class="stat-card-value" id="pay-stat-paid" style="color:var(--green)">$0</div><div class="stat-card-sub">this month</div></div>
           <div class="stat-card"><div class="stat-card-label">Payouts</div><div class="stat-card-value" id="pay-stat-count">0</div><div class="stat-card-sub">shown</div></div>
         </div>
-        <!-- Filters -->
-        <div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap;align-items:center;justify-content:flex-end">
+        <!-- Tabs + Search + Filters -->
+        <div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap;align-items:center">
+          <div class="cal-tabs" id="pay-tabs">
+            <button class="cal-tab active" id="pay-tab-unpaid" onclick="setPayTab('unpaid',this)">Unpaid</button>
+            <button class="cal-tab" id="pay-tab-paid" onclick="setPayTab('paid',this)">Paid</button>
+          </div>
+          <input type="text" id="pay-search" placeholder="Search installer, date..." oninput="renderPayHistory()"
+            style="padding:.4rem .75rem;border:1.5px solid var(--g300);border-radius:6px;font-family:'Inter',sans-serif;font-size:.875rem;background:#fff;outline:none;flex:1;min-width:160px"/>
           <select id="pay-installer-filter" onchange="renderPayHistory()" style="padding:.4rem .75rem;border:1.5px solid var(--g300);border-radius:6px;font-family:'Inter',sans-serif;font-size:.875rem;background:#fff;outline:none">
             <option value="all">All Installers</option>
           </select>
-          <select id="pay-date-filter" onchange="renderPayHistory()" style="padding:.4rem .75rem;border:1.5px solid var(--g300);border-radius:6px;font-family:'Inter',sans-serif;font-size:.875rem;background:#fff;outline:none">
-            <option value="all">All Pay Dates</option>
-          </select>
-          <select id="pay-status-filter" onchange="renderPayHistory()" style="padding:.4rem .75rem;border:1.5px solid var(--g300);border-radius:6px;font-family:'Inter',sans-serif;font-size:.875rem;background:#fff;outline:none">
-            <option value="all">All Status</option>
-            <option value="draft">Unpaid</option>
-            <option value="approved">Paid</option>
+          <select id="pay-month-filter" onchange="renderPayHistory()" style="padding:.4rem .75rem;border:1.5px solid var(--g300);border-radius:6px;font-family:'Inter',sans-serif;font-size:.875rem;background:#fff;outline:none">
+            <option value="all">All Months</option>
           </select>
         </div>
         <div id="pay-history-list"></div>
@@ -800,11 +801,16 @@
       </div>
 
       <div class="form-group" style="margin-top:.75rem"><label>Notes</label><textarea id="pm-notes" placeholder="Any notes about this payout..."></textarea></div>
+      <div id="pm-needs-info-row" style="display:none;margin-top:.5rem;padding:.6rem .75rem;background:var(--afaint);border:1.5px solid var(--amber);border-radius:8px">
+        <div style="font-size:.75rem;font-weight:700;color:var(--amber);margin-bottom:.35rem">⚠ On Hold — Needs Info</div>
+        <input type="text" id="pm-needs-info-note" placeholder="What do you need to find out? e.g. Check with PM about furniture charge" style="width:100%;padding:.4rem .6rem;border:1.5px solid var(--amber);border-radius:6px;font-family:'Inter',sans-serif;font-size:.8rem;outline:none;background:#fff"/>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-danger btn-sm" id="pm-delete-btn" style="display:none;margin-right:auto" onclick="deletePayout()">Delete</button>
       <button class="btn btn-secondary" onclick="closeModal('payout-modal')">Cancel</button>
       <button class="btn btn-secondary" onclick="savePayout('draft')">Save Draft</button>
+      <button class="btn btn-ghost btn-sm" onclick="savePayoutNeedsInfo()" style="color:var(--amber);border:1.5px solid var(--amber)" title="Put on hold — needs more info before paying">⚠ Needs Info</button>
       <button class="btn btn-primary" onclick="savePayout('approved')">Approve & Save</button>
     </div>
   </div>
@@ -1811,10 +1817,19 @@ async function fetchPayouts(){
   payouts=data||[];
 }
 
+let payTab='unpaid'; // 'unpaid' or 'paid'
+
+function setPayTab(tab,btn){
+  payTab=tab;
+  document.querySelectorAll('#pay-tabs .cal-tab').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  renderPayHistory();
+}
+
 function renderPayHistory(){
   const instFilter=document.getElementById('pay-installer-filter')?.value||'all';
-  const stFilter=document.getElementById('pay-status-filter')?.value||'all';
-  const dateFilter=document.getElementById('pay-date-filter')?.value||'all';
+  const monthFilter=document.getElementById('pay-month-filter')?.value||'all';
+  const searchQ=(document.getElementById('pay-search')?.value||'').toLowerCase().trim();
 
   // Populate installer filter
   const instSel=document.getElementById('pay-installer-filter');
@@ -1822,27 +1837,45 @@ function renderPayHistory(){
   const curInst=instSel?.value;
   if(instSel) instSel.innerHTML=`<option value="all">All Installers</option>`+installers.map(p=>`<option value="${p.id}" ${p.id===curInst?'selected':''}>${p.full_name}</option>`).join('');
 
-  // Populate pay date filter from unique week_end dates
-  const dateSel=document.getElementById('pay-date-filter');
-  const curDate=dateSel?.value;
-  const uniqueDates=[...new Set(payouts.map(p=>p.week_end))].sort((a,b)=>b.localeCompare(a));
-  if(dateSel) dateSel.innerHTML=`<option value="all">All Pay Dates</option>`+uniqueDates.map(d=>`<option value="${d}" ${d===curDate?'selected':''}>${fd(d)}</option>`).join('');
+  // Populate month filter from unique months
+  const monthSel=document.getElementById('pay-month-filter');
+  const curMonth=monthSel?.value;
+  const uniqueMonths=[...new Set(payouts.map(p=>p.week_end?.substring(0,7)))].filter(Boolean).sort((a,b)=>b.localeCompare(a));
+  if(monthSel) monthSel.innerHTML=`<option value="all">All Months</option>`+uniqueMonths.map(m=>{
+    const [y,mo]=m.split('-');
+    const label=new Date(y,mo-1,1).toLocaleDateString('en-US',{month:'long',year:'numeric'});
+    return`<option value="${m}" ${m===curMonth?'selected':''}>${label}</option>`;
+  }).join('');
 
-  // Filter payouts
+  // Filter by tab
   let fp=payouts;
-  if(instFilter!=='all') fp=fp.filter(p=>p.installer_id===instFilter);
-  if(stFilter!=='all') fp=fp.filter(p=>p.status===stFilter);
-  if(dateFilter!=='all') fp=fp.filter(p=>p.week_end===dateFilter);
+  if(payTab==='unpaid') fp=fp.filter(p=>p.status==='draft'||p.status==='needs_info');
+  else fp=fp.filter(p=>p.status==='approved');
 
-  // Update summary cards
-  const outstanding=fp.filter(p=>p.status==='draft').reduce((s,p)=>s+Number(p.total_amount||0),0);
-  const paid=fp.filter(p=>p.status==='approved').reduce((s,p)=>s+Number(p.total_amount||0),0);
+  // Filter by installer, month, search
+  if(instFilter!=='all') fp=fp.filter(p=>p.installer_id===instFilter);
+  if(monthFilter!=='all') fp=fp.filter(p=>p.week_end?.startsWith(monthFilter));
+  if(searchQ) fp=fp.filter(p=>{
+    const name=(p.installer?.full_name||'').toLowerCase();
+    const date=fd(p.week_end).toLowerCase();
+    const lines=(p.payout_line_items||[]).map(l=>l.description||'').join(' ').toLowerCase();
+    return name.includes(searchQ)||date.includes(searchQ)||lines.includes(searchQ);
+  });
+
+  // Summary cards
+  const now=new Date();
+  const mtdStart=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
+  const outstanding=payouts.filter(p=>p.status==='draft'||p.status==='needs_info').reduce((s,p)=>s+Number(p.total_amount||0),0);
+  const paidMTD=payouts.filter(p=>p.status==='approved'&&p.week_end>=mtdStart).reduce((s,p)=>s+Number(p.total_amount||0),0);
   document.getElementById('pay-stat-outstanding').textContent='$'+outstanding.toFixed(2);
-  document.getElementById('pay-stat-paid').textContent='$'+paid.toFixed(2);
+  document.getElementById('pay-stat-paid').textContent='$'+paidMTD.toFixed(2);
   document.getElementById('pay-stat-count').textContent=fp.length;
 
   const c=document.getElementById('pay-history-list');
-  if(!fp.length){c.innerHTML=`<div class="empty-state"><div class="empty-icon">💵</div><p>No payouts yet.</p></div>`;return}
+  if(!fp.length){
+    c.innerHTML=`<div class="empty-state"><div class="empty-icon">💵</div><p>${payTab==='unpaid'?'No unpaid payouts.':'No paid payouts yet.'}</p></div>`;
+    return;
+  }
 
   // Group by installer
   const byInstaller={};
@@ -1853,70 +1886,120 @@ function renderPayHistory(){
   });
 
   c.innerHTML=Object.values(byInstaller).map(({name,payouts:iPayouts})=>{
-    const totalDue=iPayouts.filter(p=>p.status==='draft').reduce((s,p)=>s+Number(p.total_amount||0),0);
-    const totalPaid=iPayouts.filter(p=>p.status==='approved').reduce((s,p)=>s+Number(p.total_amount||0),0);
-    const hasDraft=iPayouts.some(p=>p.status==='draft');
-    const jobCount=iPayouts.reduce((s,p)=>s+(p.payout_line_items?.length||0),0);
-
-    // Sort payouts newest first
     const sorted=[...iPayouts].sort((a,b)=>b.week_end.localeCompare(a.week_end));
+    const totalDue=iPayouts.reduce((s,p)=>s+Number(p.total_amount||0),0);
+    const jobCount=iPayouts.reduce((s,p)=>s+(p.payout_line_items?.length||0),0);
+    const hasNeedsInfo=iPayouts.some(p=>p.status==='needs_info');
 
-    const payoutRows=sorted.map(p=>{
+    const payoutBlocks=sorted.map(p=>{
       const lines=p.payout_line_items||[];
       const isDraft=p.status==='draft';
-      return`
-        <div style="background:#fff;border:1px solid var(--g150);border-radius:8px;margin-bottom:.5rem;overflow:hidden">
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:.6rem .875rem;border-bottom:1px solid var(--g100)">
-            <div style="display:flex;align-items:center;gap:.75rem">
-              <div>
-                <span style="font-size:.8rem;font-weight:700;color:var(--g700)">Pay Date: ${fd(p.week_end)}</span>
-                <span style="font-size:.75rem;color:var(--g400);margin-left:.5rem">${lines.length} line item${lines.length!==1?'s':''}</span>
-              </div>
-              <span style="font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:20px;background:${isDraft?'var(--afaint)':'var(--gfaint)'};color:${isDraft?'var(--amber)':'var(--green)'}">${isDraft?'Unpaid':'Paid'}</span>
+      const isNeedsInfo=p.status==='needs_info';
+      const isPaid=p.status==='approved';
+      const flaggedLines=lines.filter(l=>l.needs_review);
+      const expandId=`payout-expand-${p.id}`;
+
+      const statusBadge=isPaid
+        ?`<span style="font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--gfaint);color:var(--green)">Paid</span>`
+        :isNeedsInfo
+        ?`<span style="font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--afaint);color:var(--amber)">⚠ Needs Info</span>`
+        :`<span style="font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:20px;background:#fff3cd;color:#856404">Unpaid</span>`;
+
+      const lineItemsHtml=lines.length?`
+        <table style="width:100%;border-collapse:collapse;font-size:.8rem;margin-top:.25rem">
+          <thead><tr style="background:var(--g50)">
+            <th style="padding:.35rem .875rem;text-align:left;font-weight:600;color:var(--g500);font-size:.7rem;text-transform:uppercase">Description</th>
+            <th style="padding:.35rem .5rem;text-align:right;font-weight:600;color:var(--g500);font-size:.7rem;text-transform:uppercase">Qty</th>
+            <th style="padding:.35rem .5rem;text-align:right;font-weight:600;color:var(--g500);font-size:.7rem;text-transform:uppercase">Rate</th>
+            <th style="padding:.35rem .875rem;text-align:right;font-weight:600;color:var(--g500);font-size:.7rem;text-transform:uppercase">Total</th>
+          </tr></thead>
+          <tbody>${lines.map((li,i)=>`
+            <tr style="border-top:1px solid var(--g100);background:${li.needs_review?'var(--afaint)':i%2===1?'var(--g50)':'#fff'}">
+              <td style="padding:.35rem .875rem;color:var(--g800)">${li.needs_review?'⚠ ':''}${li.description||'—'}</td>
+              <td style="padding:.35rem .5rem;text-align:right;color:var(--g600)">${li.quantity!=null?li.quantity:''}</td>
+              <td style="padding:.35rem .5rem;text-align:right;color:var(--g600)">${li.rate_amount!=null?'$'+Number(li.rate_amount).toFixed(2):''}</td>
+              <td style="padding:.35rem .875rem;text-align:right;font-weight:600">$${Number(li.total_amount||0).toFixed(2)}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>`:
+        '<div style="padding:.5rem .875rem;font-size:.8rem;color:var(--g400)">No line items</div>';
+
+      return`<div style="background:#fff;border:1px solid ${isNeedsInfo?'var(--amber)':isPaid?'var(--g200)':'var(--g150)'};border-radius:8px;margin-bottom:.5rem;overflow:hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:.65rem .875rem;cursor:pointer;user-select:none" onclick="togglePayoutExpand('${expandId}')">
+          <div style="display:flex;align-items:center;gap:.625rem">
+            <span style="font-size:.85rem;color:var(--g400);transition:transform .2s" id="${expandId}-arrow">▶</span>
+            <div>
+              <span style="font-size:.825rem;font-weight:700;color:var(--g800)">Pay date: ${fd(p.week_end)}</span>
+              <span style="font-size:.75rem;color:var(--g400);margin-left:.5rem">${lines.length} item${lines.length!==1?'s':''}${flaggedLines.length?` · ⚠ ${flaggedLines.length} flagged`:''}</span>
             </div>
-            <div style="display:flex;align-items:center;gap:.5rem">
-              <span style="font-size:1rem;font-weight:700">$${Number(p.total_amount).toFixed(2)}</span>
-              <button class="btn btn-ghost btn-sm" onclick="openEditPayout('${p.id}')" style="font-size:.75rem">Edit</button>
-              <button class="btn btn-ghost btn-sm" onclick="openPrintModal('${p.id}')" style="font-size:.75rem">🖨</button>
-            </div>
+            ${statusBadge}
           </div>
-          ${lines.length?`<table style="width:100%;border-collapse:collapse;font-size:.8rem">
-            <thead><tr style="background:var(--g50)">
-              <th style="padding:.4rem .875rem;text-align:left;font-weight:600;color:var(--g500);font-size:.7rem;text-transform:uppercase;letter-spacing:.05em">Description</th>
-              <th style="padding:.4rem .5rem;text-align:right;font-weight:600;color:var(--g500);font-size:.7rem;text-transform:uppercase;letter-spacing:.05em">Qty</th>
-              <th style="padding:.4rem .5rem;text-align:right;font-weight:600;color:var(--g500);font-size:.7rem;text-transform:uppercase;letter-spacing:.05em">Rate</th>
-              <th style="padding:.4rem .875rem;text-align:right;font-weight:600;color:var(--g500);font-size:.7rem;text-transform:uppercase;letter-spacing:.05em">Total</th>
-            </tr></thead>
-            <tbody>${lines.map((li,i)=>`<tr style="border-top:1px solid var(--g100)${i%2===1?';background:var(--g50)':''}">
-              <td style="padding:.4rem .875rem;color:var(--g800)">${li.description||'—'}</td>
-              <td style="padding:.4rem .5rem;text-align:right;color:var(--g600)">${li.quantity!=null?li.quantity:''}</td>
-              <td style="padding:.4rem .5rem;text-align:right;color:var(--g600)">${li.rate_amount!=null?'$'+Number(li.rate_amount).toFixed(2):''}</td>
-              <td style="padding:.4rem .875rem;text-align:right;font-weight:600">$${Number(li.total_amount||0).toFixed(2)}</td>
-            </tr>`).join('')}</tbody>
-          </table>`:''}
-          ${p.notes?`<div style="padding:.4rem .875rem;font-size:.75rem;color:var(--g500);border-top:1px solid var(--g100);font-style:italic">${p.notes}</div>`:''}
-        </div>`;
+          <div style="display:flex;align-items:center;gap:.5rem">
+            <span style="font-size:.95rem;font-weight:700">$${Number(p.total_amount).toFixed(2)}</span>
+            <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openEditPayout('${p.id}')" style="font-size:.75rem">Edit</button>
+            <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openPrintModal('${p.id}')" style="font-size:.75rem">🖨</button>
+          </div>
+        </div>
+        ${isNeedsInfo&&p.needs_info_note?`<div style="padding:.35rem .875rem .5rem;font-size:.78rem;color:var(--amber);border-top:1px solid var(--amber);background:var(--afaint)">⚠ ${p.needs_info_note}</div>`:''}
+        <div id="${expandId}" style="display:none;border-top:1px solid var(--g100)">${lineItemsHtml}</div>
+      </div>`;
     }).join('');
 
-    return`<div style="margin-bottom:1.5rem">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
+    // Mark paid button — only for unpaid tab, only if no needs_info
+    const canMarkPaid=payTab==='unpaid'&&!hasNeedsInfo;
+    const markPaidBtn=canMarkPaid
+      ?`<button class="btn btn-primary btn-sm" onclick="markInstallerPaid('${iPayouts.map(p=>p.id).join(',')}')" style="background:var(--green);border-color:var(--green);white-space:nowrap">✓ Mark ${name.split(' ')[0]} paid — $${totalDue.toFixed(2)}</button>`
+      :hasNeedsInfo
+      ?`<button class="btn btn-ghost btn-sm" disabled style="opacity:.5;cursor:not-allowed;white-space:nowrap">⚠ Needs info before paying</button>`
+      :'';
+
+    return`<div style="margin-bottom:1.75rem">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:.6rem;gap:.75rem;flex-wrap:wrap">
         <div>
-          <div style="font-size:1.1rem;font-weight:700;color:var(--g900)">${name}</div>
-          <div style="font-size:.8rem;color:var(--g500)">${iPayouts.length} payout${iPayouts.length!==1?'s':''} · ${jobCount} line item${jobCount!==1?'s':''}</div>
+          <div style="font-size:1.05rem;font-weight:700;color:var(--g900)">${name}</div>
+          <div style="font-size:.8rem;color:var(--g500)">Pay date: ${sorted[0]?fd(sorted[0].week_end):'—'} · ${iPayouts.length} payout${iPayouts.length!==1?'s':''} · ${jobCount} line item${jobCount!==1?'s':''}</div>
         </div>
         <div style="display:flex;align-items:center;gap:.75rem">
-          ${hasDraft?`<div style="text-align:right">
-            <div style="font-size:1.25rem;font-weight:800;color:var(--g900)">$${totalDue.toFixed(2)}</div>
-            <div style="font-size:.72rem;color:var(--amber);font-weight:600">due</div>
-          </div>`:totalPaid>0?`<div style="text-align:right">
-            <div style="font-size:1.25rem;font-weight:800;color:var(--green)">$${totalPaid.toFixed(2)}</div>
-            <div style="font-size:.72rem;color:var(--green);font-weight:600">paid</div>
-          </div>`:''}
+          ${payTab==='unpaid'?`<div style="text-align:right"><div style="font-size:1.3rem;font-weight:800;color:${hasNeedsInfo?'var(--amber)':'var(--g900)'}">$${totalDue.toFixed(2)}</div><div style="font-size:.72rem;font-weight:600;color:${hasNeedsInfo?'var(--amber)':'var(--g500)'}">due</div></div>`:''}
+          ${markPaidBtn}
         </div>
       </div>
-      ${payoutRows}
+      ${payoutBlocks}
     </div>`;
   }).join('');
+}
+
+function togglePayoutExpand(expandId){
+  const el=document.getElementById(expandId);
+  const arrow=document.getElementById(expandId+'-arrow');
+  if(!el)return;
+  const open=el.style.display!=='none';
+  el.style.display=open?'none':'block';
+  if(arrow)arrow.style.transform=open?'':'rotate(90deg)';
+}
+
+async function markInstallerPaid(idsCsv){
+  const ids=idsCsv.split(',').filter(Boolean);
+  if(!ids.length)return;
+  if(!confirm(`Mark ${ids.length} payout${ids.length!==1?'s':''} as paid?`))return;
+  for(const id of ids){
+    await sb.from('payouts').update({status:'approved',approved_by:me.id,approved_at:new Date().toISOString()}).eq('id',id);
+  }
+  await fetchPayouts();
+  renderPayHistory();
+  showToast('Marked as paid.','success');
+}
+
+async function savePayoutNeedsInfo(){
+  const note=document.getElementById('pm-needs-info-note')?.value||'';
+  if(!note.trim()){
+    // Show the note field and focus it
+    const row=document.getElementById('pm-needs-info-row');
+    if(row){row.style.display='block';document.getElementById('pm-needs-info-note').focus();}
+    showToast('Enter a note explaining what needs to be resolved.','');
+    return;
+  }
+  await savePayout('needs_info',note);
 }
 
 // line items in memory for current payout being edited
@@ -1929,6 +2012,10 @@ function openNewPayout(overrideWeekStart, overrideWeekEnd){
   document.getElementById('pm-notes').value='';
   document.getElementById('pm-delete-btn').style.display='none';
   currentLines=[];
+  const niRow=document.getElementById('pm-needs-info-row');
+  const niNote=document.getElementById('pm-needs-info-note');
+  if(niRow)niRow.style.display='none';
+  if(niNote)niNote.value='';
 
   // Use override dates if provided (from payThisJob), otherwise use calendar view week
   let wsStr, weStr;
@@ -1964,10 +2051,15 @@ async function openEditPayout(id){
   document.getElementById('pm-week-end').value=p.week_end;
   document.getElementById('pm-delete-btn').style.display='inline-flex';
 
+  // Show needs-info row if applicable
+  const niRow=document.getElementById('pm-needs-info-row');
+  const niNote=document.getElementById('pm-needs-info-note');
+  if(niRow){niRow.style.display=p.status==='needs_info'?'block':'none';}
+  if(niNote){niNote.value=p.needs_info_note||'';}
+
   const installers=profiles.filter(p=>p.role==='installer'&&p.is_active!==false);
   document.getElementById('pm-installer').innerHTML=`<option value="">Select installer...</option>`+installers.map(pr=>`<option value="${pr.id}" ${pr.id===p.installer_id?'selected':''}>${pr.full_name}</option>`).join('');
 
-  // Load line items from saved payout
   currentLines=(p.payout_line_items||[]).map(li=>({
     id:li.id,
     desc:li.description,
@@ -1980,6 +2072,7 @@ async function openEditPayout(id){
     rateId:li.rate_id,
     unit:li.unit,
     notes:li.notes,
+    needsReview:li.needs_review||false,
     _key:li.id
   }));
 
@@ -2138,14 +2231,19 @@ function updatePayoutTotal(){
   document.getElementById('pm-total').textContent=`$${total.toFixed(2)}`;
 }
 
-async function savePayout(status){
+async function savePayout(status, needsInfoNote){
   const id=document.getElementById('pm-payout-id').value;
   const installer_id=document.getElementById('pm-installer').value;
   const week_start=document.getElementById('pm-week-start').value;
   const week_end=document.getElementById('pm-week-end').value;
-  if(!installer_id||!week_start){showToast('Select an installer and week.','error');return}
+  if(!installer_id||!week_start){showToast('Select an installer and payout date.','error');return}
   const total=currentLines.reduce((sum,li)=>sum+Number(li.total||0),0);
-  const payload={installer_id,week_start,week_end,total_amount:total,status,notes:document.getElementById('pm-notes').value||null,created_by:me.id};
+  const payload={
+    installer_id,week_start,week_end,total_amount:total,status,
+    notes:document.getElementById('pm-notes').value||null,
+    needs_info_note:needsInfoNote||null,
+    created_by:me.id
+  };
   if(status==='approved'){payload.approved_by=me.id;payload.approved_at=new Date().toISOString()}
 
   let payoutId=id;
@@ -2157,7 +2255,6 @@ async function savePayout(status){
   }
 
   if(payoutId){
-    // Replace all line items
     await sb.from('payout_line_items').delete().eq('payout_id',payoutId);
     if(currentLines.length){
       await sb.from('payout_line_items').insert(currentLines.map((li,i)=>({
@@ -2170,12 +2267,14 @@ async function savePayout(status){
         rate_amount:li.rate,
         total_amount:Number(li.total||0),
         notes:li.notes||null,
+        needs_review:li.needsReview||false,
         sort_order:i
       })));
     }
   }
   closeModal('payout-modal');
-  showToast(status==='approved'?'Payout approved!':'Draft saved.','success');
+  const toastMsg=status==='approved'?'Payout approved!':status==='needs_info'?'Saved — on hold until resolved.':'Draft saved.';
+  showToast(toastMsg,'success');
   await fetchPayouts();
   renderPayHistory();
 }
