@@ -2531,13 +2531,14 @@ async function importFromJobTread(){
     organization:{
       $:{id:jtSettings.org_id},
       jobs:{
-        $:{size:100,sortBy:[{field:'createdAt',order:'desc'}]},
+        $:{size:25,sortBy:[{field:'createdAt',order:'desc'}]},
         nodes:{
           id:{},name:{},number:{},status:{},
           location:{street:{},city:{},state:{}},
           documents:{
-            $:{size:8},
-            nodes:{id:{},name:{},type:{},number:{}}
+            $:{size:3},
+            nodes:{id:{},name:{},type:{},number:{},
+              costItems:{$:{size:10},nodes:{id:{},name:{},quantity:{},unitCost:{},cost:{}}}}
           }
         }
       }
@@ -2614,8 +2615,9 @@ async function loadMoreJTJobs(count){
             id:{},name:{},number:{},status:{},
             location:{street:{},city:{},state:{}},
             documents:{
-              $:{size:8},
-              nodes:{id:{},name:{},type:{},number:{}}
+              $:{size:3},
+              nodes:{id:{},name:{},type:{},number:{},
+                costItems:{$:{size:10},nodes:{id:{},name:{},quantity:{},unitCost:{},cost:{}}}}
             }
           }
         }
