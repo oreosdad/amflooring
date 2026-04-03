@@ -754,6 +754,9 @@
         </div>
       </div>
 
+      <!-- Duplicate payout warning -->
+      <div id="pm-dupe-warning" style="display:none;margin-bottom:.75rem;padding:.6rem .75rem;background:#fff5f5;border:1.5px solid var(--red);border-radius:8px"></div>
+
       <!-- Jobs this week -->
       <div id="pm-jobs-section" style="margin-bottom:1rem">
         <div style="font-size:.75rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;display:flex;align-items:center;justify-content:space-between">
@@ -809,9 +812,8 @@
     <div class="modal-footer">
       <button class="btn btn-danger btn-sm" id="pm-delete-btn" style="display:none;margin-right:auto" onclick="deletePayout()">Delete</button>
       <button class="btn btn-secondary" onclick="closeModal('payout-modal')">Cancel</button>
-      <button class="btn btn-secondary" onclick="savePayout('draft')">Save Draft</button>
+      <button class="btn btn-secondary" onclick="savePayout('draft')">Save</button>
       <button class="btn btn-ghost btn-sm" onclick="savePayoutNeedsInfo()" style="color:var(--amber);border:1.5px solid var(--amber)" title="Put on hold — needs more info before paying">⚠ Needs Info</button>
-      <button class="btn btn-primary" onclick="savePayout('approved')">Approve & Save</button>
     </div>
   </div>
 </div>
@@ -1938,6 +1940,7 @@ function renderPayHistory(){
             <span style="font-size:.95rem;font-weight:700">$${Number(p.total_amount).toFixed(2)}</span>
             <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openEditPayout('${p.id}')" style="font-size:.75rem">Edit</button>
             <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openPrintModal('${p.id}')" style="font-size:.75rem">🖨</button>
+            ${isPaid?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();markPayoutUnpaid('${p.id}')" style="font-size:.75rem;color:var(--amber)">Mark Unpaid</button>`:''}
           </div>
         </div>
         ${isNeedsInfo&&p.needs_info_note?`<div style="padding:.35rem .875rem .5rem;font-size:.78rem;color:var(--amber);border-top:1px solid var(--amber);background:var(--afaint)">⚠ ${p.needs_info_note}</div>`:''}
@@ -1978,6 +1981,37 @@ function togglePayoutExpand(expandId){
   if(arrow)arrow.style.transform=open?'':'rotate(90deg)';
 }
 
+async function markPayoutUnpaid(payoutId){
+  if(!confirm('Mark this payout as unpaid?'))return;
+  await sb.from('payouts').update({status:'draft',approved_by:null,approved_at:null}).eq('id',payoutId);
+  await fetchPayouts();
+  renderPayHistory();
+  showToast('Marked as unpaid.','');
+}
+
+function checkDuplicatePayout(projectId){
+  // Check if this project's job has already been paid in any payout
+  const existing=payouts.filter(p=>
+    (p.payout_line_items||[]).some(li=>li.project_id===projectId)
+  );
+  if(!existing.length) return null;
+  return existing;
+}
+
+function showDuplicateWarning(projectId,projectName){
+  const dupes=checkDuplicatePayout(projectId);
+  if(!dupes) return;
+  const warningEl=document.getElementById('pm-dupe-warning');
+  if(!warningEl) return;
+  const names=dupes.map(p=>{
+    const inst=p.installer?.full_name||'Unknown';
+    const status=p.status==='approved'?'✓ paid':p.status==='needs_info'?'⚠ on hold':'draft';
+    return`${inst} — ${fd(p.week_end)} (${status})`;
+  });
+  warningEl.style.display='block';
+  warningEl.innerHTML=`<div style="font-size:.78rem;font-weight:700;color:var(--red);margin-bottom:.25rem">⚠ Already in a payout: ${projectName}</div><div style="font-size:.75rem;color:var(--g600)">${names.join('<br>')}</div>`;
+}
+
 async function markInstallerPaid(idsCsv){
   const ids=idsCsv.split(',').filter(Boolean);
   if(!ids.length)return;
@@ -2016,6 +2050,8 @@ function openNewPayout(overrideWeekStart, overrideWeekEnd){
   const niNote=document.getElementById('pm-needs-info-note');
   if(niRow)niRow.style.display='none';
   if(niNote)niNote.value='';
+  const dupeWarn=document.getElementById('pm-dupe-warning');
+  if(dupeWarn)dupeWarn.style.display='none';
 
   // Use override dates if provided (from payThisJob), otherwise use calendar view week
   let wsStr, weStr;
@@ -2146,6 +2182,7 @@ function addJobRef(jobId,jobName){
   currentLines.push({_key:Date.now()+'',desc:'',job:jobId,jobName,jobDate,qty:null,rate:null,total:0,unit:'',rateId:null});
   renderPayoutLines();
   updateInstallDates();
+  showDuplicateWarning(jobId,jobName);
 }
 
 function updateInstallDates(){
@@ -2430,6 +2467,8 @@ async function payThisJob(projectId){
   // Add job as a line item reference
   currentLines.push({_key:Date.now()+'',desc:'',job:p.id,jobName:p.customer_name,jobDate:p.start_date,qty:null,rate:null,total:0,unit:'',rateId:null});
   renderPayoutLines();
+  // Warn if this job already has a payout
+  showDuplicateWarning(p.id, p.customer_name);
 
   // If no installer was assigned, show a hint
   if(!assigned.length){
@@ -2867,6 +2906,8 @@ function importDocLines(localJob,jtJob,doc){
   }
 
   renderPayoutLines();
+  // Check for duplicate payouts on imported jobs
+  if(localJob?.id) showDuplicateWarning(localJob.id, localJob.customer_name||jtJob.name);
   showToast(
     `Imported ${added} items from "${doc.name}".${flagged?` ⚠ ${flagged} flagged for review.`:''}`,
     flagged?'':'success'
