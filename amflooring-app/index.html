@@ -2531,16 +2531,13 @@ async function importFromJobTread(){
     organization:{
       $:{id:jtSettings.org_id},
       jobs:{
-        $:{size:50,sortBy:[{field:'createdAt',order:'desc'}]},
+        $:{size:100,sortBy:[{field:'createdAt',order:'desc'}]},
         nodes:{
           id:{},name:{},number:{},status:{},
           location:{street:{},city:{},state:{}},
           documents:{
-            $:{size:3},
-            nodes:{
-              id:{},name:{},type:{},
-              costItems:{$:{size:10},nodes:{id:{},name:{},quantity:{},unitCost:{},cost:{}}}
-            }
+            $:{size:8},
+            nodes:{id:{},name:{},type:{},number:{}}
           }
         }
       }
@@ -2552,14 +2549,14 @@ async function importFromJobTread(){
     const assigned=(p.project_installers||[]).map(pi=>pi.installer_id);
     return assigned.includes(instId)&&p.start_date>=ws&&p.start_date<=we&&p.calendar_type==='install';
   });
-  window._jtPickerState={jtJobs:data.organization.jobs.nodes,myLocalJobs,selectedJtJob:null,offset:50};
+  window._jtPickerState={jtJobs:data.organization.jobs.nodes,myLocalJobs,selectedJtJob:null,offset:100};
   showJTJobStep();
 }
 
 function showJTJobStep(){
   const{jtJobs,myLocalJobs}=window._jtPickerState;
   const body=document.getElementById('jt-picker-body');
-  body.innerHTML='<div style="margin-bottom:.75rem"><input type="text" id="jt-job-search" placeholder="Search by name, number, or address..." oninput="filterJTJobs(this.value)" style="width:100%;padding:.5rem .75rem;border:1.5px solid var(--g300);border-radius:6px;font-family:Inter,sans-serif;font-size:.875rem;outline:none" autofocus/></div><div id="jt-job-list"><div style="color:var(--g400);font-size:.875rem;padding:1.5rem;text-align:center">Type to search '+jtJobs.length+' jobs from JobTread</div></div>';
+  body.innerHTML='<div style="margin-bottom:.75rem"><input type="text" id="jt-job-search" placeholder="Search by name, job #, estimate #, or address..." oninput="filterJTJobs(this.value)" style="width:100%;padding:.5rem .75rem;border:1.5px solid var(--g300);border-radius:6px;font-family:Inter,sans-serif;font-size:.875rem;outline:none" autofocus/></div><div id="jt-job-list"><div style="color:var(--g400);font-size:.875rem;padding:1.5rem;text-align:center">Type to search '+jtJobs.length+' jobs from JobTread</div></div>';
   document.getElementById('jt-picker-modal').querySelector('.modal-title').textContent='Step 1 — Select JobTread Job';
   openModal('jt-picker-modal');
   setTimeout(()=>document.getElementById('jt-job-search')?.focus(),150);
@@ -2575,7 +2572,8 @@ function filterJTJobs(q){
   const ql=q.toLowerCase();
   const filtered=jtJobs.filter(j=>{
     const addr=j.location?[j.location.street,j.location.city,j.location.state].filter(Boolean).join(' ').toLowerCase():'';
-    return j.name.toLowerCase().includes(ql)||j.number.toString().includes(ql)||addr.includes(ql);
+    const docNums=(j.documents?.nodes||[]).map(d=>d.number?.toString()||'').join(' ');
+    return j.name.toLowerCase().includes(ql)||j.number.toString().includes(ql)||addr.includes(ql)||docNums.includes(ql);
   });
   renderJTJobList(filtered,myLocalJobs,false);
 }
@@ -2588,7 +2586,7 @@ function renderJTJobList(jtJobs,myLocalJobs,showLoadButtons){
     const hasLabor=j.documents?.nodes?.some(d=>d.costItems?.nodes?.some(ci=>Number(ci.unitCost||0)>0));
     const localMatch=myLocalJobs.find(lj=>j.name.toLowerCase().includes(lj.customer_name.toLowerCase().split(' ')[0])||lj.customer_name.toLowerCase().includes(j.name.toLowerCase().split(' ')[0]));
     const border=localMatch?'var(--green)':'var(--g200)';
-    return`<div style="padding:.75rem;border:1.5px solid ${border};border-radius:8px;margin-bottom:.4rem;cursor:pointer" onclick="selectJTJob(${i})"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:600;font-size:.875rem">${j.name}</div><div style="font-size:.75rem;color:var(--g500)">JT #${j.number} · ${j.status} · ${docCount} estimate${docCount!==1?'s':''}</div>${j.location?.street?`<div style="font-size:.72rem;color:var(--g400);margin-top:1px">📍 ${[j.location.street,j.location.city,j.location.state].filter(Boolean).join(', ')}</div>`:''}${localMatch?`<div style="font-size:.72rem;color:var(--green);margin-top:2px">✓ Likely match: ${localMatch.customer_name}</div>`:''}</div><span style="font-size:.75rem;font-weight:600;color:${hasLabor?'var(--g900)':'var(--g400)'}">${hasLabor?'Has labor':'No labor'}</span></div></div>`;
+    return`<div style="padding:.75rem;border:1.5px solid ${border};border-radius:8px;margin-bottom:.4rem;cursor:pointer" onclick="selectJTJob(${i})"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:600;font-size:.875rem">${j.name}</div><div style="font-size:.75rem;color:var(--g500)">JT #${j.number} · ${j.status} · ${docCount} estimate${docCount!==1?'s':''}${(j.documents?.nodes||[]).filter(d=>d.number).map(d=>' · Est #'+d.number).join('')}</div>${j.location?.street?`<div style="font-size:.72rem;color:var(--g400);margin-top:1px">📍 ${[j.location.street,j.location.city,j.location.state].filter(Boolean).join(', ')}</div>`:''}${localMatch?`<div style="font-size:.72rem;color:var(--green);margin-top:2px">✓ Likely match: ${localMatch.customer_name}</div>`:''}</div><span style="font-size:.75rem;font-weight:600;color:${hasLabor?'var(--g900)':'var(--g400)'}">${hasLabor?'Has labor':'No labor'}</span></div></div>`;
   }).join('');
   const loadBtns=showLoadButtons!==false?`<div style="padding:.75rem 0;text-align:center">
     <button class="btn btn-ghost btn-sm" onclick="loadMoreJTJobs(250)" style="font-size:.75rem;color:var(--blue)">Load 250 more</button>
@@ -2601,48 +2599,77 @@ async function loadMoreJTJobs(count){
   if(!state) return;
   const btn=event?.target;
   if(btn){btn.textContent='Loading...';btn.disabled=true;}
-  const data=await jtQuery({
-    organization:{
-      $:{id:jtSettings.org_id},
-      jobs:{
-        $:{size:count,sortBy:[{field:'createdAt',order:'desc'}],offset:state.offset||0},
-        nodes:{
-          id:{},name:{},number:{},status:{},
-          location:{street:{},city:{},state:{}},
-          documents:{
-            $:{size:3},
-            nodes:{
-              id:{},name:{},type:{},
-              costItems:{$:{size:10},nodes:{id:{},name:{},quantity:{},unitCost:{},cost:{}}}
+  // Fetch in batches of 25 (API limit) until we reach count
+  const batchSize=100;
+  let loaded=0;
+  let offset=state.offset||0;
+  while(loaded<count){
+    const thisSize=Math.min(batchSize,count-loaded);
+    const data=await jtQuery({
+      organization:{
+        $:{id:jtSettings.org_id},
+        jobs:{
+          $:{size:thisSize,sortBy:[{field:'createdAt',order:'desc'}],offset},
+          nodes:{
+            id:{},name:{},number:{},status:{},
+            location:{street:{},city:{},state:{}},
+            documents:{
+              $:{size:8},
+              nodes:{id:{},name:{},type:{},number:{}}
             }
           }
         }
       }
-    }
-  });
-  const newJobs=data?.organization?.jobs?.nodes||[];
-  if(!newJobs.length){showToast('No more jobs to load.','');return}
-  state.jtJobs=[...state.jtJobs,...newJobs];
-  state.offset=(state.offset||0)+newJobs.length;
+    });
+    const batch=data?.organization?.jobs?.nodes||[];
+    if(!batch.length) break;
+    state.jtJobs=[...state.jtJobs,...batch];
+    offset+=batch.length;
+    loaded+=batch.length;
+    if(batch.length<thisSize) break; // no more jobs available
+  }
+  state.offset=offset;
+  if(!loaded){showToast('No more jobs to load.','');if(btn){btn.textContent='Load 250 more';btn.disabled=false;}return}
   // Re-render with current search filter applied
   const q=document.getElementById('jt-job-search')?.value||'';
-  if(q.length>=2){
-    filterJTJobs(q);
-  } else {
-    renderJTJobList(state.jtJobs,state.myLocalJobs);
-  }
-  showToast(`Loaded ${newJobs.length} more jobs (${state.jtJobs.length} total).`,'');
+  if(q.length>=2){filterJTJobs(q);}
+  else{renderJTJobList(state.jtJobs,state.myLocalJobs,true);}
+  showToast(`Loaded ${loaded} more jobs (${state.jtJobs.length} total).`,'');
 }
 
-function selectJTJob(idx){
+async function selectJTJob(idx){
   const{jtJobs,myLocalJobs}=window._jtPickerState;
   const jtJob=jtJobs[idx];if(!jtJob)return;
   const localJob=myLocalJobs.find(lj=>jtJob.name.toLowerCase().includes(lj.customer_name.toLowerCase().split(' ')[0])||lj.customer_name.toLowerCase().includes(jtJob.name.toLowerCase().split(' ')[0]))||myLocalJobs[0]||null;
   window._jtPickerState.selectedJtJob=jtJob;
   window._jtPickerState.selectedLocalJob=localJob;
-  const docs=(jtJob.documents?.nodes||[]).filter(d=>d.costItems?.nodes?.some(ci=>Number(ci.unitCost||0)>0));
+
+  // Show loading state in picker body
+  document.getElementById('jt-picker-body').innerHTML='<div style="padding:2rem;text-align:center;color:var(--g400)">Loading estimates...</div>';
+
+  // Fetch full cost items for this specific job
+  const data=await jtQuery({
+    job:{
+      $:{id:jtJob.id},
+      id:{},name:{},number:{},
+      documents:{
+        $:{size:10},
+        nodes:{
+          id:{},name:{},type:{},
+          costItems:{$:{size:50},nodes:{id:{},name:{},quantity:{},unitCost:{},cost:{}}}
+        }
+      }
+    }
+  });
+
+  const fullJob=data?.job;
+  if(!fullJob){showToast('Could not load job details.','error');return}
+
+  const docs=(fullJob.documents?.nodes||[]).filter(d=>
+    d.costItems?.nodes?.some(ci=>Number(ci.unitCost||0)>0)
+  );
   if(!docs.length){showToast('No estimates with labor items found on this job.','error');return}
-  showJTDocStep(jtJob,docs,localJob);
+  showJTDocStep(fullJob,docs,localJob);
 }
 
 function showJTDocStep(jtJob,docs,localJob){
@@ -2744,7 +2771,7 @@ async function showJTJobPicker(myJobs,ws,we){
     organization:{
       $:{id:jtSettings.org_id},
       jobs:{
-        $:{size:50,sortBy:[{field:'createdAt',order:'desc'}]},
+        $:{size:25,sortBy:[{field:'createdAt',order:'desc'}]},
         nodes:{
           id:{},name:{},number:{},status:{},
           documents:{
