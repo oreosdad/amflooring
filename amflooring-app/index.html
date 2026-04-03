@@ -445,14 +445,24 @@
           <div><div class="page-title">Installer Pay</div><div class="page-subtitle">Build, approve, and track installer payouts</div></div>
           <button class="btn btn-primary" onclick="openNewPayout()">+ New Payout</button>
         </div>
-        <div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap;align-items:center">
+        <!-- Summary cards -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:1.25rem">
+          <div class="stat-card"><div class="stat-card-label">Outstanding</div><div class="stat-card-value" id="pay-stat-outstanding" style="color:var(--amber)">$0</div><div class="stat-card-sub">draft / unpaid</div></div>
+          <div class="stat-card"><div class="stat-card-label">Paid Out</div><div class="stat-card-value" id="pay-stat-paid" style="color:var(--green)">$0</div><div class="stat-card-sub">approved</div></div>
+          <div class="stat-card"><div class="stat-card-label">Payouts</div><div class="stat-card-value" id="pay-stat-count">0</div><div class="stat-card-sub">shown</div></div>
+        </div>
+        <!-- Filters -->
+        <div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap;align-items:center;justify-content:flex-end">
           <select id="pay-installer-filter" onchange="renderPayHistory()" style="padding:.4rem .75rem;border:1.5px solid var(--g300);border-radius:6px;font-family:'Inter',sans-serif;font-size:.875rem;background:#fff;outline:none">
             <option value="all">All Installers</option>
           </select>
+          <select id="pay-date-filter" onchange="renderPayHistory()" style="padding:.4rem .75rem;border:1.5px solid var(--g300);border-radius:6px;font-family:'Inter',sans-serif;font-size:.875rem;background:#fff;outline:none">
+            <option value="all">All Pay Dates</option>
+          </select>
           <select id="pay-status-filter" onchange="renderPayHistory()" style="padding:.4rem .75rem;border:1.5px solid var(--g300);border-radius:6px;font-family:'Inter',sans-serif;font-size:.875rem;background:#fff;outline:none">
             <option value="all">All Status</option>
-            <option value="draft">Draft</option>
-            <option value="approved">Approved</option>
+            <option value="draft">Unpaid</option>
+            <option value="approved">Paid</option>
           </select>
         </div>
         <div id="pay-history-list"></div>
@@ -1803,41 +1813,107 @@ async function fetchPayouts(){
 function renderPayHistory(){
   const instFilter=document.getElementById('pay-installer-filter')?.value||'all';
   const stFilter=document.getElementById('pay-status-filter')?.value||'all';
-  // Build installer filter options
+  const dateFilter=document.getElementById('pay-date-filter')?.value||'all';
+
+  // Populate installer filter
   const instSel=document.getElementById('pay-installer-filter');
   const installers=profiles.filter(p=>p.role==='installer'&&p.is_active!==false);
-  const curInst=instSel.value;
-  instSel.innerHTML=`<option value="all">All Installers</option>`+installers.map(p=>`<option value="${p.id}" ${p.id===curInst?'selected':''}>${p.full_name}</option>`).join('');
+  const curInst=instSel?.value;
+  if(instSel) instSel.innerHTML=`<option value="all">All Installers</option>`+installers.map(p=>`<option value="${p.id}" ${p.id===curInst?'selected':''}>${p.full_name}</option>`).join('');
 
+  // Populate pay date filter from unique week_end dates
+  const dateSel=document.getElementById('pay-date-filter');
+  const curDate=dateSel?.value;
+  const uniqueDates=[...new Set(payouts.map(p=>p.week_end))].sort((a,b)=>b.localeCompare(a));
+  if(dateSel) dateSel.innerHTML=`<option value="all">All Pay Dates</option>`+uniqueDates.map(d=>`<option value="${d}" ${d===curDate?'selected':''}>${fd(d)}</option>`).join('');
+
+  // Filter payouts
   let fp=payouts;
-  if(instFilter!=='all')fp=fp.filter(p=>p.installer_id===instFilter);
-  if(stFilter!=='all')fp=fp.filter(p=>p.status===stFilter);
+  if(instFilter!=='all') fp=fp.filter(p=>p.installer_id===instFilter);
+  if(stFilter!=='all') fp=fp.filter(p=>p.status===stFilter);
+  if(dateFilter!=='all') fp=fp.filter(p=>p.week_end===dateFilter);
+
+  // Update summary cards
+  const outstanding=fp.filter(p=>p.status==='draft').reduce((s,p)=>s+Number(p.total_amount||0),0);
+  const paid=fp.filter(p=>p.status==='approved').reduce((s,p)=>s+Number(p.total_amount||0),0);
+  document.getElementById('pay-stat-outstanding').textContent='$'+outstanding.toFixed(2);
+  document.getElementById('pay-stat-paid').textContent='$'+paid.toFixed(2);
+  document.getElementById('pay-stat-count').textContent=fp.length;
 
   const c=document.getElementById('pay-history-list');
-  if(!fp.length){c.innerHTML=`<div class="empty-state"><div class="empty-icon">💵</div><p>No payouts yet. Create one to get started.</p></div>`;return}
+  if(!fp.length){c.innerHTML=`<div class="empty-state"><div class="empty-icon">💵</div><p>No payouts yet.</p></div>`;return}
 
-  c.innerHTML=fp.map(p=>{
-    const name=p.installer?.full_name||'Unknown';
-    const lines=p.payout_line_items||[];
-    const lineCount=lines.length;
-    const statusColor=p.status==='approved'?'var(--green)':'var(--amber)';
-    const statusLabel=p.status==='approved'?'Approved':'Draft';
-    return`<div class="payout-card status-${p.status}">
-      <div class="payout-card-top">
+  // Group by installer
+  const byInstaller={};
+  fp.forEach(p=>{
+    const key=p.installer_id||'unknown';
+    if(!byInstaller[key]) byInstaller[key]={name:p.installer?.full_name||'Unknown',payouts:[]};
+    byInstaller[key].payouts.push(p);
+  });
+
+  c.innerHTML=Object.values(byInstaller).map(({name,payouts:iPayouts})=>{
+    const totalDue=iPayouts.filter(p=>p.status==='draft').reduce((s,p)=>s+Number(p.total_amount||0),0);
+    const totalPaid=iPayouts.filter(p=>p.status==='approved').reduce((s,p)=>s+Number(p.total_amount||0),0);
+    const hasDraft=iPayouts.some(p=>p.status==='draft');
+    const jobCount=iPayouts.reduce((s,p)=>s+(p.payout_line_items?.length||0),0);
+
+    // Sort payouts newest first
+    const sorted=[...iPayouts].sort((a,b)=>b.week_end.localeCompare(a.week_end));
+
+    const payoutRows=sorted.map(p=>{
+      const lines=p.payout_line_items||[];
+      const isDraft=p.status==='draft';
+      return`
+        <div style="background:#fff;border:1px solid var(--g150);border-radius:8px;margin-bottom:.5rem;overflow:hidden">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:.6rem .875rem;border-bottom:1px solid var(--g100)">
+            <div style="display:flex;align-items:center;gap:.75rem">
+              <div>
+                <span style="font-size:.8rem;font-weight:700;color:var(--g700)">Pay Date: ${fd(p.week_end)}</span>
+                <span style="font-size:.75rem;color:var(--g400);margin-left:.5rem">${lines.length} line item${lines.length!==1?'s':''}</span>
+              </div>
+              <span style="font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:20px;background:${isDraft?'var(--afaint)':'var(--gfaint)'};color:${isDraft?'var(--amber)':'var(--green)'}">${isDraft?'Unpaid':'Paid'}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:.5rem">
+              <span style="font-size:1rem;font-weight:700">$${Number(p.total_amount).toFixed(2)}</span>
+              <button class="btn btn-ghost btn-sm" onclick="openEditPayout('${p.id}')" style="font-size:.75rem">Edit</button>
+              <button class="btn btn-ghost btn-sm" onclick="openPrintModal('${p.id}')" style="font-size:.75rem">🖨</button>
+            </div>
+          </div>
+          ${lines.length?`<table style="width:100%;border-collapse:collapse;font-size:.8rem">
+            <thead><tr style="background:var(--g50)">
+              <th style="padding:.4rem .875rem;text-align:left;font-weight:600;color:var(--g500);font-size:.7rem;text-transform:uppercase;letter-spacing:.05em">Description</th>
+              <th style="padding:.4rem .5rem;text-align:right;font-weight:600;color:var(--g500);font-size:.7rem;text-transform:uppercase;letter-spacing:.05em">Qty</th>
+              <th style="padding:.4rem .5rem;text-align:right;font-weight:600;color:var(--g500);font-size:.7rem;text-transform:uppercase;letter-spacing:.05em">Rate</th>
+              <th style="padding:.4rem .875rem;text-align:right;font-weight:600;color:var(--g500);font-size:.7rem;text-transform:uppercase;letter-spacing:.05em">Total</th>
+            </tr></thead>
+            <tbody>${lines.map((li,i)=>`<tr style="border-top:1px solid var(--g100)${i%2===1?';background:var(--g50)':''}">
+              <td style="padding:.4rem .875rem;color:var(--g800)">${li.description||'—'}</td>
+              <td style="padding:.4rem .5rem;text-align:right;color:var(--g600)">${li.quantity!=null?li.quantity:''}</td>
+              <td style="padding:.4rem .5rem;text-align:right;color:var(--g600)">${li.rate_amount!=null?'$'+Number(li.rate_amount).toFixed(2):''}</td>
+              <td style="padding:.4rem .875rem;text-align:right;font-weight:600">$${Number(li.total_amount||0).toFixed(2)}</td>
+            </tr>`).join('')}</tbody>
+          </table>`:''}
+          ${p.notes?`<div style="padding:.4rem .875rem;font-size:.75rem;color:var(--g500);border-top:1px solid var(--g100);font-style:italic">${p.notes}</div>`:''}
+        </div>`;
+    }).join('');
+
+    return`<div style="margin-bottom:1.5rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
         <div>
-          <div class="payout-installer">${name}</div>
-          <div class="payout-meta">Week of ${fd(p.week_start)} – ${fd(p.week_end)} · ${lineCount} line item${lineCount!==1?'s':''}</div>
-          ${p.notes?`<div class="payout-meta" style="margin-top:2px;font-style:italic">${p.notes}</div>`:''}
+          <div style="font-size:1.1rem;font-weight:700;color:var(--g900)">${name}</div>
+          <div style="font-size:.8rem;color:var(--g500)">${iPayouts.length} payout${iPayouts.length!==1?'s':''} · ${jobCount} line item${jobCount!==1?'s':''}</div>
         </div>
-        <div style="text-align:right">
-          <div class="payout-amount">$${Number(p.total_amount).toFixed(2)}</div>
-          <span style="font-size:.75rem;font-weight:600;color:${statusColor};background:${p.status==='approved'?'var(--gfaint)':'var(--afaint)'};padding:2px 8px;border-radius:20px;display:inline-block;margin-top:4px">${statusLabel}</span>
+        <div style="display:flex;align-items:center;gap:.75rem">
+          ${hasDraft?`<div style="text-align:right">
+            <div style="font-size:1.25rem;font-weight:800;color:var(--g900)">$${totalDue.toFixed(2)}</div>
+            <div style="font-size:.72rem;color:var(--amber);font-weight:600">due</div>
+          </div>`:totalPaid>0?`<div style="text-align:right">
+            <div style="font-size:1.25rem;font-weight:800;color:var(--green)">$${totalPaid.toFixed(2)}</div>
+            <div style="font-size:.72rem;color:var(--green);font-weight:600">paid</div>
+          </div>`:''}
         </div>
       </div>
-      <div style="display:flex;gap:.5rem;margin-top:.75rem;flex-wrap:wrap">
-        <button class="btn btn-secondary btn-sm" onclick="openEditPayout('${p.id}')">Edit</button>
-        <button class="btn btn-ghost btn-sm" onclick="openPrintModal('${p.id}')">🖨 Print</button>
-      </div>
+      ${payoutRows}
     </div>`;
   }).join('');
 }
