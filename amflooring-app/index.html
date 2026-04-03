@@ -2597,23 +2597,19 @@ async function selectJTJob(idx){
   state.selectedJtJob=jtJob;
   state.selectedLocalJob=localJob;
   document.getElementById('jt-picker-body').innerHTML='<div style="padding:2rem;text-align:center;color:var(--g400)">Loading estimates...</div>';
-  // Fetch this job's documents and cost items
+  // Fetch this job's documents directly by job ID
   const data=await jtQuery({
-    organization:{
-      $:{id:jtSettings.org_id},
-      jobs:{
-        $:{size:25,where:['id','=',jtJob.id]},
-        nodes:{id:{},name:{},number:{},
-          documents:{
-            $:{size:10},
-            nodes:{id:{},name:{},type:{},number:{},
-              costItems:{$:{size:50},nodes:{id:{},name:{},quantity:{},unitCost:{},cost:{}}}}
-          }
-        }
+    job:{
+      $:{id:jtJob.id},
+      id:{},name:{},number:{},
+      documents:{
+        $:{size:10},
+        nodes:{id:{},name:{},type:{},number:{},
+          costItems:{$:{size:30},nodes:{id:{},name:{},quantity:{},unitCost:{},cost:{}}}}
       }
     }
   });
-  const fullJob=data?.organization?.jobs?.nodes?.find(j=>j.id===jtJob.id);
+  const fullJob=data?.job;
   if(!fullJob){showToast('Could not load estimates for this job.','error');return}
   const docs=(fullJob.documents?.nodes||[]).filter(d=>d.costItems?.nodes?.some(ci=>Number(ci.unitCost||0)>0));
   if(!docs.length){showToast('No estimates with labor items found on this job.','error');return}
