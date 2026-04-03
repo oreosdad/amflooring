@@ -2828,26 +2828,20 @@ function calSearchInput(q){
 
 function calSearchJump(projectId){
   const p=projects.find(x=>x.id===projectId);
-  if(!p||!p.start_date) return;
+  if(!p) return;
   // Close search
   document.getElementById('cal-search').value='';
   document.getElementById('cal-search-results').style.display='none';
   // Navigate calendar to the week containing this job
-  const d=new Date(p.start_date+'T00:00:00');
-  weekStart=weekOf(d);
-  currentMonth=new Date(d.getFullYear(),d.getMonth(),1);
-  // Switch to correct calendar tab if needed
-  if(p.calendar_type&&calTab!==p.calendar_type&&calTab!=='all'){
-    setCalTab(p.calendar_type,document.querySelector(`.cal-tab[onclick*="${p.calendar_type}"]`));
+  if(p.start_date){
+    const d=new Date(p.start_date+'T00:00:00');
+    weekStart=weekOf(d);
+    currentMonth=new Date(d.getFullYear(),d.getMonth(),1);
+    setView('week',document.getElementById('vbtn-week'));
+    renderCal();
   }
-  setView('week',document.getElementById('vbtn-week'));
-  renderCal();
-  // Flash highlight after render
-  setTimeout(()=>{
-    const chips=[...document.querySelectorAll('.ev-chip,.event-chip')];
-    const chip=chips.find(c=>c.textContent.includes(p.customer_name?.substring(0,10)||''));
-    if(chip){chip.style.outline='3px solid var(--red)';setTimeout(()=>chip.style.outline='',2000);}
-  },150);
+  // Open the job detail modal
+  setTimeout(()=>openDetail(projectId),100);
 }
 
 function calSearchClear(){
