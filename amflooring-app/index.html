@@ -771,11 +771,12 @@
       </div>
 
       <!-- Line item column headers -->
-      <div style="display:grid;grid-template-columns:1fr 70px 80px 80px 32px;gap:6px;padding:0 .25rem;margin-bottom:.25rem">
+      <div style="display:grid;grid-template-columns:1fr 70px 80px 80px 28px 32px;gap:6px;padding:0 .25rem;margin-bottom:.25rem">
         <div style="font-size:.7rem;color:var(--g400);font-weight:600;text-transform:uppercase;letter-spacing:.05em">Description</div>
         <div style="font-size:.7rem;color:var(--g400);font-weight:600;text-transform:uppercase;letter-spacing:.05em;text-align:right">Qty</div>
         <div style="font-size:.7rem;color:var(--g400);font-weight:600;text-transform:uppercase;letter-spacing:.05em;text-align:right">Rate</div>
         <div style="font-size:.7rem;color:var(--g400);font-weight:600;text-transform:uppercase;letter-spacing:.05em;text-align:right">Total</div>
+        <div></div>
         <div></div>
       </div>
       <div id="pm-line-items"></div>
@@ -920,7 +921,7 @@
   .payout-installer { font-size:1rem;font-weight:600 }
   .payout-meta { font-size:.8rem;color:var(--g500);margin-top:2px }
   .payout-amount { font-size:1.3rem;font-weight:700;color:var(--g900) }
-  .li-row { display:grid;grid-template-columns:1fr 70px 80px 80px 32px;gap:6px;align-items:center;margin-bottom:4px }
+  .li-row { display:grid;grid-template-columns:1fr 70px 80px 80px 28px 32px;gap:6px;align-items:center;margin-bottom:4px }
   .li-input { padding:4px 6px;border:1.5px solid var(--g300);border-radius:4px;font-family:'Inter',sans-serif;font-size:.8rem;background:#fff;color:var(--g900);width:100%;outline:none;text-align:right }
   .li-input:focus { border-color:var(--red) }
   .li-desc { padding:4px 6px;border:1.5px solid var(--g300);border-radius:4px;font-family:'Inter',sans-serif;font-size:.8rem;background:#fff;color:var(--g900);width:100%;outline:none }
@@ -2098,11 +2099,12 @@ function renderPayoutLines(){
   }
   const jobOptions=currentPayoutInstallerJobs.map(j=>`<option value="${j.id}">${j.customer_name}</option>`).join('');
   c.innerHTML=currentLines.map((li,i)=>`
-    <div class="li-row" data-key="${li._key}">
+    <div class="li-row${li.needsReview?' li-review':''}" data-key="${li._key}" style="${li.needsReview?'background:var(--afaint);border-radius:4px':''}">
       <input class="li-desc" value="${(li.desc||'').replace(/"/g,'&quot;')}" placeholder="Description" onchange="updateLine('${li._key}','desc',this.value)"/>
       <input class="li-input" type="number" step="0.01" value="${li.qty!=null?li.qty:''}" placeholder="Qty" onchange="updateLine('${li._key}','qty',this.value)"/>
-      <input class="li-input" type="number" step="0.01" value="${li.rate!=null?li.rate:''}" placeholder="Rate" onchange="updateLine('${li._key}','rate',this.value)"/>
+      <input class="li-input" type="number" step="0.01" value="${li.rate!=null?li.rate:''}" placeholder="Rate" onchange="updateLine('${li._key}','rate',this.value)" style="${li.needsReview?'border-color:var(--amber)':''}"/>
       <div class="li-total">$${Number(li.total||0).toFixed(2)}</div>
+      <button title="${li.needsReview?'Needs review — click to clear':'OK'}" onclick="clearReviewFlag('${li._key}')" style="background:none;border:none;cursor:${li.needsReview?'pointer':'default'};font-size:.9rem;line-height:1;padding:0;opacity:${li.needsReview?'1':'0'}">${li.needsReview?'⚠️':''}</button>
       <button onclick="removeLine('${li._key}')" style="background:none;border:none;cursor:pointer;color:var(--g400);font-size:1.1rem;line-height:1;padding:0">×</button>
     </div>`).join('');
   updatePayoutTotal();
@@ -2730,14 +2732,23 @@ function importDocLines(localJob,jtJob,doc){
   if(!items.length){showToast('No non-taxable labor items found in this estimate.','');return}
 
   let added=0;
+  let flagged=0;
   for(const item of items){
     const matched=matchJTItemToRate(item.name);
-    // If unitCost is 0, leave rate blank so you fill it in manually
-    // Rate priority: 1) matched rate table, 2) JT unitCost if >0, 3) 50% of JT unitPrice if cost=0
     const jtRate=Number(item.unitCost||0)>0?item.unitCost
       :Number(item.unitPrice||0)>0?parseFloat((item.unitPrice*0.5).toFixed(2))
       :null;
     const rate=matched?Number(matched.default_rate||0):jtRate;
+
+    // Flag for review if:
+    // - no rate table match (rate came from JT cost or 50% default)
+    // - OR qty looks wrong (qty=1 but item name suggests multiple units e.g. steps, spindles)
+    const noMatch=!matched;
+    const is50pct=!matched&&Number(item.unitCost||0)===0&&Number(item.unitPrice||0)>0;
+    const suspectQty=item.quantity===1&&/step|spindle|baluster|tread|riser|stair/i.test(item.name);
+    const needsReview=noMatch||is50pct||suspectQty||!rate;
+    if(needsReview) flagged++;
+
     currentLines.push({
       _key:Date.now()+'_'+Math.random(),
       desc:item.name,
@@ -2749,6 +2760,7 @@ function importDocLines(localJob,jtJob,doc){
       total:rate&&item.quantity?parseFloat((rate*item.quantity).toFixed(2)):Number(item.cost||0),
       unit:matched?.unit||'',
       rateId:matched?.id||null,
+      needsReview,
       jtJobId:jtJob.id,
       jtItemId:item.id
     });
@@ -2756,11 +2768,15 @@ function importDocLines(localJob,jtJob,doc){
   }
 
   renderPayoutLines();
-  const needsRate=currentLines.filter(l=>!l.rate).length;
   showToast(
-    `Imported ${added} items from "${doc.name}".${needsRate?` ${needsRate} need a rate.`:''}`,
-    'success'
+    `Imported ${added} items from "${doc.name}".${flagged?` ⚠ ${flagged} flagged for review.`:''}`,
+    flagged?'':'success'
   );
+}
+
+function clearReviewFlag(key){
+  const li=currentLines.find(x=>x._key===key);
+  if(li){li.needsReview=false;renderPayoutLines();}
 }
 
 async function showJTJobPicker(myJobs,ws,we){
