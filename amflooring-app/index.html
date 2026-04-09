@@ -3158,6 +3158,7 @@ async function selectJTJob(idx){
     job:{
       $:{id:jtJob.id},
       id:{},name:{},number:{},
+      location:{name:{},address:{},city:{},state:{}},
       documents:{
         $:{size:10},
         nodes:{id:{},name:{},type:{},number:{},
@@ -3167,6 +3168,8 @@ async function selectJTJob(idx){
   });
   const fullJob=data?.job;
   if(!fullJob){showToast('Could not load estimates for this job.','error');return}
+  // Use fullJob (has location) instead of search result jtJob
+  state.selectedJtJob=fullJob;
   const docs=(fullJob.documents?.nodes||[]).filter(d=>d.costItems?.nodes?.some(ci=>ci.isTaxable===false));
   if(!docs.length){showToast('No estimates with labor items found on this job.','error');return}
   state.selectedDocs=docs;
@@ -3206,6 +3209,17 @@ function selectJTDocFinal(idx){
 function importDocLines(localJob,jtJob,doc){
   const items=doc.costItems.nodes.filter(ci=>ci.isTaxable===false);
   if(!items.length){showToast('No non-taxable labor items found in this estimate.','');return}
+
+  // Backfill address on local project from JT if missing
+  if(localJob?.id && !localJob?.address && jtJob?.location?.address){
+    const jtAddr=jtJob.location.address;
+    sb.from('projects').update({address:jtAddr}).eq('id',localJob.id).then(()=>{
+      // Update in-memory project too
+      const proj=projects.find(p=>p.id===localJob.id);
+      if(proj) proj.address=jtAddr;
+      localJob.address=jtAddr;
+    });
+  }
 
   let added=0;
   let flagged=0;
