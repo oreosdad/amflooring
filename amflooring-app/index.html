@@ -2049,11 +2049,17 @@ function renderPayHistory(){
 
       return`<div style="background:#fff;border:1px solid ${isNeedsInfo?'var(--amber)':isPaid?'var(--g200)':'var(--g150)'};border-radius:8px;margin-bottom:.5rem;overflow:hidden">
         <div style="display:flex;align-items:center;justify-content:space-between;padding:.65rem .875rem;cursor:pointer;user-select:none" onclick="togglePayoutExpand('${expandId}')">
-          <div style="display:flex;align-items:center;gap:.625rem">
-            <span style="font-size:.85rem;color:var(--g400);transition:transform .2s" id="${expandId}-arrow">▶</span>
-            <div>
-              <span style="font-size:.825rem;font-weight:700;color:var(--g800)">Pay date: ${fd(p.week_end)}</span>
-              <span style="font-size:.75rem;color:var(--g400);margin-left:.5rem">${lines.length} item${lines.length!==1?'s':''}${flaggedLines.length?` · <span style="color:var(--amber)">⚠ ${flaggedLines.length} need review</span>`:isClean?` · <span style="color:var(--green)">✓ all clear</span>`:''}</span>
+          <div style="display:flex;align-items:center;gap:.625rem;flex:1;min-width:0">
+            <span style="font-size:.85rem;color:var(--g400);transition:transform .2s;flex-shrink:0" id="${expandId}-arrow">▶</span>
+            <div style="min-width:0">
+              <div>
+                <span style="font-size:.825rem;font-weight:700;color:var(--g800)">Pay date: ${fd(p.week_end)}</span>
+                <span style="font-size:.75rem;color:var(--g400);margin-left:.5rem">${lines.length} item${lines.length!==1?'s':''}${flaggedLines.length?` · <span style="color:var(--amber)">⚠ ${flaggedLines.length} need review</span>`:isClean?` · <span style="color:var(--green)">✓ all clear</span>`:''}</span>
+              </div>
+              ${(()=>{
+                const addrs=[...new Set(lines.map(l=>l.project?.address).filter(Boolean))];
+                return addrs.length?`<div style="font-size:.72rem;color:var(--g500);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📍 ${addrs.join(' · ')}</div>`:'';
+              })()}
             </div>
             ${statusBadge}
           </div>
