@@ -772,6 +772,7 @@
       <div style="font-size:.75rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;display:flex;align-items:center;justify-content:space-between">
         <span>Pay Line Items</span>
         <button class="btn btn-ghost btn-sm" onclick="addFreehandLine()" style="color:var(--blue);font-size:.75rem">+ Add line</button>
+        <button class="btn btn-ghost btn-sm" onclick="addMinChargePrompt()" style="color:var(--amber);font-size:.75rem">+ Min charge</button>
       </div>
 
       <!-- Line item column headers -->
@@ -1590,7 +1591,7 @@ function onCalendarChange(){
 function onStartDateChange(){
   const s=document.getElementById('f-start-date').value;
   const e=document.getElementById('f-end-date');
-  if(s&&!e.value)e.value=s;
+  if(s) e.value=s; // always default end to start — user can extend if multi-day
 }
 function onStartTimeChange(){
   const cal=document.getElementById('f-calendar').value;
@@ -2228,6 +2229,17 @@ function updateInstallDates(){
   }
 }
 
+function addMinChargePrompt(){
+  // Quick prompt to add a minimum charge line
+  const type=prompt('Flooring type for minimum charge?\n(tile=500, all others=200)\nEnter: tile, carpet, lvp, hardwood, laminate, or other','tile');
+  if(!type) return;
+  const mins={tile:500,carpet:200,lvp:200,hardwood:200,laminate:200};
+  const amount=mins[type.toLowerCase().trim()]||200;
+  const desc=type.charAt(0).toUpperCase()+type.slice(1).toLowerCase()+' Install — Minimum Charge';
+  currentLines.push({_key:Date.now()+'',desc,job:'',jobName:'',jobDate:null,qty:1,rate:amount,total:amount,unit:'',rateId:null,needsReview:false});
+  renderPayoutLines();
+}
+
 function addFreehandLine(){
   currentLines.push({_key:Date.now()+'',desc:'',job:'',jobName:'',qty:null,rate:null,total:0,unit:'',rateId:null});
   renderPayoutLines();
@@ -2856,7 +2868,7 @@ async function selectJTJob(idx){
       documents:{
         $:{size:10},
         nodes:{id:{},name:{},type:{},number:{},
-          costItems:{$:{size:30},nodes:{id:{},name:{},quantity:{},unitCost:{},cost:{},unitPrice:{},price:{},isTaxable:{}}}}
+          costItems:{$:{size:30},nodes:{id:{},name:{},description:{},quantity:{},unitCost:{},cost:{},unitPrice:{},price:{},isTaxable:{}}}}
       }
     }
   });
@@ -2904,16 +2916,41 @@ function importDocLines(localJob,jtJob,doc){
 
   let added=0;
   let flagged=0;
+
+  // Minimum pay rules by flooring type — applied when description says "minimum charge"
+  const minPayByType={
+    tile:500, carpet:200, lvp:200, hardwood:200, laminate:200, default:200
+  };
+
+  function getMinPayForItem(itemName, description){
+    const isMinCharge=/minimum.?charge/i.test(description||'');
+    if(!isMinCharge) return null;
+    const n=(itemName||'').toLowerCase();
+    if(/tile/i.test(n)) return minPayByType.tile;
+    if(/carpet|cpt/i.test(n)) return minPayByType.carpet;
+    if(/lvp|luxury vinyl|vinyl plank/i.test(n)) return minPayByType.lvp;
+    if(/hardwood|wood|prefinish/i.test(n)) return minPayByType.hardwood;
+    if(/laminate/i.test(n)) return minPayByType.laminate;
+    return minPayByType.default;
+  }
+
   for(const item of items){
     const matched=matchJTItemToRate(item.name);
     const jtRate=Number(item.unitCost||0)>0?item.unitCost
       :Number(item.unitPrice||0)>0?parseFloat((item.unitPrice*0.5).toFixed(2))
       :null;
-    const rate=matched?Number(matched.default_rate||0):jtRate;
+    let rate=matched?Number(matched.default_rate||0):jtRate;
+    let total=rate&&item.quantity?parseFloat((rate*item.quantity).toFixed(2)):Number(item.cost||0);
 
-    // Flag for review if:
-    // - no rate table match (rate came from JT cost or 50% default)
-    // - OR qty looks wrong (qty=1 but item name suggests multiple units e.g. steps, spindles)
+    // Apply minimum pay rule based on description field
+    const minPay=getMinPayForItem(item.name, item.description);
+    let hitMinimum=false;
+    if(minPay&&total<minPay){
+      total=minPay;
+      rate=item.quantity&&item.quantity>0?parseFloat((minPay/item.quantity).toFixed(2)):minPay;
+      hitMinimum=true;
+    }
+
     const noMatch=!matched;
     const is50pct=!matched&&Number(item.unitCost||0)===0&&Number(item.unitPrice||0)>0;
     const suspectQty=item.quantity===1&&/step|spindle|baluster|tread|riser|stair/i.test(item.name);
@@ -2922,13 +2959,13 @@ function importDocLines(localJob,jtJob,doc){
 
     currentLines.push({
       _key:Date.now()+'_'+Math.random(),
-      desc:item.name,
+      desc:item.name+(hitMinimum?` (min $${minPay})`:''),
       job:localJob?.id||'',
       jobName:localJob?.customer_name||jtJob.name,
       jobDate:localJob?.start_date||null,
       qty:item.quantity||null,
       rate,
-      total:rate&&item.quantity?parseFloat((rate*item.quantity).toFixed(2)):Number(item.cost||0),
+      total,
       unit:matched?.unit||'',
       rateId:matched?.id||null,
       needsReview,
@@ -2965,7 +3002,7 @@ async function showJTJobPicker(myJobs,ws,we){
             $:{size:5},
             nodes:{
               id:{},name:{},type:{},
-              costItems:{$:{size:30},nodes:{id:{},name:{},quantity:{},unitCost:{},cost:{},unitPrice:{},price:{},isTaxable:{}}}
+              costItems:{$:{size:30},nodes:{id:{},name:{},description:{},quantity:{},unitCost:{},cost:{},unitPrice:{},price:{},isTaxable:{}}}
             }
           }
         }
