@@ -473,6 +473,7 @@
       <div class="page" id="page-rates">
         <div class="page-header">
           <div><div class="page-title">Rate Table</div><div class="page-subtitle">Default installer pay rates — all editable</div></div>
+          <button class="btn btn-primary" onclick="openAddRateModal()">+ Add Rate</button>
         </div>
         <div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap">
           <input type="text" id="rates-search" placeholder="Search rates..." oninput="renderRates()" style="padding:.45rem .9rem;border:1.5px solid var(--g300);border-radius:6px;font-family:'Inter',sans-serif;font-size:.875rem;outline:none;width:200px"/>
@@ -741,7 +742,7 @@
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;margin-bottom:1rem;align-items:end">
         <div class="form-group" style="margin:0">
           <label>Installer *</label>
-          <select id="pm-installer" onchange="loadPayoutJobs()"></select>
+          <select id="pm-installer" onchange="loadPayoutJobs();buildPayoutRateSelect()"></select>
         </div>
         <div class="form-group" style="margin:0">
           <label>Install Date(s)</label>
@@ -827,6 +828,56 @@
   </div>
 </div>
 
+<!-- ADD RATE MODAL -->
+<div class="modal-overlay" id="add-rate-modal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header"><div class="modal-title">Add Rate</div><button class="modal-close" onclick="closeModal('add-rate-modal')">×</button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label>Category *</label>
+          <select id="ar-category" style="width:100%;padding:.45rem .75rem;border:1.5px solid var(--g300);border-radius:6px;font-family:'Inter',sans-serif;font-size:.875rem;background:#fff;outline:none">
+            <option value="">Select category...</option>
+          </select>
+        </div>
+        <div class="form-group"><label>New Category</label>
+          <input type="text" id="ar-new-category" placeholder="Or type a new one"/>
+        </div>
+      </div>
+      <div class="form-group"><label>Name *</label>
+        <input type="text" id="ar-name" placeholder="e.g. Underlay Install"/>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Rate</label>
+          <input type="number" id="ar-rate" placeholder="0.00" step="0.01"/>
+        </div>
+        <div class="form-group"><label>Unit</label>
+          <select id="ar-unit" style="width:100%;padding:.45rem .75rem;border:1.5px solid var(--g300);border-radius:6px;font-family:'Inter',sans-serif;font-size:.875rem;background:#fff;outline:none">
+            <option value="SF">SF</option>
+            <option value="SY">SY</option>
+            <option value="LF">LF</option>
+            <option value="EA">EA</option>
+            <option value="flat">Flat</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Type</label>
+          <select id="ar-type" style="width:100%;padding:.45rem .75rem;border:1.5px solid var(--g300);border-radius:6px;font-family:'Inter',sans-serif;font-size:.875rem;background:#fff;outline:none">
+            <option value="flat">Fixed</option>
+            <option value="varies">Varies</option>
+            <option value="percent">% of Customer</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label>Notes <span style="font-weight:400;font-size:.75rem;color:var(--g400)">(optional)</span></label>
+        <input type="text" id="ar-notes" placeholder="Any clarification..."/>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('add-rate-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveNewRate()">Add Rate</button>
+    </div>
+  </div>
+</div>
+
 <!-- COMPLIANCE / ADD INSTALLER MODAL -->
 <div class="modal-overlay" id="compliance-modal">
   <div class="modal" style="max-width:560px">
@@ -866,6 +917,12 @@
         </div>
       </div>
       <div class="form-group"><label>Notes</label><textarea id="comp-notes" placeholder="Any additional notes..."></textarea></div>
+      <input type="hidden" id="comp-profile-id"/>
+      <div class="section-divider">Preferred Pay Categories</div>
+      <div class="form-group">
+        <div style="font-size:.78rem;color:var(--g500);margin-bottom:.5rem">Rate categories shown first in payout builder for this installer</div>
+        <div id="comp-categories" style="display:flex;flex-wrap:wrap;gap:.4rem"></div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('compliance-modal')">Cancel</button>
@@ -1179,8 +1236,8 @@ function renderEventChip(item,forMonth=false){
     // Pay indicator — check if any approved payout has a line item for this project
     const hasPaid=payouts.some(po=>po.status==='approved'&&(po.payout_line_items||[]).some(li=>li.project_id===p.id));
     const hasDraft=!hasPaid&&payouts.some(po=>(po.status==='draft'||po.status==='needs_info')&&(po.payout_line_items||[]).some(li=>li.project_id===p.id));
-    const payDot=hasPaid?'<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-left:3px;vertical-align:middle" title="Paid"></span>'
-      :hasDraft?'<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--amber);margin-left:3px;vertical-align:middle" title="Payout in progress"></span>'
+    const payDot=hasPaid?'<span style="font-size:.7rem;margin-left:2px" title="Ready to pay">💵</span>'
+      :hasDraft?'<span style="font-size:.7rem;margin-left:2px" title="Payout in progress">⚠️</span>'
       :'';
     const label=`${timeStr?timeStr+' ':''}${p.customer_name}${ftBadge?` <span style="opacity:.75;font-size:.65rem">${ftBadge}</span>`:''}${payDot}`;
     return`<div class="cal-event cal-${p.calendar_type}" onclick="openDetail('${p.id}')" title="${p.customer_name}${ftBadge?' · '+p.flooring_type:''}${hasPaid?' · Paid':hasDraft?' · Payout in progress':''}" ${sz}>${label}</div>`;
@@ -1773,6 +1830,43 @@ function buildRateCatFilter(){
 
 let ratesDirty=false;
 
+function openAddRateModal(){
+  // Populate category dropdown from existing categories
+  const cats=[...new Set(installerRates.map(r=>r.category).filter(Boolean))].sort();
+  const sel=document.getElementById('ar-category');
+  sel.innerHTML='<option value="">Select category...</option>'+cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+  ['ar-name','ar-rate','ar-notes','ar-new-category'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('ar-unit').value='SF';
+  document.getElementById('ar-type').value='flat';
+  openModal('add-rate-modal');
+}
+
+async function saveNewRate(){
+  const catSel=document.getElementById('ar-category').value;
+  const catNew=document.getElementById('ar-new-category').value.trim();
+  const category=catNew||catSel;
+  const name=document.getElementById('ar-name').value.trim();
+  if(!category){showToast('Select or enter a category.','error');return}
+  if(!name){showToast('Name is required.','error');return}
+  const rateType=document.getElementById('ar-type').value;
+  const rateVal=document.getElementById('ar-rate').value;
+  const payload={
+    category,
+    name,
+    default_rate:rateType==='flat'&&rateVal?parseFloat(rateVal):null,
+    unit:document.getElementById('ar-unit').value,
+    rate_type:rateType,
+    notes:document.getElementById('ar-notes').value.trim()||null,
+    sort_order:999
+  };
+  const{data,error}=await sb.from('installer_rates').insert(payload).select().single();
+  if(error){showToast('Error saving rate.','error');return}
+  installerRates.push(data);
+  closeModal('add-rate-modal');
+  showToast(`Added "${name}" to ${category}.`,'success');
+  renderRates();
+}
+
 function renderRates(){
   const q=(document.getElementById('rates-search')?.value||'').toLowerCase();
   const cat=document.getElementById('rates-cat-filter')?.value||'';
@@ -2009,6 +2103,7 @@ async function markPayoutUnpaid(payoutId){
   await sb.from('payouts').update({status:'draft',approved_by:null,approved_at:null}).eq('id',payoutId);
   await fetchPayouts();
   renderPayHistory();
+  renderCal();
   showToast('Marked as unpaid.','');
 }
 
@@ -2044,6 +2139,7 @@ async function markInstallerPaid(idsCsv){
   }
   await fetchPayouts();
   renderPayHistory();
+  renderCal();
   showToast('Marked as paid.','success');
 }
 
@@ -2147,15 +2243,31 @@ async function openEditPayout(id){
 
 function buildPayoutRateSelect(){
   const sel=document.getElementById('pm-rate-select');
+  const instId=document.getElementById('pm-installer')?.value;
+  const installer=profiles.find(p=>p.id===instId);
+  const preferred=(installer?.preferred_categories||[]).map(c=>c.toLowerCase());
+
   const byCat={};
   installerRates.forEach(r=>{if(!byCat[r.category])byCat[r.category]=[];byCat[r.category].push(r)});
+
+  // Sort categories — preferred first, then alphabetical
+  const sortedCats=Object.keys(byCat).sort((a,b)=>{
+    const aP=preferred.includes(a.toLowerCase());
+    const bP=preferred.includes(b.toLowerCase());
+    if(aP&&!bP) return -1;
+    if(!aP&&bP) return 1;
+    return a.localeCompare(b);
+  });
+
   sel.innerHTML=`<option value="">Select a rate...</option>`+
-    Object.entries(byCat).map(([cat,items])=>
-      `<optgroup label="${cat}">${items.map(r=>{
+    sortedCats.map(cat=>{
+      const isPreferred=preferred.includes(cat.toLowerCase());
+      const items=byCat[cat];
+      return`<optgroup label="${isPreferred?'★ ':''} ${cat}">${items.map(r=>{
         const rateStr=r.rate_type==='varies'?'varies':r.rate_type==='percent'?`${r.percent_of}% of cust.`:`$${Number(r.default_rate||0).toFixed(2)}/${r.unit}`;
         return`<option value="${r.id}">${r.name} (${rateStr})</option>`;
-      }).join('')}</optgroup>`
-    ).join('');
+      }).join('')}</optgroup>`;
+    }).join('');
 }
 
 async function loadPayoutJobs(){
@@ -2359,6 +2471,7 @@ async function savePayout(status, needsInfoNote){
   showToast(toastMsg,'success');
   await fetchPayouts();
   renderPayHistory();
+  renderCal();
 }
 
 async function deletePayout(){
@@ -2370,6 +2483,7 @@ async function deletePayout(){
   showToast('Deleted.','');
   await fetchPayouts();
   renderPayHistory();
+  renderCal();
 }
 
 function openPrintModal(id){
@@ -2638,8 +2752,34 @@ function renderCompliance(){
     </tr>`).join('');
 }
 
+function buildCategoryCheckboxes(selected){
+  const container=document.getElementById('comp-categories');
+  if(!container)return;
+  const cats=[...new Set(installerRates.map(r=>r.category).filter(Boolean))].sort();
+  container.innerHTML=cats.map(cat=>{
+    const checked=(selected||[]).includes(cat);
+    const id='cat-cb-'+cat.replace(/[^a-z0-9]/gi,'_');
+    return`<label style="display:flex;align-items:center;gap:.35rem;padding:.3rem .6rem;border:1.5px solid ${checked?'var(--red)':'var(--g200)'};border-radius:20px;cursor:pointer;font-size:.78rem;font-weight:600;background:${checked?'var(--rfaint, #fff5f5)':'#fff'};user-select:none" id="lbl-${id}">
+      <input type="checkbox" id="${id}" value="${cat}" ${checked?'checked':''} onchange="updateCatLabel(this)" style="display:none"/>
+      ${cat}
+    </label>`;
+  }).join('');
+}
+
+function updateCatLabel(cb){
+  const lbl=document.getElementById('lbl-'+cb.id);
+  if(!lbl)return;
+  lbl.style.borderColor=cb.checked?'var(--red)':'var(--g200)';
+  lbl.style.background=cb.checked?'var(--rfaint,#fff5f5)':'#fff';
+}
+
+function getSelectedCategories(){
+  return [...document.querySelectorAll('#comp-categories input[type=checkbox]:checked')].map(cb=>cb.value);
+}
+
 function openAddInstallerModal(){
   document.getElementById('comp-id').value='';
+  document.getElementById('comp-profile-id').value='';
   document.getElementById('comp-modal-title').textContent='Add Installer';
   ['comp-name','comp-gl-exp','comp-wc-exp','comp-notes'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('comp-status').value='active';
@@ -2647,12 +2787,16 @@ function openAddInstallerModal(){
   document.getElementById('comp-wc-onfile').value='yes';
   document.getElementById('comp-w9').value='yes';
   document.getElementById('comp-ic').value='yes';
+  buildCategoryCheckboxes([]);
   openModal('compliance-modal');
 }
 
 function openEditInstallerModal(id){
   const r=installerCompliance.find(x=>x.id===id);if(!r)return;
+  // Find matching profile by name to get preferred_categories
+  const prof=profiles.find(p=>p.full_name&&r.name&&p.full_name.toLowerCase()===r.name.toLowerCase());
   document.getElementById('comp-id').value=id;
+  document.getElementById('comp-profile-id').value=prof?.id||'';
   document.getElementById('comp-modal-title').textContent='Edit Installer';
   document.getElementById('comp-name').value=r.name||'';
   document.getElementById('comp-status').value=r.status||'active';
@@ -2663,11 +2807,13 @@ function openEditInstallerModal(id){
   document.getElementById('comp-w9').value=r.w9||'';
   document.getElementById('comp-ic').value=r.ic_agreement||'';
   document.getElementById('comp-notes').value=r.notes||'';
+  buildCategoryCheckboxes(prof?.preferred_categories||[]);
   openModal('compliance-modal');
 }
 
 async function saveInstallerCompliance(){
   const id=document.getElementById('comp-id').value;
+  const profileId=document.getElementById('comp-profile-id').value;
   const name=document.getElementById('comp-name').value.trim();
   if(!name){showToast('Name is required.','error');return}
   const payload={
@@ -2684,6 +2830,16 @@ async function saveInstallerCompliance(){
   };
   if(id)await sb.from('installer_compliance').update(payload).eq('id',id);
   else await sb.from('installer_compliance').insert(payload);
+
+  // Save preferred categories to profile if linked
+  const cats=getSelectedCategories();
+  if(profileId){
+    await sb.from('profiles').update({preferred_categories:cats.length?cats:null}).eq('id',profileId);
+    // Update in-memory profiles array too so payout builder reflects immediately
+    const prof=profiles.find(p=>p.id===profileId);
+    if(prof)prof.preferred_categories=cats;
+  }
+
   closeModal('compliance-modal');
   showToast('Saved!','success');
   await fetchCompliance();
@@ -2744,8 +2900,9 @@ function matchJTItemToRate(itemName){
     {keys:['vct install'],rateName:'VCT Install'},
     {keys:['cove base'],rateName:'Cove Base'},
     {keys:['lvp steps','vinyl steps'],rateName:'LVP Steps'},
-    {keys:['tile install','floor tile','basic tile'],rateName:'Basic Install'},
+    {keys:['tile install','floor tile','basic tile'],rateName:'Basic Install',category:'Tile'},
     {keys:['mosaic'],rateName:'Install Mosaics'},
+    {keys:['bullnose','bull nose'],rateName:'Trim'},
     {keys:['cement board'],rateName:'Cement Board'},
     {keys:['tear out carpet','tu carpet','tearout carpet','carpet pad tack','carpet+pad+tack'],rateName:'Carpet/Pad/Tack'},
     {keys:['haul carpet','tear out & haul carpet','haul & tear'],rateName:'Carpet/Pad'},
@@ -2764,10 +2921,16 @@ function matchJTItemToRate(itemName){
     {keys:['weld vinyl'],rateName:'Weld Vinyl Install'},
     {keys:['weld seam'],rateName:'Weld Seam'},
   ];
-  for(const{keys,rateName}of keywordMap){
+  for(const{keys,rateName,category,pct50}of keywordMap){
     if(keys.some(k=>name.includes(k))){
-      const r=installerRates.find(x=>x.name.toLowerCase()===rateName.toLowerCase());
-      if(r) return r;
+      // If no rateName (e.g. bullnose — 50% of price, no rate table entry), return pct50 marker
+      if(!rateName) return pct50?{pct50:true,default_rate:null}:null;
+      // If category hint provided, prefer that category's entry
+      let r=category
+        ?installerRates.find(x=>x.name.toLowerCase()===rateName.toLowerCase()&&(x.category||'').toLowerCase()===category.toLowerCase())
+        :null;
+      if(!r) r=installerRates.find(x=>x.name.toLowerCase()===rateName.toLowerCase());
+      if(r) return pct50?{...r,pct50:true}:r;
     }
   }
   // Partial match fallback
@@ -2817,8 +2980,38 @@ async function runJTSearch(q){
   if(!q||q.length<2){showToast('Enter at least 2 characters to search.','');return}
   const list=document.getElementById('jt-job-list');
   list.innerHTML='<div style="color:var(--g400);font-size:.875rem;padding:1.5rem;text-align:center">Searching...</div>';
+
   const isNum=/^[0-9]+$/.test(q.trim());
-  const whereClause=isNum?['number','=',q.trim()]:['name','like','%'+q+'%'];
+  // Detect address-like query: contains digits AND letters (e.g. "139th", "12502 w 183rd")
+  const isAddress=/\d/.test(q)&&/[a-zA-Z]/.test(q)&&!isNum;
+
+  let whereClause;
+
+  if(isAddress){
+    // Search Supabase for matching addresses, then use customer names to search JT
+    const{data:localMatches}=await sb.from('projects')
+      .select('customer_name,address,start_date')
+      .ilike('address','%'+q+'%')
+      .order('start_date',{ascending:false})
+      .limit(5);
+
+    if(localMatches&&localMatches.length){
+      // Use first match customer name to search JT
+      const firstName=localMatches[0].customer_name.split(' ')[0].replace(/[^a-zA-Z0-9]/g,'');
+      whereClause=['name','like','%'+firstName+'%'];
+      // Show a hint
+      list.innerHTML='<div style="color:var(--g600);font-size:.78rem;padding:.5rem .75rem;background:var(--g50);border-radius:6px;margin-bottom:.5rem">'
+        +'Found in your calendar: '
+        +localMatches.map(m=>`<strong>${m.customer_name}</strong> (${m.address||''})`).join(', ')
+        +' — searching JT by name...</div>';
+    } else {
+      list.innerHTML='<div style="color:var(--g400);font-size:.875rem;padding:1.5rem;text-align:center">No jobs found with that address in your calendar.</div>';
+      return;
+    }
+  } else {
+    whereClause=isNum?['number','=',q.trim()]:['name','like','%'+q+'%'];
+  }
+
   const data=await jtQuery({
     organization:{
       $:{id:jtSettings.org_id},
@@ -2826,22 +3019,22 @@ async function runJTSearch(q){
         $:{size:25,where:whereClause},
         nodes:{
           id:{},name:{},number:{},status:{},
-          location:{street:{},city:{},state:{}}
+          location:{name:{},address:{},city:{},state:{}}
         }
       }
     }
   });
   const jobs=data?.organization?.jobs?.nodes||[];
   if(!jobs.length){
-    list.innerHTML='<div style="color:var(--g400);font-size:.875rem;padding:1.5rem;text-align:center">No jobs found for "'+q+'"</div>';
+    list.innerHTML+='<div style="color:var(--g400);font-size:.875rem;padding:1.5rem;text-align:center">No JT jobs found for "'+q+'"</div>';
     return;
   }
   window._jtPickerState._searchJobs=jobs;
   const{myLocalJobs}=window._jtPickerState;
-  list.innerHTML=jobs.map((j,i)=>{
+  list.innerHTML=(list.innerHTML||'')+jobs.map((j,i)=>{
     const localMatch=myLocalJobs.find(lj=>j.name.toLowerCase().includes(lj.customer_name.toLowerCase().split(' ')[0])||lj.customer_name.toLowerCase().includes(j.name.toLowerCase().split(' ')[0]));
     const border=localMatch?'var(--green)':'var(--g200)';
-    const addr=j.location?.street?'<div style="font-size:.72rem;color:var(--g400);margin-top:1px">'+[j.location.street,j.location.city,j.location.state].filter(Boolean).join(', ')+'</div>':'';
+    const addr=j.location?.address?'<div style="font-size:.72rem;color:var(--g400);margin-top:1px">'+j.location.address+'</div>':'';
     const match=localMatch?'<div style="font-size:.72rem;color:var(--green);margin-top:2px">Likely match: '+localMatch.customer_name+'</div>':'';
     return'<div style="padding:.75rem;border:1.5px solid '+border+';border-radius:8px;margin-bottom:.4rem;cursor:pointer" onclick="selectJTJob('+i+')">'
       +'<div style="display:flex;justify-content:space-between;align-items:center">'
@@ -2936,10 +3129,20 @@ function importDocLines(localJob,jtJob,doc){
 
   for(const item of items){
     const matched=matchJTItemToRate(item.name);
-    const jtRate=Number(item.unitCost||0)>0?item.unitCost
-      :Number(item.unitPrice||0)>0?parseFloat((item.unitPrice*0.5).toFixed(2))
-      :null;
-    let rate=matched?Number(matched.default_rate||0):jtRate;
+    const unitCost=Number(item.unitCost||0);
+    const unitPrice=Number(item.unitPrice||0);
+
+    // Determine if this should use 50% of price:
+    // - matched rate has pct50 flag, OR
+    // - unitCost is 0 and there's a customer price
+    const use50pct=matched?.pct50
+      ||(unitCost===0&&unitPrice>0);
+
+    const jtRate=use50pct&&unitPrice>0
+      ?parseFloat((unitPrice*0.5).toFixed(2))
+      :unitCost>0?unitCost:null;
+    // If matched but pct50 with no default_rate (bullnose), use jtRate (50% of price)
+    let rate=matched&&matched.default_rate!=null?Number(matched.default_rate):jtRate;
     let total=rate&&item.quantity?parseFloat((rate*item.quantity).toFixed(2)):Number(item.cost||0);
 
     // Apply minimum pay rule based on description field
@@ -2952,7 +3155,7 @@ function importDocLines(localJob,jtJob,doc){
     }
 
     const noMatch=!matched;
-    const is50pct=!matched&&Number(item.unitCost||0)===0&&Number(item.unitPrice||0)>0;
+    const is50pct=use50pct&&!matched;
     const suspectQty=item.quantity===1&&/step|spindle|baluster|tread|riser|stair/i.test(item.name);
     const needsReview=noMatch||is50pct||suspectQty||!rate;
     if(needsReview) flagged++;
@@ -3108,48 +3311,73 @@ async function deleteCoiDoc(docId,path,compId){
 }
 
 // ── CALENDAR SEARCH ──────────────────────────────────────────────────────────
+let calSearchTimer=null;
 function calSearchInput(q){
   const res=document.getElementById('cal-search-results');
   if(!q||q.length<2){res.style.display='none';return}
-  const ql=q.toLowerCase();
-  const matches=projects.filter(p=>
-    (p.customer_name||'').toLowerCase().includes(ql)||
-    (p.address||'').toLowerCase().includes(ql)||
-    (p.notes||'').toLowerCase().includes(ql)||
-    (p.flooring_type||'').toLowerCase().includes(ql)
-  ).slice(0,12);
-  if(!matches.length){
-    res.innerHTML='<div style="padding:.75rem;font-size:.85rem;color:var(--g400)">No jobs found</div>';
-    res.style.display='block';return;
-  }
-  res.innerHTML=matches.map(p=>{
-    const cal={install:'🔨',sales:'💼',warehouse:'📦'}[p.calendar_type]||'📅';
-    const dt=p.start_date?fd(p.start_date):'No date';
-    return`<div onclick="calSearchJump('${p.id}')" style="padding:.6rem .75rem;cursor:pointer;border-bottom:1px solid var(--g100);font-size:.85rem"
-      onmouseover="this.style.background='var(--g50)'" onmouseout="this.style.background=''">
-      <div style="font-weight:600">${cal} ${p.customer_name||'Unnamed'}</div>
-      <div style="font-size:.75rem;color:var(--g500)">${dt}${p.address?' · '+p.address:''}</div>
-    </div>`;
-  }).join('');
+  res.innerHTML='<div style="padding:.75rem;font-size:.85rem;color:var(--g400)">Searching...</div>';
   res.style.display='block';
+  clearTimeout(calSearchTimer);
+  calSearchTimer=setTimeout(()=>calSearchExec(q),300);
+}
+
+async function calSearchExec(q){
+  const res=document.getElementById('cal-search-results');
+  if(!q||q.length<2){res.style.display='none';return}
+  try{
+    const{data}=await sb.from('projects')
+      .select('id,customer_name,start_date,address,calendar_type,flooring_type')
+      .or(`customer_name.ilike.%${q}%,address.ilike.%${q}%,notes.ilike.%${q}%`)
+      .order('start_date',{ascending:false})
+      .limit(12);
+    const matches=data||[];
+    if(!matches.length){
+      res.innerHTML='<div style="padding:.75rem;font-size:.85rem;color:var(--g400)">No jobs found</div>';
+      res.style.display='block';return;
+    }
+    res.innerHTML=matches.map(p=>{
+      const cal={install:'🔨',sales:'💼',warehouse:'📦'}[p.calendar_type]||'📅';
+      const dt=p.start_date?fd(p.start_date):'No date';
+      return`<div onclick="calSearchJump('${p.id}')" style="padding:.6rem .75rem;cursor:pointer;border-bottom:1px solid var(--g100);font-size:.85rem"
+        onmouseover="this.style.background='var(--g50)'" onmouseout="this.style.background=''">
+        <div style="font-weight:600">${cal} ${p.customer_name||'Unnamed'}${p.flooring_type?` <span style="opacity:.6;font-size:.72rem">${p.flooring_type}</span>`:''}</div>
+        <div style="font-size:.75rem;color:var(--g500)">${dt}${p.address?' · '+p.address:''}</div>
+      </div>`;
+    }).join('');
+    res.style.display='block';
+  }catch(e){
+    res.innerHTML='<div style="padding:.75rem;font-size:.85rem;color:var(--red)">Search error</div>';
+  }
 }
 
 function calSearchJump(projectId){
-  const p=projects.find(x=>x.id===projectId);
-  if(!p) return;
-  // Close search
+  // First check if project is already in memory
+  let p=projects.find(x=>x.id===projectId);
   document.getElementById('cal-search').value='';
   document.getElementById('cal-search-results').style.display='none';
-  // Navigate calendar to the week containing this job
-  if(p.start_date){
-    const d=new Date(p.start_date+'T00:00:00');
-    weekStart=weekOf(d);
-    currentMonth=new Date(d.getFullYear(),d.getMonth(),1);
-    setView('week',document.getElementById('vbtn-week'));
-    renderCal();
+  if(p){
+    if(p.start_date){
+      const d=new Date(p.start_date+'T00:00:00');
+      weekStart=weekOf(d);
+      currentMonth=new Date(d.getFullYear(),d.getMonth(),1);
+      setView('week',document.getElementById('vbtn-week'));
+      renderCal();
+    }
+    setTimeout(()=>openDetail(projectId),100);
+  } else {
+    // Project not in memory — fetch it, then jump
+    sb.from('projects').select('*').eq('id',projectId).single().then(({data})=>{
+      if(!data) return;
+      // Add to projects array temporarily so openDetail works
+      projects.push(data);
+      const d=new Date(data.start_date+'T00:00:00');
+      weekStart=weekOf(d);
+      currentMonth=new Date(d.getFullYear(),d.getMonth(),1);
+      setView('week',document.getElementById('vbtn-week'));
+      renderCal();
+      setTimeout(()=>openDetail(projectId),100);
+    });
   }
-  // Open the job detail modal
-  setTimeout(()=>openDetail(projectId),100);
 }
 
 function calSearchClear(){
