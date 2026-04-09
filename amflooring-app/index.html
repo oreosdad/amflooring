@@ -456,6 +456,7 @@
           <div class="cal-tabs" id="pay-tabs">
             <button class="cal-tab active" id="pay-tab-unpaid" onclick="setPayTab('unpaid',this)">Unpaid</button>
             <button class="cal-tab" id="pay-tab-paid" onclick="setPayTab('paid',this)">Paid</button>
+            <button class="cal-tab" id="pay-tab-all" onclick="setPayTab('all',this)">All</button>
           </div>
           <input type="text" id="pay-search" placeholder="Search installer, date..." oninput="renderPayHistory()"
             style="padding:.4rem .75rem;border:1.5px solid var(--g300);border-radius:6px;font-family:'Inter',sans-serif;font-size:.875rem;background:#fff;outline:none;flex:1;min-width:160px"/>
@@ -1967,7 +1968,8 @@ function renderPayHistory(){
   // Filter by tab
   let fp=payouts;
   if(payTab==='unpaid') fp=fp.filter(p=>p.status==='draft'||p.status==='needs_info');
-  else fp=fp.filter(p=>p.status==='approved');
+  else if(payTab==='paid') fp=fp.filter(p=>p.status==='approved');
+  // 'all' shows everything
 
   // Filter by installer, month, search
   if(instFilter!=='all') fp=fp.filter(p=>p.installer_id===instFilter);
@@ -1990,7 +1992,7 @@ function renderPayHistory(){
 
   const c=document.getElementById('pay-history-list');
   if(!fp.length){
-    c.innerHTML=`<div class="empty-state"><div class="empty-icon">💵</div><p>${payTab==='unpaid'?'No unpaid payouts.':'No paid payouts yet.'}</p></div>`;
+    c.innerHTML=`<div class="empty-state"><div class="empty-icon">💵</div><p>${payTab==='unpaid'?'No unpaid payouts.':payTab==='paid'?'No paid payouts yet.':'No payouts yet.'}</p></div>`;
     return;
   }
 
@@ -2071,15 +2073,22 @@ function renderPayHistory(){
           </div>
         </div>
         ${isNeedsInfo&&p.needs_info_note?`<div style="padding:.35rem .875rem .5rem;font-size:.78rem;color:var(--amber);border-top:1px solid var(--amber);background:var(--afaint)">⚠ ${p.needs_info_note}</div>`:''}
+        ${isPaid?`<div style="padding:.3rem .875rem;font-size:.75rem;color:var(--g500);border-top:1px solid var(--g100);display:flex;align-items:center;gap:.5rem">
+          <span style="font-weight:600;color:var(--g700)">Check date:</span>
+          <input type="date" value="${p.check_date||p.approved_at?.split('T')[0]||''}" 
+            onchange="updateCheckDate('${p.id}',this.value)" onclick="event.stopPropagation()"
+            style="border:1.5px solid var(--g300);border-radius:4px;padding:2px 6px;font-family:'Inter',sans-serif;font-size:.75rem;outline:none;background:#fff"/>
+        </div>`:''}
         <div id="${expandId}" style="display:none;border-top:1px solid var(--g100)">${lineItemsHtml}</div>
       </div>`;
     }).join('');
 
     // Mark paid button — only for unpaid tab, only if no needs_info
-    const canMarkPaid=payTab==='unpaid'&&!hasNeedsInfo;
+    const canMarkPaid=(payTab==='unpaid'||payTab==='all')&&!hasNeedsInfo&&iPayouts.some(p=>p.status==='draft');
+    const paidTotal=iPayouts.filter(p=>p.status==='approved').reduce((s,p)=>s+Number(p.total_amount||0),0);
     const markPaidBtn=canMarkPaid
-      ?`<button class="btn btn-primary btn-sm" onclick="markInstallerPaid('${iPayouts.map(p=>p.id).join(',')}')" style="background:var(--green);border-color:var(--green);white-space:nowrap">✓ Mark ${name.split(' ')[0]} paid — $${totalDue.toFixed(2)}</button>`
-      :hasNeedsInfo
+      ?`<button class="btn btn-primary btn-sm" onclick="markInstallerPaid('${iPayouts.filter(p=>p.status==='draft').map(p=>p.id).join(',')}')" style="background:var(--green);border-color:var(--green);white-space:nowrap">✓ Mark ${name.split(' ')[0]} paid — $${totalDue.toFixed(2)}</button>`
+      :hasNeedsInfo&&iPayouts.some(p=>p.status==='needs_info')
       ?`<button class="btn btn-ghost btn-sm" disabled style="opacity:.5;cursor:not-allowed;white-space:nowrap">⚠ Needs info before paying</button>`
       :'';
 
@@ -2090,7 +2099,8 @@ function renderPayHistory(){
           <div style="font-size:.8rem;color:var(--g500)">Pay date: ${sorted[0]?fd(sorted[0].week_end):'—'} · ${iPayouts.length} payout${iPayouts.length!==1?'s':''} · ${jobCount} line item${jobCount!==1?'s':''}</div>
         </div>
         <div style="display:flex;align-items:center;gap:.75rem">
-          ${payTab==='unpaid'?`<div style="text-align:right"><div style="font-size:1.3rem;font-weight:800;color:${hasNeedsInfo?'var(--amber)':'var(--g900)'}">$${totalDue.toFixed(2)}</div><div style="font-size:.72rem;font-weight:600;color:${hasNeedsInfo?'var(--amber)':'var(--g500)'}">due</div></div>`:''}
+          ${(payTab==='unpaid'||payTab==='all')&&totalDue>0?`<div style="text-align:right"><div style="font-size:1.3rem;font-weight:800;color:${hasNeedsInfo?'var(--amber)':'var(--g900)'}">$${totalDue.toFixed(2)}</div><div style="font-size:.72rem;font-weight:600;color:${hasNeedsInfo?'var(--amber)':'var(--g500)'}">due</div></div>`:''}
+          ${(payTab==='paid'||payTab==='all')&&paidTotal>0?`<div style="text-align:right"><div style="font-size:1.3rem;font-weight:800;color:var(--green)">$${paidTotal.toFixed(2)}</div><div style="font-size:.72rem;font-weight:600;color:var(--green)">paid</div></div>`:''}
           ${markPaidBtn}
         </div>
       </div>
@@ -2144,13 +2154,21 @@ async function markInstallerPaid(idsCsv){
   const ids=idsCsv.split(',').filter(Boolean);
   if(!ids.length)return;
   if(!confirm(`Mark ${ids.length} payout${ids.length!==1?'s':''} as paid?`))return;
+  const today=new Date().toISOString().split('T')[0];
   for(const id of ids){
-    await sb.from('payouts').update({status:'approved',approved_by:me.id,approved_at:new Date().toISOString()}).eq('id',id);
+    await sb.from('payouts').update({status:'approved',approved_by:me.id,approved_at:new Date().toISOString(),check_date:today}).eq('id',id);
   }
   await fetchPayouts();
   renderPayHistory();
   renderCal();
   showToast('Marked as paid.','success');
+}
+
+async function updateCheckDate(payoutId, dateVal){
+  await sb.from('payouts').update({check_date:dateVal||null}).eq('id',payoutId);
+  const p=payouts.find(x=>x.id===payoutId);
+  if(p) p.check_date=dateVal;
+  showToast('Check date updated.','success');
 }
 
 function toggleNeedsInfoNote(checked){
