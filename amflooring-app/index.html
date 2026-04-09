@@ -2501,6 +2501,12 @@ async function savePayout(status, needsInfoNote){
   }
 
   if(payoutId){
+    // Safety check — don't wipe line items if currentLines is empty on an existing payout
+    // This prevents accidentally deleting all line items if the modal loaded incorrectly
+    if(id && currentLines.length===0){
+      const confirmed=confirm('This payout has no line items. Are you sure you want to save with an empty line item list? This will delete all existing line items.');
+      if(!confirmed){return;}
+    }
     await sb.from('payout_line_items').delete().eq('payout_id',payoutId);
     if(currentLines.length){
       await sb.from('payout_line_items').insert(currentLines.map((li,i)=>({
