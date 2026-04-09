@@ -918,10 +918,10 @@
       </div>
       <div class="form-group"><label>Notes</label><textarea id="comp-notes" placeholder="Any additional notes..."></textarea></div>
       <input type="hidden" id="comp-profile-id"/>
-      <div class="section-divider">Preferred Pay Categories</div>
+      <div class="section-divider">Pay Rates</div>
       <div class="form-group">
-        <div style="font-size:.78rem;color:var(--g500);margin-bottom:.5rem">Rate categories shown first in payout builder for this installer</div>
-        <div id="comp-categories" style="display:flex;flex-wrap:wrap;gap:.4rem"></div>
+        <div style="font-size:.78rem;color:var(--g500);margin-bottom:.5rem">Check the rates this installer gets. Checked categories sort first in the payout builder — checked rates auto-select.</div>
+        <div id="comp-rate-checkboxes" style="max-height:240px;overflow-y:auto;border:1.5px solid var(--g200);border-radius:8px;padding:.5rem"></div>
       </div>
     </div>
     <div class="modal-footer">
@@ -2246,11 +2246,11 @@ function buildPayoutRateSelect(){
   const instId=document.getElementById('pm-installer')?.value;
   const installer=profiles.find(p=>p.id===instId);
   const preferred=(installer?.preferred_categories||[]).map(c=>c.toLowerCase());
+  const preferredRateIds=new Set(installer?.preferred_rate_ids||[]);
 
   const byCat={};
   installerRates.forEach(r=>{if(!byCat[r.category])byCat[r.category]=[];byCat[r.category].push(r)});
 
-  // Sort categories — preferred first, then alphabetical
   const sortedCats=Object.keys(byCat).sort((a,b)=>{
     const aP=preferred.includes(a.toLowerCase());
     const bP=preferred.includes(b.toLowerCase());
@@ -2263,11 +2263,17 @@ function buildPayoutRateSelect(){
     sortedCats.map(cat=>{
       const isPreferred=preferred.includes(cat.toLowerCase());
       const items=byCat[cat];
-      return`<optgroup label="${isPreferred?'★ ':''} ${cat}">${items.map(r=>{
+      return`<optgroup label="${isPreferred?'★ ':''}${cat}">${items.map(r=>{
         const rateStr=r.rate_type==='varies'?'varies':r.rate_type==='percent'?`${r.percent_of}% of cust.`:`$${Number(r.default_rate||0).toFixed(2)}/${r.unit}`;
-        return`<option value="${r.id}">${r.name} (${rateStr})</option>`;
+        const isPrefRate=preferredRateIds.has(r.id);
+        return`<option value="${r.id}" ${isPrefRate?'style="font-weight:700"':''}>${isPrefRate?'★ ':''}${r.name} (${rateStr})</option>`;
       }).join('')}</optgroup>`;
     }).join('');
+
+  // Auto-select if installer has exactly one preferred rate across all categories
+  if(preferredRateIds.size===1){
+    sel.value=[...preferredRateIds][0];
+  }
 }
 
 async function loadPayoutJobs(){
@@ -2752,29 +2758,60 @@ function renderCompliance(){
     </tr>`).join('');
 }
 
-function buildCategoryCheckboxes(selected){
-  const container=document.getElementById('comp-categories');
+function buildRateCheckboxes(selectedRateIds, selectedCats){
+  const container=document.getElementById('comp-rate-checkboxes');
   if(!container)return;
-  const cats=[...new Set(installerRates.map(r=>r.category).filter(Boolean))].sort();
+  const byCat={};
+  installerRates.forEach(r=>{
+    if(!r.category)return;
+    if(!byCat[r.category])byCat[r.category]=[];
+    byCat[r.category].push(r);
+  });
+  const cats=Object.keys(byCat).sort();
   container.innerHTML=cats.map(cat=>{
-    const checked=(selected||[]).includes(cat);
-    const id='cat-cb-'+cat.replace(/[^a-z0-9]/gi,'_');
-    return`<label style="display:flex;align-items:center;gap:.35rem;padding:.3rem .6rem;border:1.5px solid ${checked?'var(--red)':'var(--g200)'};border-radius:20px;cursor:pointer;font-size:.78rem;font-weight:600;background:${checked?'var(--rfaint, #fff5f5)':'#fff'};user-select:none" id="lbl-${id}">
-      <input type="checkbox" id="${id}" value="${cat}" ${checked?'checked':''} onchange="updateCatLabel(this)" style="display:none"/>
-      ${cat}
-    </label>`;
+    const catChecked=(selectedCats||[]).includes(cat);
+    const catId='cat-chk-'+cat.replace(/[^a-z0-9]/gi,'_');
+    const rates=byCat[cat];
+    const rateRows=rates.map(r=>{
+      const rateChecked=(selectedRateIds||[]).includes(r.id);
+      const rateStr=r.rate_type==='varies'?'varies':r.rate_type==='percent'?`${r.percent_of}% of cust.`:(r.default_rate!=null?`$${Number(r.default_rate).toFixed(2)}/${r.unit}`:'');
+      return`<label style="display:flex;align-items:center;gap:.5rem;padding:.2rem .5rem .2rem 1.5rem;cursor:pointer;font-size:.8rem;border-radius:4px" 
+        onmouseover="this.style.background='var(--g50)'" onmouseout="this.style.background=''">
+        <input type="checkbox" class="comp-rate-cb" data-rate-id="${r.id}" data-cat="${cat}" ${rateChecked?'checked':''} 
+          style="accent-color:var(--red);cursor:pointer" onchange="onRateCbChange(this)"/>
+        <span>${r.name}</span>
+        ${rateStr?`<span style="color:var(--g400);font-size:.72rem;margin-left:auto">${rateStr}</span>`:''}
+      </label>`;
+    }).join('');
+    return`<div style="margin-bottom:.25rem">
+      <label style="display:flex;align-items:center;gap:.5rem;padding:.3rem .5rem;cursor:pointer;font-weight:700;font-size:.8rem;background:var(--g50);border-radius:6px">
+        <input type="checkbox" class="comp-cat-cb" id="${catId}" data-cat="${cat}" ${catChecked?'checked':''}
+          style="accent-color:var(--red);cursor:pointer" onchange="onCatCbChange(this)"/>
+        ${cat}
+      </label>
+      ${rateRows}
+    </div>`;
   }).join('');
 }
 
-function updateCatLabel(cb){
-  const lbl=document.getElementById('lbl-'+cb.id);
-  if(!lbl)return;
-  lbl.style.borderColor=cb.checked?'var(--red)':'var(--g200)';
-  lbl.style.background=cb.checked?'var(--rfaint,#fff5f5)':'#fff';
+function onCatCbChange(cb){
+  // When category toggled, don't touch individual rates — category is independent
+}
+
+function onRateCbChange(cb){
+  // When a rate is checked, auto-check its category too
+  if(cb.checked){
+    const catCb=document.querySelector(`.comp-cat-cb[data-cat="${cb.dataset.cat}"]`);
+    if(catCb)catCb.checked=true;
+  }
+}
+
+function getSelectedRateIds(){
+  return [...document.querySelectorAll('.comp-rate-cb:checked')].map(cb=>cb.dataset.rateId);
 }
 
 function getSelectedCategories(){
-  return [...document.querySelectorAll('#comp-categories input[type=checkbox]:checked')].map(cb=>cb.value);
+  return [...document.querySelectorAll('.comp-cat-cb:checked')].map(cb=>cb.dataset.cat);
 }
 
 function openAddInstallerModal(){
@@ -2787,7 +2824,7 @@ function openAddInstallerModal(){
   document.getElementById('comp-wc-onfile').value='yes';
   document.getElementById('comp-w9').value='yes';
   document.getElementById('comp-ic').value='yes';
-  buildCategoryCheckboxes([]);
+  buildRateCheckboxes([],[]);
   openModal('compliance-modal');
 }
 
@@ -2807,7 +2844,7 @@ function openEditInstallerModal(id){
   document.getElementById('comp-w9').value=r.w9||'';
   document.getElementById('comp-ic').value=r.ic_agreement||'';
   document.getElementById('comp-notes').value=r.notes||'';
-  buildCategoryCheckboxes(prof?.preferred_categories||[]);
+  buildRateCheckboxes(prof?.preferred_rate_ids||[], prof?.preferred_categories||[]);
   openModal('compliance-modal');
 }
 
@@ -2831,13 +2868,16 @@ async function saveInstallerCompliance(){
   if(id)await sb.from('installer_compliance').update(payload).eq('id',id);
   else await sb.from('installer_compliance').insert(payload);
 
-  // Save preferred categories to profile if linked
+  // Save preferred categories and rate IDs to profile if linked
   const cats=getSelectedCategories();
+  const rateIds=getSelectedRateIds();
   if(profileId){
-    await sb.from('profiles').update({preferred_categories:cats.length?cats:null}).eq('id',profileId);
-    // Update in-memory profiles array too so payout builder reflects immediately
+    await sb.from('profiles').update({
+      preferred_categories:cats.length?cats:null,
+      preferred_rate_ids:rateIds.length?rateIds:null
+    }).eq('id',profileId);
     const prof=profiles.find(p=>p.id===profileId);
-    if(prof)prof.preferred_categories=cats;
+    if(prof){prof.preferred_categories=cats;prof.preferred_rate_ids=rateIds;}
   }
 
   closeModal('compliance-modal');
@@ -2875,7 +2915,7 @@ async function jtQuery(queryBody){
 }
 
 // Fuzzy match a JT cost item name to a rate table entry
-function matchJTItemToRate(itemName){
+function matchJTItemToRate(itemName, flooringType){
   if(!itemName) return null;
   const name=itemName.toLowerCase();
   // Direct name match first
@@ -2883,8 +2923,10 @@ function matchJTItemToRate(itemName){
   if(match) return match;
   // Keyword matching — map common JT names to rate table entries
   const keywordMap=[
-    {keys:['carpet install','basic carpet','carpet basic'],rateName:'Basic Install'},
-    {keys:['pattern carpet','carpet pattern','premium carpet'],rateName:'Premium Carpet Install'},
+    {keys:['carpet install','basic carpet','carpet basic'],rateName:'Carpet Install',category:'Carpet & Steps'},
+    {keys:['pattern carpet','carpet pattern'],rateName:'Pattern Install (Basic)',category:'Carpet & Steps'},
+    {keys:['premium carpet','pattern premium','carpet premium'],rateName:'Pattern Install (Premium)',category:'Carpet & Steps'},
+    {keys:['carpet premium install','premium carpet install'],rateName:'Carpet Install (Premium)',category:'Carpet & Steps'},
     {keys:['lvp install','lvp basic','lvp click','luxury vinyl'],rateName:'LVP Basic Install (click)'},
     {keys:['lvp glue'],rateName:'LVP Glue Down'},
     {keys:['laminate install'],rateName:'Laminate Install'},
@@ -2895,8 +2937,9 @@ function matchJTItemToRate(itemName){
     {keys:['water based'],rateName:'Water Based'},
     {keys:['oil based'],rateName:'Oil Based'},
     {keys:['stair tread'],rateName:'Stair Tread Finish'},
-    {keys:['sheet vinyl install','vinyl install'],rateName:'Basic Install'},
-    {keys:['underlay'],rateName:'Underlay Install'},
+    {keys:['sheet vinyl install','sheet vinyl'],rateName:'Sheet Vinyl Install',category:'Sheet Vinyl'},
+    {keys:['sheet vinyl underlay'],rateName:'Underlay Install',category:'Sheet Vinyl'},
+    {keys:['underlay'],rateName:'Underlay Install',category:'LVP'},
     {keys:['vct install'],rateName:'VCT Install'},
     {keys:['cove base'],rateName:'Cove Base'},
     {keys:['lvp steps','vinyl steps'],rateName:'LVP Steps'},
@@ -2907,7 +2950,7 @@ function matchJTItemToRate(itemName){
     {keys:['tear out carpet','tu carpet','tearout carpet','carpet pad tack','carpet+pad+tack'],rateName:'Carpet/Pad/Tack'},
     {keys:['haul carpet','tear out & haul carpet','haul & tear'],rateName:'Carpet/Pad'},
     {keys:['tear out hardwood','tu hardwood'],rateName:'TU Hardwood'},
-    {keys:['tear out laminate','tu laminate','tear out lvp','tu lvp'],rateName:'TU Laminate/LVP etc'},
+    {keys:['tear out laminate','tearout laminate','tu laminate','tear out lvp','tearout lvp','tu lvp','tear out existing laminate','tear out existing lvp'],rateName:'TU Laminate/LVP etc'},
     {keys:['tear out tile','tu tile','demo tile'],rateName:'TU Tile'},
     {keys:['tear out vct','tu vct'],rateName:'TU VCT / Glue Down LVP'},
     {keys:['base shoe'],rateName:'R&R Base Shoe'},
@@ -2916,6 +2959,7 @@ function matchJTItemToRate(itemName){
     {keys:['fridge','refrigerator'],rateName:'R&R Fridges'},
     {keys:['toilet'],rateName:'R&R Toilets'},
     {keys:['sink'],rateName:'Pedestal Sink'},
+    {keys:['quarter round','base shoe install','primed base shoe','stain base shoe','white base shoe','install base shoe','install primed','install stain'],rateName:'R&R Base Shoe'},
     {keys:['restretch','re-stretch'],rateName:'Restretch'},
     {keys:['weld cove'],rateName:'Weld Cove'},
     {keys:['weld vinyl'],rateName:'Weld Vinyl Install'},
@@ -2923,21 +2967,19 @@ function matchJTItemToRate(itemName){
   ];
   for(const{keys,rateName,category,pct50}of keywordMap){
     if(keys.some(k=>name.includes(k))){
-      // If no rateName (e.g. bullnose — 50% of price, no rate table entry), return pct50 marker
       if(!rateName) return pct50?{pct50:true,default_rate:null}:null;
-      // If category hint provided, prefer that category's entry
       let r=category
         ?installerRates.find(x=>x.name.toLowerCase()===rateName.toLowerCase()&&(x.category||'').toLowerCase()===category.toLowerCase())
         :null;
+      if(!r&&!category&&flooringType){
+        r=installerRates.find(x=>x.name.toLowerCase()===rateName.toLowerCase()&&(x.category||'').toLowerCase().includes(flooringType.toLowerCase()));
+      }
       if(!r) r=installerRates.find(x=>x.name.toLowerCase()===rateName.toLowerCase());
       if(r) return pct50?{...r,pct50:true}:r;
     }
   }
-  // Partial match fallback
-  return installerRates.find(r=>
-    name.includes(r.name.toLowerCase().substring(0,6))||
-    r.name.toLowerCase().includes(name.substring(0,6))
-  )||null;
+  // No match — return null and let it flag for manual review
+  return null;
 }
 
 // Show document picker modal then import selected doc's line items
@@ -3128,7 +3170,7 @@ function importDocLines(localJob,jtJob,doc){
   }
 
   for(const item of items){
-    const matched=matchJTItemToRate(item.name);
+    const matched=matchJTItemToRate(item.name, localJob?.flooring_type);
     const unitCost=Number(item.unitCost||0);
     const unitPrice=Number(item.unitPrice||0);
 
