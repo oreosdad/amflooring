@@ -1170,8 +1170,19 @@ function renderEventChip(item,forMonth=false){
   if(item.type==='project'){
     const p=item.p;
     const timeStr=p.start_time?` ${fmtTime(p.start_time)}`:'';
-    const label=timeStr?`${timeStr} ${p.customer_name}`:p.customer_name;
-    return`<div class="cal-event cal-${p.calendar_type}" onclick="openDetail('${p.id}')" title="${p.customer_name}" ${sz}>${label}</div>`;
+    // Flooring type badge — short abbreviation
+    const ftMap={Carpet:'CPT',LVP:'LVP',Tile:'TILE','Hardwood':'HWD','Laminate':'LAM','Sheet Vinyl':'SV','VCT':'VCT'};
+    const ftBadge=p.flooring_type&&p.calendar_type==='install'
+      ?(ftMap[p.flooring_type]||p.flooring_type.substring(0,3).toUpperCase())
+      :'';
+    // Pay indicator — check if any approved payout has a line item for this project
+    const hasPaid=payouts.some(po=>po.status==='approved'&&(po.payout_line_items||[]).some(li=>li.project_id===p.id));
+    const hasDraft=!hasPaid&&payouts.some(po=>(po.status==='draft'||po.status==='needs_info')&&(po.payout_line_items||[]).some(li=>li.project_id===p.id));
+    const payDot=hasPaid?'<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-left:3px;vertical-align:middle" title="Paid"></span>'
+      :hasDraft?'<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--amber);margin-left:3px;vertical-align:middle" title="Payout in progress"></span>'
+      :'';
+    const label=`${timeStr?timeStr+' ':''}${p.customer_name}${ftBadge?` <span style="opacity:.75;font-size:.65rem">${ftBadge}</span>`:''}${payDot}`;
+    return`<div class="cal-event cal-${p.calendar_type}" onclick="openDetail('${p.id}')" title="${p.customer_name}${ftBadge?' · '+p.flooring_type:''}${hasPaid?' · Paid':hasDraft?' · Payout in progress':''}" ${sz}>${label}</div>`;
   }
   const t=item.t;
   return`<div class="cal-event time-off" ${sz}>🏖 ${(t.profiles?.full_name||'').split(' ')[0]}${t.note?` (${t.note})`:''}</div>`;
@@ -1907,12 +1918,15 @@ function renderPayHistory(){
       const isNeedsInfo=p.status==='needs_info';
       const isPaid=p.status==='approved';
       const flaggedLines=lines.filter(l=>l.needs_review);
+      const isClean=isDraft&&!flaggedLines.length&&lines.length>0;
       const expandId=`payout-expand-${p.id}`;
 
       const statusBadge=isPaid
         ?`<span style="font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--gfaint);color:var(--green)">Paid</span>`
         :isNeedsInfo
         ?`<span style="font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--afaint);color:var(--amber)">⚠ Needs Info</span>`
+        :isClean
+        ?`<span style="font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--gfaint);color:var(--green)">✓ Ready</span>`
         :`<span style="font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:20px;background:#fff3cd;color:#856404">Unpaid</span>`;
 
       const lineItemsHtml=lines.length?`
@@ -1940,7 +1954,7 @@ function renderPayHistory(){
             <span style="font-size:.85rem;color:var(--g400);transition:transform .2s" id="${expandId}-arrow">▶</span>
             <div>
               <span style="font-size:.825rem;font-weight:700;color:var(--g800)">Pay date: ${fd(p.week_end)}</span>
-              <span style="font-size:.75rem;color:var(--g400);margin-left:.5rem">${lines.length} item${lines.length!==1?'s':''}${flaggedLines.length?` · ⚠ ${flaggedLines.length} flagged`:''}</span>
+              <span style="font-size:.75rem;color:var(--g400);margin-left:.5rem">${lines.length} item${lines.length!==1?'s':''}${flaggedLines.length?` · <span style="color:var(--amber)">⚠ ${flaggedLines.length} need review</span>`:isClean?` · <span style="color:var(--green)">✓ all clear</span>`:''}</span>
             </div>
             ${statusBadge}
           </div>
