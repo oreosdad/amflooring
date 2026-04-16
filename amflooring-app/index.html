@@ -322,9 +322,9 @@
         <div style="display:flex;gap:.75rem;align-items:center;margin-bottom:.75rem;flex-wrap:wrap">
           <div class="cal-tabs" id="cal-tabs">
             <button class="cal-tab active" onclick="setCalTab('all',this)">All</button>
-            <button class="cal-tab" onclick="setCalTab('sales',this)">Sales</button>
-            <button class="cal-tab" onclick="setCalTab('install',this)">Installs</button>
-            <button class="cal-tab" onclick="setCalTab('warehouse',this)">Warehouse</button>
+            <button class="cal-tab" onclick="setCalTab('sales',this)"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--sales-border);margin-right:4px;vertical-align:middle"></span>Sales</button>
+            <button class="cal-tab" onclick="setCalTab('install',this)"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--install-border);margin-right:4px;vertical-align:middle"></span>Installs</button>
+            <button class="cal-tab" onclick="setCalTab('warehouse',this)"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--warehouse-border);margin-right:4px;vertical-align:middle"></span>Warehouse</button>
           </div>
           <select class="who-filter" id="who-filter" onchange="renderCal()">
             <option value="all">👥 All People</option>
@@ -341,11 +341,7 @@
             <button class="view-btn" id="vbtn-month" onclick="setView('month',this)">Month</button>
           </div>
         </div>
-        <div class="cal-legend">
-          <span class="legend-item"><span class="legend-dot" style="background:var(--sales-border)"></span>Sales</span>
-          <span class="legend-item"><span class="legend-dot" style="background:var(--install-border)"></span>Installs</span>
-          <span class="legend-item"><span class="legend-dot" style="background:var(--warehouse-border)"></span>Warehouse</span>
-        </div>
+
         <div class="card desktop-only">
           <div class="card-header">
             <div class="calendar-nav" style="width:100%;display:flex;align-items:center;gap:.75rem">
@@ -784,6 +780,7 @@
           <button class="btn btn-ghost btn-sm" onclick="addMinCharge('carpet')" style="color:var(--amber);font-size:.72rem;padding:.2rem .5rem">Carpet $200</button>
           <button class="btn btn-ghost btn-sm" onclick="addMinCharge('lvp')" style="color:var(--amber);font-size:.72rem;padding:.2rem .5rem">LVP $200</button>
           <button class="btn btn-ghost btn-sm" onclick="addMinCharge('other')" style="color:var(--amber);font-size:.72rem;padding:.2rem .5rem">Other $200</button>
+          <button class="btn btn-ghost btn-sm" onclick="addMinCharge('wood')" style="color:var(--amber);font-size:.72rem;padding:.2rem .5rem">Wood $500</button>
         </div>
       </div>
 
@@ -3062,6 +3059,7 @@ function matchJTItemToRate(itemName, flooringType){
     {keys:['quarter round','base shoe install','primed base shoe','stain base shoe','white base shoe','install base shoe','install primed','install stain'],rateName:'R&R Base Shoe'},
     {keys:['restretch','re-stretch'],rateName:'Restretch'},
     {keys:['weld cove'],rateName:'Weld Cove'},
+    {keys:['lace','lacing','wood lace'],rateName:'Lace',category:'Raw / Pre-Finished Wood'},
     {keys:['weld vinyl'],rateName:'Weld Vinyl Install'},
     {keys:['weld seam'],rateName:'Weld Seam'},
   ];
@@ -3268,7 +3266,7 @@ function importDocLines(localJob,jtJob,doc){
 
   // Minimum pay rules by flooring type — applied when description says "minimum charge"
   const minPayByType={
-    tile:500, carpet:200, lvp:200, hardwood:200, laminate:200, default:200
+    tile:500, carpet:200, lvp:200, hardwood:500, laminate:200, wood:500, default:200
   };
 
   function getMinPayForItem(itemName, description){
@@ -3278,7 +3276,7 @@ function importDocLines(localJob,jtJob,doc){
     if(/tile/i.test(n)) return minPayByType.tile;
     if(/carpet|cpt/i.test(n)) return minPayByType.carpet;
     if(/lvp|luxury vinyl|vinyl plank/i.test(n)) return minPayByType.lvp;
-    if(/hardwood|wood|prefinish/i.test(n)) return minPayByType.hardwood;
+    if(/hardwood|prefinish|raw wood|wood install/i.test(n)) return minPayByType.wood;
     if(/laminate/i.test(n)) return minPayByType.laminate;
     return minPayByType.default;
   }
