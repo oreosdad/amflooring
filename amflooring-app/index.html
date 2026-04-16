@@ -609,6 +609,10 @@
         </div>
       </div>
       <div class="form-group"><label>Notes</label><textarea id="f-notes" placeholder="Room details, instructions, access info..."></textarea></div>
+      <div class="form-group" id="f-remaining-row" style="display:none">
+        <label>✂ Remaining Balance <span style="font-weight:400;font-size:.75rem;color:var(--g400)">(multi-trip jobs)</span></label>
+        <input type="text" id="f-remaining-note" placeholder="e.g. 140 of 188 SY paid — 48 SY remaining"/>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-danger btn-sm" id="btn-delete" onclick="deleteProject()" style="display:none;margin-right:auto">Delete</button>
@@ -774,7 +778,13 @@
       <div style="font-size:.75rem;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;display:flex;align-items:center;justify-content:space-between">
         <span>Pay Line Items</span>
         <button class="btn btn-ghost btn-sm" onclick="addFreehandLine()" style="color:var(--blue);font-size:.75rem">+ Add line</button>
-        <button class="btn btn-ghost btn-sm" onclick="addMinChargePrompt()" style="color:var(--amber);font-size:.75rem">+ Min charge</button>
+        <div style="display:inline-flex;gap:.25rem;align-items:center">
+          <span style="font-size:.72rem;color:var(--amber);font-weight:600">Min:</span>
+          <button class="btn btn-ghost btn-sm" onclick="addMinCharge('tile')" style="color:var(--amber);font-size:.72rem;padding:.2rem .5rem">Tile $500</button>
+          <button class="btn btn-ghost btn-sm" onclick="addMinCharge('carpet')" style="color:var(--amber);font-size:.72rem;padding:.2rem .5rem">Carpet $200</button>
+          <button class="btn btn-ghost btn-sm" onclick="addMinCharge('lvp')" style="color:var(--amber);font-size:.72rem;padding:.2rem .5rem">LVP $200</button>
+          <button class="btn btn-ghost btn-sm" onclick="addMinCharge('other')" style="color:var(--amber);font-size:.72rem;padding:.2rem .5rem">Other $200</button>
+        </div>
       </div>
 
       <!-- Line item column headers -->
@@ -787,6 +797,7 @@
         <div></div>
       </div>
       <div id="pm-line-items"></div>
+      <datalist id="li-desc-options"></datalist>
 
       <!-- Add from rate table -->
       <div style="margin-top:.75rem;padding:.75rem;background:var(--g50);border:1.5px dashed var(--g300);border-radius:8px">
@@ -1241,7 +1252,8 @@ function renderEventChip(item,forMonth=false){
     const payDot=hasPaid?'<span style="font-size:.7rem;margin-left:2px" title="Ready to pay">💵</span>'
       :hasDraft?'<span style="font-size:.7rem;margin-left:2px" title="Payout in progress">⚠️</span>'
       :'';
-    const label=`${timeStr?timeStr+' ':''}${p.customer_name}${ftBadge?` <span style="opacity:.75;font-size:.65rem">${ftBadge}</span>`:''}${payDot}`;
+    const remainBadge=p.remaining_note?'<span style="font-size:.65rem;margin-left:2px" title="'+p.remaining_note.replace(/"/g,'&quot;')+'">✂</span>':'';
+    const label=`${payDot}${timeStr?timeStr+' ':''}${p.customer_name}${ftBadge?` <span style="opacity:.75;font-size:.65rem">${ftBadge}</span>`:''}${remainBadge}`;
     return`<div class="cal-event cal-${p.calendar_type}" onclick="openDetail('${p.id}')" title="${p.customer_name}${ftBadge?' · '+p.flooring_type:''}${hasPaid?' · Paid':hasDraft?' · Payout in progress':''}" ${sz}>${label}</div>`;
   }
   const t=item.t;
@@ -1693,12 +1705,13 @@ function removeCrew(id){assignedCrew=assignedCrew.filter(x=>x!==id);renderCrewCh
 
 function openNewProject(){
   document.getElementById('modal-title').textContent='New Project';
-  ['project-id','f-customer','f-address','f-measurement','f-notes','f-materials'].forEach(id=>document.getElementById(id).value='');
+  ['project-id','f-customer','f-address','f-measurement','f-notes','f-materials','f-remaining-note'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('f-flooring').value='';document.getElementById('f-status').value='scheduled';document.getElementById('f-calendar').value='install';
   const t=today();
   document.getElementById('f-start-date').value=t;document.getElementById('f-end-date').value=t;
   document.getElementById('f-start-time').value='08:30';document.getElementById('f-end-time').value='';
   document.getElementById('btn-delete').style.display='none';
+  document.getElementById('f-remaining-row').style.display='none';
   document.getElementById('quick-add-form').classList.add('hidden');document.getElementById('quick-add-icon').textContent='＋';
   document.getElementById('install-only-fields').style.display='block';
   updateUnit();assignedCrew=[];buildCrewDropdown('install',[]);
@@ -1712,6 +1725,8 @@ function openEditProject(p){
   document.getElementById('f-flooring').value=p.flooring_type||'';document.getElementById('f-measurement').value=p.measurement_value||'';
   document.getElementById('f-start-date').value=p.start_date||'';document.getElementById('f-end-date').value=p.end_date||p.start_date||'';
   document.getElementById('f-notes').value=p.notes||'';document.getElementById('f-materials').value=p.materials||'';
+  document.getElementById('f-remaining-note').value=p.remaining_note||'';
+  document.getElementById('f-remaining-row').style.display=p.calendar_type==='install'?'block':'none';
   document.getElementById('f-status').value=p.status||'scheduled';document.getElementById('f-calendar').value=p.calendar_type||'install';
   document.getElementById('f-start-time').value=p.start_time||'';document.getElementById('f-end-time').value=p.end_time||'';
   document.getElementById('btn-delete').style.display='inline-flex';
@@ -1731,7 +1746,7 @@ async function saveProject(){
   const start=document.getElementById('f-start-date').value;
   if(!customer||!start){showToast('Customer name and start date are required.','error');return}
   const ft=document.getElementById('f-flooring').value,ct=document.getElementById('f-calendar').value;
-  const payload={customer_name:customer,address:document.getElementById('f-address').value.trim()||null,flooring_type:ct==='install'?(ft||null):null,measurement_value:ct==='install'?(parseFloat(document.getElementById('f-measurement').value)||null):null,measurement_unit:(ft==='Carpet'||ft==='Pad'?'SY':'SF'),materials:ct==='install'?(document.getElementById('f-materials').value.trim()||null):null,start_date:start,end_date:document.getElementById('f-end-date').value||start,start_time:document.getElementById('f-start-time').value||null,end_time:document.getElementById('f-end-time').value||null,status:document.getElementById('f-status').value,notes:document.getElementById('f-notes').value.trim()||null,calendar_type:ct,created_by:me.id};
+  const payload={customer_name:customer,address:document.getElementById('f-address').value.trim()||null,flooring_type:ct==='install'?(ft||null):null,measurement_value:ct==='install'?(parseFloat(document.getElementById('f-measurement').value)||null):null,measurement_unit:(ft==='Carpet'||ft==='Pad'?'SY':'SF'),materials:ct==='install'?(document.getElementById('f-materials').value.trim()||null):null,start_date:start,end_date:document.getElementById('f-end-date').value||start,start_time:document.getElementById('f-start-time').value||null,end_time:document.getElementById('f-end-time').value||null,status:document.getElementById('f-status').value,notes:document.getElementById('f-notes').value.trim()||null,remaining_note:document.getElementById('f-remaining-note').value.trim()||null,calendar_type:ct,created_by:me.id};
   let pid=id;
   if(id)await sb.from('projects').update(payload).eq('id',id);
   else{const{data}=await sb.from('projects').insert(payload).select().single();pid=data?.id}
@@ -1801,6 +1816,7 @@ function openDetail(id){
         ${isInstall&&p.measurement_value?`<div class="detail-item"><label>Measurement</label><span>${m}</span></div>`:''}
         <div class="detail-item" style="grid-column:span 2"><label>Crew</label><span>${crew}</span></div>
         ${p.notes?`<div class="detail-item" style="grid-column:span 2"><label>Notes</label><span>${p.notes}</span></div>`:''}
+        ${p.remaining_note?`<div class="detail-item" style="grid-column:span 2;background:var(--afaint);border:1.5px solid var(--amber);border-radius:6px;padding:.4rem .6rem"><label style="color:var(--amber)">✂ Remaining Balance</label><span style="font-weight:600">${p.remaining_note}</span></div>`:''}
         ${isInstall&&p.materials?`<div class="detail-item" style="grid-column:span 2"><label>Materials</label><span>${p.materials}</span></div>`:''}
       </div>
     </div>
@@ -2038,8 +2054,10 @@ function renderPayHistory(){
           <tbody>${lines.map((li,i)=>`
             <tr style="border-top:1px solid var(--g100);background:${li.needs_review?'var(--afaint)':i%2===1?'var(--g50)':'#fff'}">
               <td style="padding:.35rem .875rem;color:var(--g800)">
-                ${li.needs_review?'⚠ ':''}${li.description||'—'}
-                ${li.project?.address?`<div style="font-size:.7rem;color:var(--g400);margin-top:1px">📍 ${li.project.address}</div>`:''}
+                ${li.needs_review?'⚠ ':''}${li.description&&li.description.trim()&&li.description!=='—'?li.description:
+                  li.project?.customer_name?`<span style="color:var(--g500);font-style:italic">${li.project.customer_name}</span>`:'<span style="color:var(--g400)">—</span>'}
+                ${li.project?.address?`<div style="font-size:.7rem;color:var(--g400);margin-top:1px">📍 ${li.project.address}</div>`:
+                  li.project?.customer_name&&!li.description?`<div style="font-size:.7rem;color:var(--g400);margin-top:1px">(no address on file)</div>`:''}
               </td>
               <td style="padding:.35rem .5rem;text-align:right;color:var(--g600)">${li.quantity!=null?li.quantity:''}</td>
               <td style="padding:.35rem .5rem;text-align:right;color:var(--g600)">${li.rate_amount!=null?'$'+Number(li.rate_amount).toFixed(2):''}</td>
@@ -2186,6 +2204,14 @@ function toggleNeedsInfoNote(checked){
 let currentLines=[];
 let currentPayoutInstallerJobs=[];
 
+function buildDescDatalist(){
+  const dl=document.getElementById('li-desc-options');
+  if(!dl)return;
+  // Build options from rate table names
+  const options=[...new Set(installerRates.map(r=>r.name))].sort();
+  dl.innerHTML=options.map(n=>`<option value="${n.replace(/"/g,'&quot;')}"></option>`).join('');
+}
+
 function openNewPayout(overrideWeekStart, overrideWeekEnd){
   document.getElementById('pm-payout-id').value='';
   document.getElementById('payout-modal-title').textContent='New Payout';
@@ -2223,6 +2249,7 @@ function openNewPayout(overrideWeekStart, overrideWeekEnd){
   buildPayoutRateSelect();
   renderPayoutLines();
   loadPayoutJobs();
+  buildDescDatalist();
   openModal('payout-modal');
 }
 
@@ -2266,6 +2293,7 @@ async function openEditPayout(id){
   buildPayoutRateSelect();
   renderPayoutLines();
   await loadPayoutJobs();
+  buildDescDatalist();
   openModal('payout-modal');
 }
 
@@ -2375,13 +2403,11 @@ function updateInstallDates(){
   }
 }
 
-function addMinChargePrompt(){
-  // Quick prompt to add a minimum charge line
-  const type=prompt('Flooring type for minimum charge?\n(tile=500, all others=200)\nEnter: tile, carpet, lvp, hardwood, laminate, or other','tile');
-  if(!type) return;
-  const mins={tile:500,carpet:200,lvp:200,hardwood:200,laminate:200};
-  const amount=mins[type.toLowerCase().trim()]||200;
-  const desc=type.charAt(0).toUpperCase()+type.slice(1).toLowerCase()+' Install — Minimum Charge';
+function addMinCharge(type){
+  const mins={tile:500,carpet:200,lvp:200,hardwood:200,laminate:200,other:200};
+  const amount=mins[type.toLowerCase()]||200;
+  const label={tile:'Tile',carpet:'Carpet',lvp:'LVP',hardwood:'Hardwood',laminate:'Laminate',other:''}[type]||'';
+  const desc=(label?label+' Install — ':'')+'Minimum Charge';
   currentLines.push({_key:Date.now()+'',desc,job:'',jobName:'',jobDate:null,qty:1,rate:amount,total:amount,unit:'',rateId:null,needsReview:false});
   renderPayoutLines();
 }
@@ -2454,7 +2480,7 @@ function renderPayoutLines(){
   // Render pay lines
   const payLinesHtml=payLines.map((li,i)=>`
     <div class="li-row${li.needsReview?' li-review':''}" data-key="${li._key}" style="${li.needsReview?'background:var(--afaint);border-radius:4px':''}">
-      <input class="li-desc" value="${(li.desc||'').replace(/"/g,'&quot;')}" placeholder="Description" onchange="updateLine('${li._key}','desc',this.value)"/>
+      <input class="li-desc" list="li-desc-options" value="${(li.desc||'').replace(/"/g,'&quot;')}" placeholder="Description" onchange="updateLine('${li._key}','desc',this.value)"/>
       <input class="li-input" type="number" step="0.01" value="${li.qty!=null?li.qty:''}" placeholder="Qty" onchange="updateLine('${li._key}','qty',this.value)"/>
       <input class="li-input" type="number" step="0.01" value="${li.rate!=null?li.rate:''}" placeholder="Rate" onchange="updateLine('${li._key}','rate',this.value)" style="${li.needsReview?'border-color:var(--amber)':''}"/>
       <div class="li-total">$${Number(li.total||0).toFixed(2)}</div>
@@ -3021,12 +3047,12 @@ function matchJTItemToRate(itemName, flooringType){
     {keys:['mosaic'],rateName:'Install Mosaics'},
     {keys:['bullnose','bull nose'],rateName:'Trim'},
     {keys:['cement board'],rateName:'Cement Board'},
-    {keys:['tear out carpet','tu carpet','tearout carpet','carpet pad tack','carpet+pad+tack'],rateName:'Carpet/Pad/Tack'},
-    {keys:['haul carpet','tear out & haul carpet','haul & tear'],rateName:'Carpet/Pad'},
-    {keys:['tear out hardwood','tu hardwood'],rateName:'TU Hardwood'},
-    {keys:['tear out laminate','tearout laminate','tu laminate','tear out lvp','tearout lvp','tu lvp','tear out existing laminate','tear out existing lvp'],rateName:'TU Laminate/LVP etc'},
-    {keys:['tear out tile','tu tile','demo tile'],rateName:'TU Tile'},
-    {keys:['tear out vct','tu vct'],rateName:'TU VCT / Glue Down LVP'},
+    {keys:['tear out carpet','tear up carpet','tu carpet','t/u carpet','tearout carpet','carpet pad tack','carpet+pad+tack','existing carpet'],rateName:'Carpet/Pad/Tack'},
+    {keys:['haul carpet','tear out & haul carpet','tear up & haul','haul & tear'],rateName:'Carpet/Pad'},
+    {keys:['tear out hardwood','tear up hardwood','tu hardwood','t/u hardwood','existing hardwood'],rateName:'TU Hardwood'},
+    {keys:['tear out laminate','tear up laminate','tearout laminate','tu laminate','t/u laminate','tear out lvp','tear up lvp','tearout lvp','tu lvp','t/u lvp','tear out existing laminate','tear out existing lvp','existing laminate','existing lvp'],rateName:'TU Laminate/LVP etc'},
+    {keys:['tear out tile','tear up tile','tu tile','t/u tile','demo tile','existing tile'],rateName:'TU Tile'},
+    {keys:['tear out vct','tear up vct','tu vct','t/u vct','existing vct'],rateName:'TU VCT / Glue Down LVP'},
     {keys:['base shoe'],rateName:'R&R Base Shoe'},
     {keys:['furniture','reset furniture','remove furniture'],rateName:'R&R Furniture'},
     {keys:['appliance','remove appliance'],rateName:'R&R Appliances'},
