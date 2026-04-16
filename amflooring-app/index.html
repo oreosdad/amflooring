@@ -2065,23 +2065,24 @@ function renderPayHistory(){
         '<div style="padding:.5rem .875rem;font-size:.8rem;color:var(--g400)">No line items</div>';
 
       return`<div style="background:#fff;border:1px solid ${isNeedsInfo?'var(--amber)':isPaid?'var(--g200)':'var(--g150)'};border-radius:8px;margin-bottom:.5rem;overflow:hidden">
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:.65rem .875rem;cursor:pointer;user-select:none" onclick="togglePayoutExpand('${expandId}')">
-          <div style="display:flex;align-items:center;gap:.625rem;flex:1;min-width:0">
-            <span style="font-size:.85rem;color:var(--g400);transition:transform .2s;flex-shrink:0" id="${expandId}-arrow">▶</span>
-            <div style="min-width:0">
-              <div>
-                <span style="font-size:.825rem;font-weight:700;color:var(--g800)">Pay date: ${fd(p.week_end)}</span>
-                <span style="font-size:.75rem;color:var(--g400);margin-left:.5rem">${lines.length} item${lines.length!==1?'s':''}${flaggedLines.length?` · <span style="color:var(--amber)">⚠ ${flaggedLines.length} need review</span>`:isClean?` · <span style="color:var(--green)">✓ all clear</span>`:''}</span>
-              </div>
-              ${(()=>{
-                const addrs=[...new Set(lines.map(l=>l.project?.address).filter(Boolean))];
-                return addrs.length?`<div style="font-size:.72rem;color:var(--g500);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📍 ${addrs.join(' · ')}</div>`:'';
-              })()}
-            </div>
-            ${statusBadge}
+        <div style="display:flex;align-items:center;gap:.625rem;padding:.65rem .875rem;cursor:pointer;user-select:none" onclick="togglePayoutExpand('${expandId}')">
+          <span style="font-size:.85rem;color:var(--g400);transition:transform .2s;flex-shrink:0" id="${expandId}-arrow">▶</span>
+          <div style="flex-shrink:0">
+            <span style="font-size:.825rem;font-weight:700;color:var(--g800)">Pay date: ${fd(p.week_end)}</span>
+            <span style="font-size:.75rem;color:var(--g400);margin-left:.5rem">${lines.length} item${lines.length!==1?'s':''}${flaggedLines.length?` · <span style="color:var(--amber)">⚠ ${flaggedLines.length} need review</span>`:isClean?` · <span style="color:var(--green)">✓ all clear</span>`:''}</span>
           </div>
-          <div style="display:flex;align-items:center;gap:.5rem">
-            <span style="font-size:.95rem;font-weight:700">$${Number(p.total_amount).toFixed(2)}</span>
+          <div style="flex:1;min-width:0;padding:0 .5rem">
+            ${(()=>{
+              const jobNames=[...new Set(lines.map(l=>l.project?.customer_name).filter(Boolean))];
+              const addrs=[...new Set(lines.map(l=>l.project?.address).filter(Boolean))];
+              if(!jobNames.length&&!addrs.length) return '<span style="font-size:.75rem;color:var(--g300)">No job linked</span>';
+              return`<div style="font-size:.78rem;font-weight:600;color:var(--g800);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${jobNames.join(', ')}</div>`+
+                (addrs.length?`<div style="font-size:.71rem;color:var(--g500);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📍 ${addrs.join(' · ')}</div>`:'');
+            })()}
+          </div>
+          <div style="display:flex;align-items:center;gap:.375rem;flex-shrink:0">
+            ${statusBadge}
+            <span style="font-size:.95rem;font-weight:700;margin-left:.25rem">$${Number(p.total_amount).toFixed(2)}</span>
             <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openEditPayout('${p.id}')" style="font-size:.75rem">Edit</button>
             <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openPrintModal('${p.id}')" style="font-size:.75rem">🖨</button>
             ${isPaid?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();markPayoutUnpaid('${p.id}')" style="font-size:.75rem;color:var(--amber)">Mark Unpaid</button>`:''}
