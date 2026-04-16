@@ -2999,10 +2999,8 @@ function matchJTItemToRate(itemName, flooringType){
   if(match) return match;
   // Keyword matching — map common JT names to rate table entries
   const keywordMap=[
-    {keys:['carpet install','basic carpet','carpet basic'],rateName:'Carpet Install',category:'Carpet & Steps'},
-    {keys:['pattern carpet','carpet pattern'],rateName:'Pattern Install (Basic)',category:'Carpet & Steps'},
-    {keys:['premium carpet','pattern premium','carpet premium'],rateName:'Pattern Install (Premium)',category:'Carpet & Steps'},
-    {keys:['carpet premium install','premium carpet install'],rateName:'Carpet Install (Premium)',category:'Carpet & Steps'},
+    {keys:['carpet install','basic carpet','carpet basic','standard carpet','carpet standard'],rateName:'Carpet Install',category:'Carpet & Steps'},
+    {keys:['pattern carpet','carpet pattern','pattern install'],rateName:'Pattern Carpet Install',category:'Carpet & Steps'},
     {keys:['lvp install','lvp basic','lvp click','luxury vinyl'],rateName:'LVP Basic Install (click)'},
     {keys:['lvp glue'],rateName:'LVP Glue Down'},
     {keys:['laminate install'],rateName:'Laminate Install'},
